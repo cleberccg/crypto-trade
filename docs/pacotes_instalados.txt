@@ -1,0 +1,23 @@
+﻿Pacotes instalados (do requirements):
+- aiohttp==3.14.1
+- alembic==1.18.5
+- backtesting==0.6.5
+- ccxt==4.5.60
+- matplotlib==3.11.0
+- mypy==2.1.0
+- numpy==2.3.2
+- pandas==3.0.3
+- plotly==6.8.0
+- pymysql==1.1.1
+- pytest==9.1.1
+- pytest-asyncio==1.4.0
+- pytest-cov==7.1.0
+- python-binance==1.0.37
+- python-dateutil==2.9.0.post0
+- python-dotenv==1.2.2
+- pytz==2026.2
+- requests==2.32.4
+- sqlalchemy==2.0.51
+- ta==0.11.0
+- types-requests==2.33.0.20260518
+- websockets==16.0

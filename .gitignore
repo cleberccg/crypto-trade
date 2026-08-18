@@ -1,0 +1,117 @@
+# =============================================================================
+# Crypto Trading Bot - .gitignore
+# =============================================================================
+
+# Environment & Secrets
+.env
+*.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environments
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Node / Frontend dependencies
+node_modules/
+frontend/node_modules/
+frontend/dist/
+
+# IDE
+.vscode/settings.json
+.vscode/launch.json
+.idea/
+*.swp
+*.swo
+*~
+
+# Keep .vscode directory structure hints but not personal settings
+!.vscode/extensions.json
+
+# Database files
+data/
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+logs/*.log
+logs/*.log.*
+*.log
+*.log.*
+*.out
+*.err
+.tmp*
+_tmp*
+pip_*.log
+
+# Pytest
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+*.py,cover
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+
+# Distribution / packaging
+*.tar.gz
+*.zip
+
+# Backtest results (generated artifacts)
+backtesting/results/
+
+# Optimization artifacts: runtime state, timestamped reports and regenerable
+# scientific datasets. Local-only; exceeds GitHub file/push size limits.
+optimization/results/
+optimization/archive/
+optimization/monitor/
+
+# Generated telemetry / evidence datasets (local-only)
+coleta_evidencias_dashboard.csv
+integridade_trade_history.csv
+scientific_dashboard.csv
+scientific_readiness.json
+scientific_readiness_history.csv
+scientific_readiness_history.json
+
+# Build artifacts
+*.tsbuildinfo

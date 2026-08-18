@@ -1,0 +1,1275 @@
+Execution Manager migration task attached from task.md on 2026-06-26.
+
+Scope enforced:
+- Keep optimizer/strategy/risk/backtest/research/dashboard behavior untouched.
+- Replace orchestration/control plane only.
+
+Implemented control-plane artifacts:
+- execution_manager package with manager/scheduler/runner/progress/heartbeat/watchdog/recovery/job_queue/resource_monitor/report/logger/models/repository/service.
+- New CLI command: python main.py execution-manager
+- REST execution endpoints under /api/v1/execution/*
+- WebSocket channels under /api/v1/ws/{execution,progress,jobs,performance,heartbeat}
+- Persistent execution state and queue in optimization/results/
+- Continuous reports (json/txt/html)
+
+Completion status: FULL
+
+Closed items:
+- Frontend dedicated Execution Manager area delivered.
+- Expanded incident packaging delivered (incident folder with logs.zip and environment/stack/state files).
+- Extended chaos tests delivered (thread stopped, worker dead, timeout, subprocess failure, unexpected error).
+- RC1 execution replay delivered (API + frontend page + artifacts listing).
+- RC1 metrics persistence delivered (execution_metrics table and historical comparison view).
+- RC1 real validation command delivered (`python main.py execution-manager-rc1`) with automatic reports and release candidate artifact.
+================================================================================
+CRYPTO TRADING BOT — TECHNICAL DIARY (task_details.txt)
+================================================================================
+This file is an append-only technical diary.
+Each task execution appends a new entry below.
+Never delete or overwrite previous entries.
+================================================================================
+
+--------------------------------------------------------------------------------
+ENTRY #001
+--------------------------------------------------------------------------------
+Date            : 2026-06-25
+Objective       : Initial project scaffold — full modular architecture setup
+
+Arquivos criados:
+  - .env.example
+  - .gitignore
+  - requirements.txt
+  - pytest.ini
+  - main.py
+  - config/__init__.py
+  - config/settings.py
+  - utils/__init__.py
+  - utils/logger.py
+  - utils/helpers.py
+  - utils/validators.py
+  - database/__init__.py
+  - database/connection.py
+  - database/models.py
+  - database/repositories.py
+  - exchange/__init__.py
+  - exchange/base_exchange.py
+  - exchange/binance_client.py
+  - exchange/data_downloader.py
+  - indicators/__init__.py
+  - indicators/base_indicator.py
+  - indicators/ema.py
+  - indicators/rsi.py
+  - indicators/atr.py
+  - indicators/macd.py
+  - indicators/bollinger.py
+  - strategies/__init__.py
+  - strategies/base_strategy.py
+  - strategies/trend_v1.py
+  - risk/__init__.py
+  - risk/position_sizer.py
+  - risk/risk_manager.py
+  - backtesting/__init__.py
+  - backtesting/engine.py
+  - backtesting/metrics.py
+  - backtesting/reporter.py
+  - paper_trading/__init__.py
+  - paper_trading/paper_broker.py
+  - paper_trading/paper_trader.py
+  - execution/__init__.py
+  - execution/order_executor.py
+  - tests/__init__.py
+  - tests/conftest.py
+  - tests/test_indicators.py
+  - tests/test_strategies.py
+  - tests/test_risk.py
+  - tests/test_backtesting.py
+  - docs/task_details.txt  (this file)
+  - docs/checklist.md
+
+Arquivos alterados:
+  None (first task)
+
+Descrição técnica:
+  Complete project scaffold implemented following the specified modular
+  architecture. All modules are decoupled and communicate through well-defined
+  interfaces (Abstract Base Classes).
+
+  Key architectural decisions:
+  1. Config uses frozen dataclasses loaded from .env via python-dotenv.
+     Immutability prevents accidental config mutation at runtime.
+  2. Logger factory (get_logger) is the single entry point for all logging.
+     RotatingFileHandler prevents disk overflow. All API calls, trades, errors,
+     and timing are logged.
+  3. Database uses SQLAlchemy 2.0 with a repository pattern. Raw SQLAlchemy
+     never leaks beyond the database/ package.
+  4. Exchange uses ccxt as the primary driver with a BaseExchange ABC.
+     Swapping to Kraken/Coinbase requires only a new adapter class.
+  5. Indicators are stateless pure-function classes. Each accepts a DataFrame
+     and returns a Series/DataFrame — no mutation of input data.
+  6. Strategies enforce a strict interface: initialize/calculate/entry_signal/
+     exit_signal/score. The backtesting engine works with any strategy.
+  7. Risk management uses risk-based position sizing (fixed-fraction of max
+     loss) and validates every trade before execution.
+  8. Backtesting engine is event-driven, bar-by-bar. Includes stop-loss,
+     take-profit, and trailing stop simulation.
+  9. Paper trading mirrors the live trading interface — only the broker changes.
+  10. Live execution (OrderExecutor) is guarded by PAPER_TRADING flag check at
+      both the settings and BinanceClient level.
+
+Decisões tomadas:
+  - SQLite for development (zero-config, file-based, WAL mode enabled).
+  - PostgreSQL support ready via DATABASE_URL env var.
+  - ccxt preferred over python-binance for cross-exchange portability.
+  - No global mutable state; settings singleton is frozen dataclass.
+  - All secrets via .env; no hardcoded values anywhere.
+
+Dependências adicionadas:
+  pandas, numpy, ccxt, python-binance, ta, backtesting, requests, sqlalchemy,
+  alembic, python-dotenv, pytest, pytest-cov, pytest-asyncio, matplotlib,
+  plotly, aiohttp, websockets, mypy, python-dateutil, pytz
+
+Problemas encontrados:
+  None at this stage.
+
+Pendências:
+  - dashboard/ module (Plotly/Dash interactive dashboard)
+  - Integration with Telegram notifications
+  - n8n webhook integration module
+  - WebSocket real-time data streaming
+  - Alembic migrations
+  - Docker configuration
+  - CI/CD pipeline (.github/workflows)
+  - Additional strategies (Mean Reversion, Breakout)
+  - Live trading activation after paper trading validation
+
+Próximos passos:
+  1. Install dependencies: pip install -r requirements.txt
+  2. Copy .env.example to .env and fill in Binance testnet keys
+  3. Run tests: pytest
+  4. Download data: python main.py download --symbol BTC/USDT --timeframe 1h --start 2023-01-01
+  5. Run backtest: python main.py backtest --symbol BTC/USDT --timeframe 1h --start 2023-01-01
+  6. Run paper trading: python main.py paper --symbol BTC/USDT --timeframe 1h --start 2023-01-01
+  7. Review backtesting/results/ for equity charts and trade logs
+  8. Implement dashboard/ module
+
+--------------------------------------------------------------------------------
+ENTRY #002
+--------------------------------------------------------------------------------
+Date            : 2026-06-25
+Objective       : Adapt local database access for XAMPP/MySQL root without password
+
+Arquivos criados:
+   - None
+
+Arquivos alterados:
+   - .env.example
+   - requirements.txt
+   - docs/task_details.txt
+
+Descrição técnica:
+   Updated the environment example to document a MySQL local development DSN
+   compatible with XAMPP defaults: mysql+pymysql://root:@localhost:3306/crypto_bot.
+   Added pymysql to the dependency list so SQLAlchemy can connect to MySQL
+   without changing the application code. SQLite remains the fallback example.
+
+Decisões tomadas:
+   - Preserve SQLite as a safe default fallback.
+   - Document XAMPP/MySQL as the primary local option requested by the user.
+   - Keep database access configured through DATABASE_URL instead of hardcoding.
+
+Dependências adicionadas:
+   pymysql>=1.1.0
+
+Problemas encontrados:
+   None during the change.
+
+Pendências:
+   - Confirm local MySQL database name exists (crypto_bot).
+   - Run dependency installation and smoke-test database connection.
+
+Próximos passos:
+   1. Set DATABASE_URL=mysql+pymysql://root:@localhost:3306/crypto_bot in .env.
+   2. Create the crypto_bot database in MySQL if it does not exist.
+   3. Run pip install -r requirements.txt.
+   4. Start the app and verify table creation.
+
+--------------------------------------------------------------------------------
+ENTRY #003
+--------------------------------------------------------------------------------
+Date            : 2026-06-25
+Objective       : Add database smoke coverage for the SQLAlchemy persistence layer
+
+Arquivos criados:
+   - tests/test_database.py
+
+Arquivos alterados:
+   - docs/task_details.txt
+
+Descrição técnica:
+   Added a smoke test that spins up an in-memory SQLite engine, creates all
+   tables, writes a Candle row through CandleRepository, and reads it back.
+   This validates the repository boundary and confirms the database layer can
+   persist data end-to-end without depending on a running MySQL server.
+
+Decisões tomadas:
+   - Use SQLite in-memory for deterministic CI-friendly validation.
+   - Keep the test focused on integration behavior rather than mocking.
+
+Dependências adicionadas:
+   None
+
+Problemas encontrados:
+   None during implementation.
+
+Pendências:
+   - Add a separate MySQL-specific integration test when a local instance is
+      available in CI or developer environment.
+
+Próximos passos:
+   1. Run the new database test.
+   2. If desired, add a MySQL integration profile for manual validation.
+
+--------------------------------------------------------------------------------
+ENTRY #004
+--------------------------------------------------------------------------------
+Date            : 2026-06-25
+Objective       : Fix pytest configuration so the test suite runs with the installed plugins
+
+Arquivos criados:
+   - None
+
+Arquivos alterados:
+   - pytest.ini
+   - docs/task_details.txt
+
+Descrição técnica:
+   The installed pytest-cov version in the Windows virtual environment did not
+   accept the `--cov-omit` argument from `pytest.ini`. Removed that option to
+   restore a working default test command. Coverage still remains enabled via
+   `--cov=.` and `--cov-report=term-missing`.
+
+Decisões tomadas:
+   - Prefer a stable default test command over an over-constrained coverage
+      filter.
+   - Keep coverage enabled while dropping the incompatible omit flag.
+
+Dependências adicionadas:
+   None
+
+Problemas encontrados:
+   `pytest -q` failed because `--cov-omit` was not recognized by the installed
+
+--------------------------------------------------------------------------------
+ENTRY #TELEGRAM_MONITORING
+--------------------------------------------------------------------------------
+Date            : 2026-06-26
+Objective       : Implementar central de monitoramento via Telegram desacoplada
+
+Arquivos criados:
+   - notifications/telegram_service.py
+   - notifications/telegram_templates.py
+   - notifications/telegram_commands.py
+   - notifications/telegram_scheduler.py
+   - notifications/telegram_router.py
+   - notifications/telegram_repository.py
+   - notifications/telegram_listener.py
+   - docs/telegram.md
+   - docs/notification_service.md
+
+Arquivos alterados:
+   - config/settings.py
+   - .env.example
+   - database/history_models.py
+   - notifications/notification_models.py
+   - notifications/notification_repository.py
+   - notifications/notification_service.py
+   - notifications/__init__.py
+   - main.py
+   - webapi/routers.py
+   - webapi/services.py
+   - docs/architecture.md
+   - docs/api.md
+   - docs/execution_manager.md
+   - docs/checklist.md
+
+Descrição técnica:
+   Foi adicionada camada Telegram totalmente desacoplada da logica de estrategia,
+   optimizer e risk manager. A integracao ocorre por listener do EventBus e
+   NotificationService com fila assíncrona, mantendo o processamento principal
+   sem bloqueios.
+
+   Persistencia incluida na tabela notification_history para historico completo
+   de entregas/falhas por execution_id e destino.
+
+   Comandos administrativos foram implementados com controle de autorizacao por
+   chat_id e endpoints internos para observabilidade do modulo.
+
+Observacoes operacionais:
+   - Modulo desabilitado por padrao (TELEGRAM_ENABLED=false).
+   - Nenhum restart da campanha ativa foi necessario para implementacao.
+
+   plugin set.
+
+Pendências:
+   - If needed, reintroduce coverage exclusions using a method supported by the
+      local pytest-cov version.
+
+Próximos passos:
+   1. Re-run the database smoke test.
+   2. Run the broader test suite once the environment is stable.
+
+--------------------------------------------------------------------------------
+ENTRY #006
+--------------------------------------------------------------------------------
+Date            : 2026-06-25
+Objective       : Add a bootstrap that creates the database schema and tables
+
+Arquivos criados:
+   - database/bootstrap.py
+
+Arquivos alterados:
+   - database/connection.py
+   - database/__init__.py
+   - main.py
+   - tests/test_database.py
+   - docs/task_details.txt
+
+Descrição técnica:
+   Added an idempotent bootstrap flow that ensures the target database exists
+   for MySQL and then creates all SQLAlchemy tables. The startup path in
+   `main.py` now calls this bootstrap instead of only creating tables, so a
+   fresh local MySQL/XAMPP instance can be prepared automatically when the app
+   starts. A SQLite smoke test now covers the bootstrap path as well.
+
+Decisões tomadas:
+   - Keep the bootstrap idempotent so it can run on every launch.
+   - Limit automatic schema creation to MySQL; SQLite keeps the simpler create
+      tables path.
+   - Preserve backward compatibility by exposing a thin wrapper from
+      `database.connection`.
+
+Dependências adicionadas:
+   None
+
+Problemas encontrados:
+   None during the code change.
+
+Pendências:
+   - Validate the bootstrap against a live local MySQL/XAMPP instance.
+
+Próximos passos:
+   1. Run the database tests again.
+   2. If MySQL is available locally, run the app once to create the schema.
+
+--------------------------------------------------------------------------------
+ENTRY #010
+Date            : 2026-06-26
+Objective       : Prepare the next platform phase with mock-first job/timeline/research/scanner modules
+
+Arquivos criados:
+   - jobs/__init__.py
+   - jobs/job_manager.py
+   - jobs/job_models.py
+   - jobs/job_repository.py
+   - jobs/job_scheduler.py
+   - jobs/job_service.py
+   - timeline/__init__.py
+   - timeline/timeline_events.py
+   - timeline/timeline_models.py
+   - timeline/timeline_repository.py
+   - timeline/timeline_service.py
+   - notifications/__init__.py
+   - notifications/notification_models.py
+   - notifications/notification_repository.py
+   - notifications/notification_service.py
+   - scheduler/__init__.py
+   - scheduler/scheduler_models.py
+   - scheduler/scheduler_repository.py
+   - scheduler/scheduler_service.py
+   - research/__init__.py
+   - research/research_models.py
+   - research/research_repository.py
+   - research/research_service.py
+   - scanner/__init__.py
+   - scanner/scanner_models.py
+   - scanner/scanner_repository.py
+   - scanner/scanner_service.py
+   - webapi/mock_api_router.py
+   - webapi/mock_services.py
+   - tests/test_new_platform_modules.py
+   - tests/test_event_bus.py
+   - frontend/src/pages/JobsPage.tsx
+   - frontend/src/pages/ExecutionTimelinePage.tsx
+   - frontend/src/pages/NotificationCenterPage.tsx
+   - frontend/src/pages/SchedulerPage.tsx
+   - frontend/src/pages/ResearchPage.tsx
+   - frontend/src/pages/ScannerPage.tsx
+   - frontend/src/pages/DashboardStatusPage.tsx
+
+Arquivos alterados:
+   - webapi/app.py
+   - webapi/mock_api_router.py
+   - webapi/mock_services.py
+   - frontend/src/App.tsx
+   - frontend/src/layout/AppLayout.tsx
+   - frontend/src/pages/DashboardPage.tsx
+   - docs/architecture.md
+   - docs/events.md
+   - docs/jobs.md
+   - docs/timeline.md
+   - docs/scheduler.md
+   - docs/research.md
+   - docs/scanner.md
+   - docs/checklist.md
+   - docs/task_details.txt
+
+Descrição técnica:
+   Prepared the next platform phase using mock-first contracts for Jobs,
+   Execution Timeline, Notification Center, Scheduler, Research Lab, Market
+   Scanner, and System Status. Added lazy-loaded dashboard routes, read-only API
+   endpoints, a System Health section on the main dashboard, and baseline tests
+   for the event bus and new module endpoints. All changes are non-disruptive and
+   avoid touching the active optimizer run, checkpoints, logs, `.env`, or any
+   destructive database migrations.
+
+Decisões tomadas:
+   - Keep new surfaces mock-backed until the overnight optimization ends.
+   - Reuse the existing observer/event architecture for future listener wiring.
+   - Make all new dashboard views pagination-compatible from the start.
+
+Dependências adicionadas:
+   None
+
+Problemas encontrados:
+   None during implementation.
+
+Pendências:
+   - Replace mocks with persistent repositories and live event writes after the
+      optimizer run finishes.
+   - Add focused tests for jobs/timeline/research/scanner internals when the real
+      implementations are introduced.
+
+Próximos passos:
+   1. Keep the platform in mock-first mode until the execution window ends.
+   2. Wire the Research Lab to the produced results after completion.
+   3. Activate timeline and notification persistence when safe.
+
+--------------------------------------------------------------------------------
+ENTRY #011
+Date            : 2026-06-26
+Objective       : Expand Research Lab structure with dedicated subpages and API contracts
+
+Arquivos criados:
+   - research/models/__init__.py
+   - research/repositories/__init__.py
+   - research/services/__init__.py
+   - research/statistics/__init__.py
+   - research/analytics/__init__.py
+   - research/comparisons/__init__.py
+   - research/insights/__init__.py
+   - research/heatmaps/__init__.py
+   - research/reports/__init__.py
+   - frontend/src/pages/ResearchComparisonsPage.tsx
+   - frontend/src/pages/ResearchRankingsPage.tsx
+   - frontend/src/pages/ResearchInsightsPage.tsx
+   - frontend/src/pages/ResearchHeatmapsPage.tsx
+   - frontend/src/pages/ResearchReportsPage.tsx
+
+Arquivos alterados:
+   - webapi/mock_services.py
+   - webapi/mock_api_router.py
+   - frontend/src/App.tsx
+   - frontend/src/layout/AppLayout.tsx
+   - tests/test_new_platform_modules.py
+   - docs/research.md
+   - docs/checklist.md
+   - docs/task_details.txt
+
+Descrição técnica:
+   Expanded the Research Lab preparation scope with dedicated mock endpoints and
+   dashboard routes for comparisons, rankings, insights, heatmaps, and reports.
+   Added folder-level scaffolding for all requested research domains so tomorrow's
+   post-processing integration can be wired without structural refactors.
+
+Decisões tomadas:
+   - Keep all new research surfaces mock-backed and read-only during the ongoing
+      optimizer run.
+   - Expose paginated response envelopes compatible with existing DataTablePage.
+
+Dependências adicionadas:
+   None
+
+Problemas encontrados:
+   None during this expansion.
+
+Pendências:
+   - Replace research mocks with real result ingestion after optimizer completion.
+
+Próximos passos:
+   1. Connect real optimization result readers when safe.
+   2. Activate ranking/insight generation pipeline on finished datasets.
+
+--------------------------------------------------------------------------------
+ENTRY #012
+Date            : 2026-06-26
+Objective       : Prepare realtime-safe websocket layer for timeline, notifications, and scheduler
+
+Arquivos criados:
+   - frontend/src/hooks/useTimelineSocket.ts
+   - frontend/src/hooks/useNotificationsSocket.ts
+   - frontend/src/hooks/useSchedulerSocket.ts
+
+Arquivos alterados:
+   - webapi/mock_api_router.py
+   - frontend/src/pages/ExecutionTimelinePage.tsx
+   - frontend/src/pages/NotificationCenterPage.tsx
+   - frontend/src/pages/SchedulerPage.tsx
+   - tests/test_new_platform_modules.py
+   - docs/scheduler.md
+   - docs/task_details.txt
+
+Descrição técnica:
+   Added authenticated mock websocket streams for timeline, notifications, and
+   scheduler under `/api/v1/ws/*` routes. Updated dashboard pages to consume
+   realtime ticks with REST fallback, preserving read-only behavior and avoiding
+   any automatic task execution.
+
+Decisões tomadas:
+   - Keep websocket payloads mock-backed and non-destructive during active
+      optimizer processing.
+   - Preserve REST fallback to avoid dashboard blocking if websocket disconnects.
+
+Dependências adicionadas:
+   None
+
+Problemas encontrados:
+   None during this phase.
+
+Pendências:
+   - Replace mock websocket snapshots with event-bus-driven live snapshots after
+      optimizer completion.
+
+Próximos passos:
+   1. Wire live listeners to event bus post-run.
+   2. Activate notifications and scheduler execution only when safe.
+
+--------------------------------------------------------------------------------
+ENTRY #013
+Date            : 2026-06-26
+Objective       : Add next-phase readiness and dry-run activation layer
+
+Arquivos criados:
+   - activation/__init__.py
+   - activation/readiness_models.py
+   - activation/readiness_service.py
+   - database/next_phase_models.py
+   - frontend/src/pages/NextPhaseReadinessPage.tsx
+   - docs/api.md
+
+Arquivos alterados:
+   - database/bootstrap.py
+   - database/__init__.py
+   - webapi/mock_api_router.py
+   - frontend/src/App.tsx
+   - frontend/src/layout/AppLayout.tsx
+   - tests/test_new_platform_modules.py
+   - docs/architecture.md
+   - docs/scheduler.md
+   - docs/task_details.txt
+
+Descrição técnica:
+   Implemented a dry-run-only activation surface to make tomorrow's handoff
+   immediate and controlled. Added additive ORM models for next-phase tables,
+   readiness and activation-plan endpoints, and a dedicated dashboard page to
+   track post-run enablement steps without enabling automation.
+
+Decisões tomadas:
+   - Keep activation plan explicitly disabled (`enabled=false`, `dry_run_only=true`).
+   - Keep readiness checks API read-only and isolated from current optimizer flow.
+
+Dependências adicionadas:
+   None
+
+Problemas encontrados:
+   None during implementation.
+
+Pendências:
+   - Toggle from dry-run to live activation only after optimization finishes and
+      result integrity is confirmed.
+
+Próximos passos:
+   1. Enable real ingestion flags tomorrow after completion.
+   2. Replace mock snapshots with persisted/live services in controlled rollout.
+
+--------------------------------------------------------------------------------
+ENTRY #007
+--------------------------------------------------------------------------------
+Date            : 2026-06-25
+Objective       : Confirm local XAMPP connectivity and update MySQL host example
+
+Arquivos criados:
+   - None
+
+Arquivos alterados:
+   - .env.example
+   - docs/task_details.txt
+
+Descrição técnica:
+   Verified that the local XAMPP MySQL server accepts connections on
+   `127.0.0.1:3306` with `root` and no password. Updated the environment
+   example to recommend `127.0.0.1` instead of `localhost` because that is the
+   connection form that worked reliably in this environment.
+
+Decisões tomadas:
+   - Prefer `127.0.0.1` in the local example to avoid host resolution issues.
+
+Dependências adicionadas:
+   None
+
+Problemas encontrados:
+   `localhost` connection attempt failed with WinError 10061, but
+   `127.0.0.1` succeeded.
+
+Pendências:
+   - Run the bootstrap against the working host and confirm database creation.
+
+Próximos passos:
+   1. Execute the bootstrap with `127.0.0.1`.
+   2. Confirm the `crypto_bot` schema and tables exist.
+
+--------------------------------------------------------------------------------
+ENTRY #008
+--------------------------------------------------------------------------------
+Date            : 2026-06-25
+Objective       : Validate MySQL/XAMPP bootstrap end-to-end
+
+Arquivos criados:
+   - None
+
+Arquivos alterados:
+   - database/bootstrap.py
+   - docs/task_details.txt
+
+Descrição técnica:
+   Re-ran the bootstrap against the working MySQL local URL and confirmed the
+   following sequence succeeded: create or ensure schema `crypto_bot`, create
+   all SQLAlchemy tables, dispose the engine, and return a success summary.
+   This is the end-to-end proof that a fresh local XAMPP MySQL instance can be
+   prepared automatically.
+
+Decisões tomadas:
+   - Keep the bootstrap idempotent and safe to call on every startup.
+
+Dependências adicionadas:
+   None
+
+Problemas encontrados:
+   None after switching to the working host and retrying.
+
+Pendências:
+   - None for the bootstrap path itself.
+
+Próximos passos:
+   1. Start the app normally with the MySQL DATABASE_URL.
+   2. Continue implementing the remaining trading modules.
+
+--------------------------------------------------------------------------------
+ENTRY #009
+--------------------------------------------------------------------------------
+Date            : 2026-06-25
+Objective       : Refactor operational configuration to a single Settings class via .env
+
+Arquivos criados:
+   - None
+
+Arquivos alterados:
+   - config/settings.py
+   - main.py
+   - .env
+   - docs/task_details.txt
+   - docs/checklist.md
+
+Descrição técnica:
+   Replaced the previous fragmented config object with a centralized `Settings`
+   class that loads runtime configuration from `.env` and exposes compatibility
+   properties consumed by existing modules. Added explicit startup validation for:
+   - required Binance credentials
+   - operation mode (`paper` or `live`)
+   - symbol format normalization/validation
+   - timeframe validation
+   - database connectivity check
+
+   Added the startup summary block at application initialization and wired
+   `main.py` to fail fast with clear messages when configuration is invalid.
+
+   Added missing requested `.env` variables only when absent, preserving existing
+   credentials and existing keys.
+
+Decisões tomadas:
+   - Keep backward-compatible fields (`settings.environment`,
+      `settings.paper_trading`, `settings.trading.default_symbol`, etc.) so no
+      business module needed architectural changes.
+   - Keep all `.env` reads inside `config/settings.py` only.
+
+Dependências adicionadas:
+   None
+
+Problemas encontrados:
+   - Temporary file merge artifact in `config/settings.py` during refactor,
+      fixed by replacing the file with a clean implementation.
+
+Pendências:
+   - None for this refactor scope.
+
+Próximos passos:
+   1. Run the full test suite after this config refactor.
+   2. Keep future config additions centralized in `Settings` only.
+   Re-ran the bootstrap against the working MySQL local URL and confirmed the
+   following sequence succeeded: create or ensure schema `crypto_bot`, create
+   all SQLAlchemy tables, dispose the engine, and return a success summary.
+   This is the end-to-end proof that a fresh local XAMPP MySQL instance can be
+   prepared automatically.
+
+Decisões tomadas:
+   - Keep the bootstrap idempotent and safe to call on every startup.
+
+Dependências adicionadas:
+   None
+
+Problemas encontrados:
+   None after switching to the working host and retrying.
+
+Pendências:
+   - None for the bootstrap path itself.
+
+Próximos passos:
+   1. Start the app normally with the MySQL DATABASE_URL.
+   2. Continue implementing the remaining trading modules.
+
+
+
+
+--------------------------------------------------------------------------------
+ENTRY #005
+--------------------------------------------------------------------------------
+Date            : 2026-06-25
+Objective       : Validate the database smoke test after fixing pytest config
+
+Arquivos criados:
+   - None
+
+Arquivos alterados:
+   - docs/task_details.txt
+
+Descrição técnica:
+   Re-ran `tests/test_database.py` after removing the unsupported pytest-cov
+   omit flag and disposing the temporary SQLite engine in the smoke test.
+   The test passed cleanly with no ResourceWarning, confirming the repository
+   and SQLAlchemy connection layer work as expected in the local dev setup.
+
+Decisões tomadas:
+   - Treat the smoke test as the minimal proof that the database layer is
+      operational before broadening test coverage.
+
+Dependências adicionadas:
+   None
+
+Problemas encontrados:
+   None after the fix.
+
+Pendências:
+   - Extend validation to a real MySQL/XAMPP instance when available.
+
+Próximos passos:
+   1. Run the rest of the test suite.
+   2. Consider a MySQL integration test profile.
+
+
+
+
+================================================================================
+
+--------------------------------------------------------------------------------
+ENTRY #010
+--------------------------------------------------------------------------------
+Date            : 2026-06-25
+Objective       : Create statistical validation module for optimization results
+
+Arquivos criados:
+   - validation/__init__.py
+   - validation/validator.py
+   - validation/validation_result.py
+   - validation/validation_report.py
+
+Arquivos alterados:
+   - main.py
+   - config/settings.py
+   - .env.example
+   - docs/checklist.md
+   - docs/task_details.txt
+
+Descricao tecnica:
+   Added an independent statistical validation module executed after optimization.
+   The module applies configurable minimum thresholds, performs walk-forward
+   validation (train and validation windows), discards weak configurations,
+   flags possible overfitting, and exports validation_report.csv/.json/.txt.
+
+Decisoes tomadas:
+   - Keep strategy, optimizer, and backtest logic unchanged.
+   - Integrate only at orchestration layer (main.py) and settings.
+
+Dependencias adicionadas:
+   None
+
+Problemas encontrados:
+   - Initial smoke failed due to missing historical data in requested period;
+     resolved by using available DB date range.
+
+Pendencias:
+   - Add automated tests for validation filtering and overfitting rules.
+
+Proximos passos:
+   1. Create dedicated tests for validation module.
+   2. Optionally expose validation thresholds and windows in README.
+
+--------------------------------------------------------------------------------
+ENTRY #011
+--------------------------------------------------------------------------------
+Date            : 2026-06-25
+Objective       : Refactor optimizer infrastructure to event hooks and real checkpoint architecture
+
+Arquivos criados:
+   - core/events/__init__.py
+   - core/events/events.py
+   - core/events/interfaces.py
+   - core/events/event_bus.py
+   - core/events/listeners.py
+   - database/session_models.py
+   - tests/test_optimizer_events.py
+   - tests/test_checkpoint_resume.py
+   - docs/architecture.md
+
+Arquivos alterados:
+   - optimizer/optimizer.py
+   - main.py
+   - config/settings.py
+   - database/bootstrap.py
+   - docs/checklist.md
+   - .env.example
+
+Descricao tecnica:
+   Implemented an observer-based event system for optimizer orchestration. The
+   optimizer now publishes lifecycle events and no longer needs direct knowledge
+   of persistence mechanisms. Added listeners for historical persistence, logs,
+   and real-time metrics. Introduced checkpoint interval configuration and resume
+   support through listener state retrieval by execution_id.
+
+   Added execution metadata propagation (strategy version, host, python version,
+   git commit) to support auditing and future integrations.
+
+Decisoes tomadas:
+   - Preserve optimizer evaluation/ranking algorithm unchanged.
+   - Keep persistence behind listener + repository/service layers.
+   - Use dependency injection for EventBus/listeners in main orchestration.
+
+Dependencias adicionadas:
+   None
+
+Problemas encontrados:
+   - Initial result object wrapping bug in optimizer refactor, fixed.
+
+Pendencias:
+   - Optional async queue listener for high-throughput non-blocking writes.
+   - Add production listeners (webhook/telegram/websocket/prometheus).
+
+Proximos passos:
+   1. Add dedicated execution_sessions + strategy_versions persistence listener.
+   2. Add integration tests for full optimize run with event hooks and resume.
+
+--------------------------------------------------------------------------------
+ENTRY #012
+--------------------------------------------------------------------------------
+Date            : 2026-06-26
+Objective       : Build initial FastAPI backend and React dashboard scaffold for web monitoring
+
+Arquivos criados:
+   - webapi/__init__.py
+   - webapi/__main__.py
+   - webapi/app.py
+   - webapi/dependencies.py
+   - webapi/schemas.py
+   - webapi/security.py
+   - webapi/services.py
+   - webapi/routers.py
+   - frontend/package.json
+   - frontend/tsconfig.json
+   - frontend/tsconfig.app.json
+   - frontend/vite.config.ts
+   - frontend/index.html
+   - frontend/src/main.tsx
+   - frontend/src/theme.ts
+   - frontend/src/styles.css
+   - frontend/src/vite-env.d.ts
+   - frontend/src/App.tsx
+   - frontend/src/api/client.ts
+   - frontend/src/hooks/useMonitorSocket.ts
+   - frontend/src/layout/AppLayout.tsx
+   - frontend/src/components/PageCard.tsx
+   - frontend/src/components/MetricGrid.tsx
+   - frontend/src/components/SimpleTable.tsx
+   - frontend/src/pages/LoginPage.tsx
+   - frontend/src/pages/DashboardPage.tsx
+   - frontend/src/pages/ListPageFactory.tsx
+   - frontend/src/pages/AnalyticsPage.tsx
+   - frontend/src/pages/SettingsPage.tsx
+   - frontend/src/pages/MonitorPage.tsx
+   - docs/frontend_architecture.md
+
+Arquivos alterados:
+   - main.py
+   - requirements.txt
+   - .env.example
+   - docs/checklist.md
+   - docs/task_details.txt
+
+Descricao tecnica:
+   Implemented a new FastAPI module to expose a dashboard-oriented API layer
+   without changing trading business logic. Added JWT-ready authentication,
+   paginated REST endpoints by domain (dashboard, executions, optimizer,
+   backtests, trades, signals, analytics, validation, database read-only,
+   logs, settings), and a WebSocket endpoint for realtime monitor updates.
+
+   Added `main.py api` command to run the backend server with host/port/reload
+   options.
+
+   Created the frontend foundation with React + TypeScript + Vite + MUI,
+   including responsive side navigation, login flow, all route placeholders
+   matching the requested screens, API client integration, and websocket monitor
+   hook.
+
+   Frontend build was validated successfully (`npm run build`).
+
+Decisoes tomadas:
+   - Keep frontend and backend isolated in dedicated modules (`frontend/` and
+      `webapi/`) to avoid coupling with core trading modules.
+   - Use service-layer read queries to expose persisted data only.
+   - Keep settings update endpoint as runtime in-memory override (safe for
+      initial phase) without mutating frozen config dataclasses.
+
+Dependencias adicionadas:
+   - fastapi
+   - uvicorn
+   - PyJWT
+
+Problemas encontrados:
+   - Frontend type error for `import.meta.env` fixed by adding
+      `frontend/src/vite-env.d.ts`.
+   - Runtime smoke for FastAPI in the current Python environment failed due to
+      missing package installation in this shell (`ModuleNotFoundError: fastapi`).
+
+Pendencias:
+   - Install new backend dependencies in active environment.
+   - Add endpoint-specific tests (API integration and auth).
+   - Expand frontend pages with full filters, advanced charts and forms.
+   - Add persistent configuration management backend (instead of in-memory).
+
+Proximos passos:
+   1. Run `pip install -r requirements.txt` in the active runtime environment.
+   2. Start backend: `python main.py api --host 0.0.0.0 --port 8000`.
+   3. Start frontend: `cd frontend && npm run dev`.
+   4. Implement DTO typing and advanced per-screen filters/pagination controls.
+
+--------------------------------------------------------------------------------
+ENTRY #013
+--------------------------------------------------------------------------------
+Date            : 2026-06-26
+Objective       : Expand dashboard to near-complete professional scope (API + 11 screens)
+
+Arquivos criados:
+   - frontend/src/api/types.ts
+   - frontend/src/components/DataTablePage.tsx
+   - frontend/src/components/ExecutionDetailsDialog.tsx
+   - frontend/src/pages/ExecutionsPage.tsx
+   - frontend/src/pages/OptimizationsPage.tsx
+   - frontend/src/pages/BacktestsPage.tsx
+   - frontend/src/pages/TradesPage.tsx
+   - frontend/src/pages/SignalsPage.tsx
+   - frontend/src/pages/ValidationPage.tsx
+   - frontend/src/pages/DatabasePage.tsx
+   - frontend/src/pages/LogsPage.tsx
+   - frontend/src/pages/IndicatorsPage.tsx
+
+Arquivos alterados:
+   - webapi/security.py
+   - webapi/dependencies.py
+   - webapi/services.py
+   - webapi/routers.py
+   - frontend/src/api/client.ts
+   - frontend/src/App.tsx
+   - frontend/src/layout/AppLayout.tsx
+   - frontend/src/components/SimpleTable.tsx
+   - frontend/src/pages/LoginPage.tsx
+   - frontend/src/pages/DashboardPage.tsx
+   - frontend/src/pages/AnalyticsPage.tsx
+   - frontend/src/pages/SettingsPage.tsx
+   - frontend/src/pages/MonitorPage.tsx
+   - docs/checklist.md
+   - docs/task_details.txt
+
+Descricao tecnica:
+   Backend FastAPI was expanded with role-based access profiles
+   (administrator/operator/read-only), execution detail endpoint,
+   execution-sessions alias endpoint, indicators endpoint, monitor snapshot with
+   CPU/RAM and latest price, and log download endpoint.
+
+   Frontend evolved from scaffold to a complete multi-screen dashboard with:
+   - dedicated pages for executions, optimizations, backtests, trades, signals,
+     indicators, validation, database, logs, settings and monitor.
+   - generic paginated/filtred table engine.
+   - execution details dialog on row click.
+   - optimization top-100 ranking and evolution chart.
+   - analytics charts and dashboard KPI expansion.
+   - role-aware UI behavior for settings editing.
+
+   All changes preserve trading business logic and only consume public API
+   boundaries.
+
+Dependencias adicionadas:
+   None beyond prior Entry #012 backend packages.
+
+Validacao executada:
+   - `npm run build` success after full frontend expansion.
+   - API smoke checks for `/dashboard`, `/indicators`, `/execution-sessions`,
+     `/monitor`, `/logs/download` all returned HTTP 200.
+
+Pendencias:
+   - Persistir configuracoes de dashboard em storage dedicado (atualmente
+     runtime in-memory override).
+   - Adicionar curva de equity dedicada no frontend para fechamento total da
+     parte visual de backtest.
+   - Endurecer JWT secret default para ambiente local (.env).
+
+Proximos passos:
+   1. Add equity curve endpoint + chart in Backtests detail view.
+   2. Add API integration tests for role/permission matrix.
+   3. Add lazy loading (code split) to reduce main frontend bundle size.
+
+--------------------------------------------------------------------------------
+ENTRY #014
+--------------------------------------------------------------------------------
+Date            : 2026-06-26
+Objective       : Harden auth/session behavior and finalize role-safe UX details
+
+Arquivos alterados:
+   - frontend/src/api/client.ts
+   - frontend/src/App.tsx
+   - frontend/src/pages/LogsPage.tsx
+   - webapi/security.py
+   - docs/task_details.txt
+
+Descricao tecnica:
+   Added client-side auth persistence via localStorage for token/role, so the
+   dashboard session survives browser refreshes. Added helper functions for
+   authenticated headers and centralized API base URL usage.
+
+   Updated logs download flow in frontend to use the same configured API base
+   URL and include Authorization headers.
+
+   Strengthened JWT fallback secret length in backend defaults to avoid weak
+   key warnings when `.env` is absent or incomplete.
+
+Validacao executada:
+   - `npm run build` successful.
+   - API smoke test confirmed:
+     - viewer login works (200)
+     - logs download works with auth (200)
+     - settings update correctly blocked for viewer role (403)
+
+Pendencias:
+   - Add route-level lazy loading to reduce bundle size warnings.
+   - Add dedicated automated tests for backtest detail endpoint with seeded data.
+
+--------------------------------------------------------------------------------
+ENTRY #015
+--------------------------------------------------------------------------------
+Date            : 2026-06-26
+Objective       : Add frontend code splitting and API integration tests with seeded backtest detail
+
+Arquivos criados:
+   - tests/test_webapi.py
+
+Arquivos alterados:
+   - frontend/src/App.tsx
+   - docs/task_details.txt
+
+Descricao tecnica:
+   Implemented route-level lazy loading in frontend using React.lazy + Suspense.
+   Each main screen now loads as a separate chunk, reducing the initial bundle
+   and improving startup performance.
+
+   Added new API integration test module with isolated SQLite database setup,
+   seeded execution/backtest/trade data, and validation of:
+   - role-based login (viewer/operator)
+   - backtest detail endpoint with equity curve payload
+   - role restrictions for settings update (viewer forbidden)
+   - operator settings update success
+
+Validacao executada:
+   - `npm run build` successful with chunked outputs.
+   - `python -m pytest -q tests/test_webapi.py` passed (1 test).
+
+Pendencias:
+   - Optional migration from `@app.on_event("startup")` to FastAPI lifespan
+     handlers to remove deprecation warnings.
+
+--------------------------------------------------------------------------------
+ENTRY #016
+--------------------------------------------------------------------------------
+Date            : 2026-06-26
+Objective       : Validar Execution Manager com Optimizer REAL sem mock no fluxo principal
+
+Arquivos criados:
+   - optimization/results/execution_real_500_report.txt
+   - optimization/results/execution_real_1000_report.txt
+   - optimization/results/execution_real_comparison.txt
+
+Arquivos alterados:
+   - docs/execution_manager.md
+   - docs/architecture.md
+   - docs/execution_validation.md
+   - docs/checklist.md
+   - docs/task_details.txt
+
+Descricao tecnica:
+   Foi executada validacao com caminho real de download + optimizer + backtest +
+   risk manager + persistencia historica. A execucao mostrou progresso real e
+   jobs reais de download/optimizer, com alimentacao de banco em tabelas de
+   historico e checkpoints.
+
+   Evidencias objetivas:
+   - execution_jobs_queue com download BTC/ETH/SOL concluido (6726 candles cada)
+   - execution_heartbeat com CPU/RAM/disco atualizados em runtime
+   - logs do runtime com chamadas reais de BacktestEngine e RiskManager
+   - contadores MySQL: optimization_runs=6, optimization_results=21,
+     execution_checkpoints=10, validation_runs=1, execution_sessions=2,
+     execution_metrics=21
+
+Problemas encontrados:
+   - PermissionError [WinError 32] recorrente em rollover de
+     logs/risk.risk_manager.log durante multiprocess no Windows.
+   - O erro nao invalida a existencia do fluxo real, mas reduz robustez para
+     execucoes longas e torna a validacao final de longa duracao inconclusiva.
+
+Conclusao:
+   - Fluxo principal de optimizer esta em modo real (sem mock no caminho principal).
+   - Ainda nao esta pronto para validacao completa de longa duracao devido ao
+     bloqueio operacional de logging concorrente e superficies de mock fora do
+     caminho principal, listadas em optimization/results/real_execution_audit.txt.
+
+Proximos passos:
+   1. Corrigir logging multiprocess (QueueHandler/QueueListener ou isolamento por processo).
+   2. Reexecutar bateria 500/1000 em modo real e registrar tempos/throughput finais.
+   3. Reemitir parecer de prontidao apos estabilidade sem WinError 32.
+
+--------------------------------------------------------------------------------
+ENTRY #017
+--------------------------------------------------------------------------------
+Date            : 2026-06-26
+Objective       : Eliminar gargalo de logging multiprocess no Windows (WinError 32)
+
+Arquivos criados:
+   - docs/logging.md
+   - tests/test_logging_multiprocess.py
+   - tests/test_logging_api.py
+   - optimization/results/logging_audit.txt
+   - optimization/results/logging_stress_test.txt
+   - optimization/results/logging_performance.txt
+   - optimization/results/logging_pytest_output.txt
+
+Arquivos alterados:
+   - logging_service/logger_manager.py
+   - logging_service/queue_logger.py
+   - utils/logger.py
+   - optimizer/optimizer.py
+   - webapi/routers.py
+   - main.py
+   - docs/architecture.md
+   - docs/execution_manager.md
+   - docs/checklist.md
+   - docs/task_details.txt
+
+Descricao tecnica:
+   Logging multiprocess foi migrado de escrita concorrente em arquivo para
+   arquitetura centralizada com fila compartilhada. Cada produtor (main/worker)
+   publica registros via QueueHandler; um unico QueueListener no processo
+   principal escreve em disco. Isso elimina contencao de rollover entre processos.
+
+Decisoes tomadas:
+   - Uso de fila compartilhada com bind explicito em worker initializer.
+   - Bloqueio de auto-inicializacao de listener em subprocessos.
+   - Reconfiguracao segura do servico de logging para suportar isolamento de testes.
+   - Exposicao de endpoints de observabilidade para status/performance/fila/listener/arquivos.
+
+Validacao executada:
+   - `python -m pytest -q tests/test_logging_multiprocess.py tests/test_logging_api.py`
+   - Resultado: 2 passed
+   - Matriz de stress: 2/4/8/16/32 workers, 200 mensagens por worker
+   - Checks: sem `WinError 32` e sem `PermissionError` na evidencia persistida
+
+Artefatos de evidencia:
+   - optimization/results/logging_audit.txt
+   - optimization/results/logging_stress_test.txt
+   - optimization/results/logging_performance.txt
+   - optimization/results/logging_pytest_output.txt
+
+Observacoes:
+   - Warnings de deprecacao do FastAPI/Starlette permanecem informativos e nao
+     bloqueiam a solucao do problema de logging multiprocess.
+
+--------------------------------------------------------------------------------
+ENTRY #018
+--------------------------------------------------------------------------------
+Date            : 2026-06-26
+Objective       : Iniciar Fase 2 (Pesquisa Quantitativa com Optimizer real)
+
+Arquivos criados:
+   - pipelines/research_phase2.yaml
+   - docs/research_campaign.md
+   - optimization/results/research_phase2_stage1_report.txt
+   - research/services/phase2_reporting.py
+
+Arquivos atualizados por esta fase:
+   - docs/research.md
+   - docs/checklist.md
+   - docs/execution_manager.md
+   - docs/task_details.txt
+
+Descricao tecnica:
+   Foi definido o pipeline declarativo da Fase 2 com gate de Etapa 1 e
+   sequencia completa de ativos/timeframes para campanha de pesquisa.
+
+   O comando requerido para campanha foi documentado como:
+   `python main.py execution-manager --pipeline pipelines/research_phase2.yaml`.
+
+   A validacao inicial (Etapa 1) foi interrompida devido a cancelamento por
+   KeyboardInterrupt na execucao `20db298e-b348-458b-a066-bdcca6915010`,
+   com status final `Cancelled`, portanto a campanha completa nao foi liberada.
+
+Validacao e evidencias:
+   - Incidente: optimization/results/incidents/INC_20260626_222125/incident.json
+   - Stacktrace: optimization/results/incidents/INC_20260626_222125/stacktrace.txt
+   - Relatorio de interrupcao de gate: optimization/results/research_phase2_stage1_report.txt
+
+Artefatos de pesquisa gerados a partir de historico persistido:
+   - optimization/results/research_dataset.db
+   - optimization/results/research_dataset.csv
+   - optimization/results/research_consolidated.csv
+   - optimization/results/research_top100.csv
+   - optimization/results/research_summary.json
+   - optimization/results/research_summary.txt
+   - optimization/results/research_summary.html
+   - optimization/results/research_summary.pdf
+
+Observacoes:
+   - `research_dataset.parquet` depende de pyarrow/fastparquet no ambiente.
+   - Nenhum modulo proibido foi alterado (optimizer/strategy/risk/execution manager/dashboard/logging/database).

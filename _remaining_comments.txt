@@ -1,0 +1,6 @@
+﻿D:\xampp\htdocs\crypto\backtesting\engine.py:118:                 # Verifica stops antes dos sinais de saida da estrategia
+D:\xampp\htdocs\crypto\database\bootstrap.py:77:     # Conecta primeiro a um schema de sistema existente; o banco alvo pode
+D:\xampp\htdocs\crypto\exchange\data_downloader.py:162:             # Limita linhas que excedem o tempo final solicitado
+D:\xampp\htdocs\crypto\exchange\data_downloader.py:172:             # Para quando atingir o limite final ou receber uma pagina parcial
+D:\xampp\htdocs\crypto\main.py:193:     # Relatorio final da carteira
+D:\xampp\htdocs\crypto\main.py:231:     # Garante que o schema e as tabelas do banco configurado existam

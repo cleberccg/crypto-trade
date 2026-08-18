@@ -1,0 +1,201 @@
+﻿# NOVA LINHA DE PESQUISA — FASE X: External Strategy Validation Lab
+
+## Contexto
+
+A infraestrutura do laboratório quantitativo está consolidada e foi validada nas fases anteriores.
+
+As pesquisas internas produziram conhecimento importante, porém ainda não identificaram uma estratégia com edge operacional suficientemente robusto para aprovação em Paper Trading e futura operação com capital real.
+
+A partir desta fase, o objetivo muda.
+
+Não iremos mais priorizar a criação de novas estratégias próprias.
+
+O foco passa a ser **identificar, importar, validar e comparar estratégias open source já utilizadas pela comunidade**, utilizando o mesmo rigor científico do laboratório.
+
+---
+
+# Objetivo
+
+Encontrar pelo menos **uma estratégia com evidências suficientes para ser classificada como PAPER_APPROVED**.
+
+Todo o restante do desenvolvimento fica subordinado a esse objetivo.
+
+---
+
+# Escopo
+
+Pesquisar estratégias em fontes confiáveis, priorizando:
+
+* GitHub
+* Projetos amplamente utilizados pela comunidade
+* Frameworks conhecidos (ex.: Freqtrade)
+* Repositórios mantidos ativamente
+* Estratégias documentadas
+* Estratégias com histórico de uso real
+
+Evitar:
+
+* Estratégias sem código-fonte
+* Estratégias com promessas irreais
+* Projetos abandonados
+* Estratégias sem documentação
+* Repositórios claramente voltados apenas para marketing
+
+---
+
+# Processo científico
+
+Para cada estratégia encontrada:
+
+## 1. Coleta
+
+Registrar:
+
+* Nome
+* Autor
+* Repositório
+* Data da última atualização
+* Popularidade (stars, forks quando disponível)
+* Framework utilizado
+* Indicadores empregados
+* Timeframes recomendados
+* Mercados recomendados
+
+---
+
+## 2. Análise técnica
+
+Responder:
+
+* Qual a lógica operacional?
+* Trend Following?
+* Mean Reversion?
+* Breakout?
+* Momentum?
+* Scalping?
+* Grid?
+* Outro?
+
+Identificar:
+
+* Entradas
+* Saídas
+* Stops
+* Targets
+* Gestão de risco
+* Dependências
+
+---
+
+## 3. Compatibilidade
+
+Avaliar o esforço para integrar ao laboratório.
+
+Classificar:
+
+* Baixo
+* Médio
+* Alto
+
+Sempre preservar a arquitetura existente.
+
+---
+
+## 4. Importação
+
+Criar um adaptador isolado para cada estratégia.
+
+Não modificar:
+
+* Optimizer
+* Validation
+* Performance Analytics
+* Edge Discovery
+* Router
+* Pipeline
+* Banco de dados
+
+Toda estratégia deve funcionar como um módulo independente.
+
+---
+
+## 5. Validação
+
+Cada estratégia importada deve passar exatamente pelo pipeline oficial:
+
+1. Backtest
+2. Robustez
+3. Cross Asset
+4. Cross Timeframe
+5. Rolling Out-of-Sample
+6. Paper Trading Experimental
+
+Sem exceções.
+
+---
+
+# Critérios de aprovação
+
+Uma estratégia somente poderá ser considerada PAPER_APPROVED se demonstrar, de forma consistente:
+
+* Profit Factor superior a 1,15
+* Expectancy positiva
+* Sharpe positivo
+* Retorno líquido positivo
+* Drawdown controlado
+* Robustez entre ativos
+* Robustez entre timeframes
+* Persistência em Rolling Out-of-Sample
+* Estabilidade durante Paper Trading
+
+Caso qualquer etapa falhe, registrar o motivo e descartar a estratégia.
+
+---
+
+# Ranking
+
+Manter um ranking permanente contendo:
+
+* Nome da estratégia
+* Origem
+* Tipo
+* Profit Factor
+* Sharpe
+* Expectancy
+* Drawdown
+* Retorno
+* Rolling OOS
+* Status
+
+Status possíveis:
+
+* REPROVADA
+* PROMISSORA
+* PAPER_CANDIDATE
+* PAPER_APPROVED
+
+---
+
+# Relatórios
+
+Gerar automaticamente:
+
+* Ranking consolidado
+* Comparativo entre estratégias
+* Motivos de aprovação ou reprovação
+* Relatório técnico individual
+* Relatório executivo consolidado
+
+---
+
+# Objetivo final
+
+O sucesso desta fase não será medido pela quantidade de estratégias pesquisadas.
+
+Será medido por uma única pergunta:
+
+**O laboratório encontrou pelo menos uma estratégia capaz de sobreviver a todo o pipeline científico e demonstrar potencial real para operação na Binance?**
+
+Somente após responder positivamente a essa pergunta o projeto voltará a investir tempo em novas arquiteturas, como Portfolio Manager, novos Routers, IA ou outras pesquisas avançadas.
+
+Priorize qualidade das evidências, reprodutibilidade e robustez estatística em todas as decisões.

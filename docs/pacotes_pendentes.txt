@@ -1,0 +1,2 @@
+﻿Pacotes pendentes (do requirements):
+(nenhum - todos instalados)

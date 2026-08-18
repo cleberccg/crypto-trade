@@ -1,0 +1,135 @@
+name: research_phase2
+version: 1
+owner: research_lab
+entrypoint:
+  command: python main.py execution-manager --pipeline pipelines/research_phase2.yaml
+constraints:
+  forbidden_changes:
+    - optimizer
+    - strategy
+    - risk_manager
+    - execution_manager
+    - dashboard
+    - logging
+    - database
+phase_1:
+  description: infraestrutura e estabilidade
+  gate: must_pass
+  stage:
+    symbol: BTC/USDT
+    timeframe: 5m
+    combinations: 10000
+    workers: 16
+  checks:
+    - heartbeat
+    - watchdog
+    - eta
+    - progress_tracker
+    - checkpoints
+    - logging
+    - dashboard
+    - database
+    - websockets
+  on_error:
+    action: interrupt_campaign
+    generate_reports:
+      - optimization/results/research_phase2_stage1_report.json
+      - optimization/results/research_phase2_stage1_report.txt
+phase_2:
+  description: campanha automatica de pesquisa
+  sequence:
+    - symbol: BTC/USDT
+      timeframe: 5m
+      combinations: 10000
+      workers: 16
+    - symbol: BTC/USDT
+      timeframe: 15m
+      combinations: 10000
+      workers: 16
+    - symbol: ETH/USDT
+      timeframe: 5m
+      combinations: 10000
+      workers: 16
+    - symbol: ETH/USDT
+      timeframe: 15m
+      combinations: 10000
+      workers: 16
+    - symbol: SOL/USDT
+      timeframe: 5m
+      combinations: 10000
+      workers: 16
+    - symbol: SOL/USDT
+      timeframe: 15m
+      combinations: 10000
+      workers: 16
+phase_3:
+  persistence:
+    fields:
+      - optimization_run
+      - execution_id
+      - strategy
+      - asset
+      - timeframe
+      - workers
+      - duration_seconds
+      - profit_factor
+      - sharpe
+      - drawdown
+      - win_rate
+      - expectancy
+      - trades
+      - best_configuration
+phase_4:
+  consolidation:
+    output: optimization/results/research_consolidated.csv
+    sort:
+      - profit_factor: desc
+      - sharpe: desc
+      - drawdown: asc
+      - expectancy: desc
+      - robustness: desc
+phase_5:
+  ranking:
+    top_n: 100
+    output: optimization/results/research_top100.csv
+phase_6:
+  robustness:
+    checks:
+      - min_trades
+      - consistency
+      - outliers
+      - inconsistent_results
+      - possible_overfitting
+      - suspicious_results
+phase_7:
+  dataset:
+    outputs:
+      - optimization/results/research_dataset.db
+      - optimization/results/research_dataset.csv
+      - optimization/results/research_dataset.parquet
+phase_8:
+  summaries:
+    outputs:
+      - optimization/results/research_summary.html
+      - optimization/results/research_summary.json
+      - optimization/results/research_summary.pdf
+      - optimization/results/research_summary.txt
+phase_9:
+  dashboard:
+    page: Research Results
+    widgets:
+      - ranking
+      - top_100
+      - filters
+      - comparisons
+      - metric_distributions
+      - heatmaps
+phase_10:
+  selection_criteria:
+    approved_label: APROVADA PARA PAPER TRADING
+    env_thresholds:
+      min_profit_factor: RESEARCH_MIN_PROFIT_FACTOR
+      min_sharpe: RESEARCH_MIN_SHARPE
+      max_drawdown: RESEARCH_MAX_DRAWDOWN
+      min_trades: RESEARCH_MIN_TRADES
+      max_overfit_score: RESEARCH_MAX_OVERFIT_SCORE

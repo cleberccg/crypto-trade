@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ScientificTradeSnapshot",
+  "type": "object",
+  "properties": {
+    "execution_id": { "type": "string" },
+    "strategy": { "type": "string" },
+    "strategy_name": { "type": ["string", "null"] },
+    "strategy_version": { "type": ["string", "null"] },
+    "campaign_id": { "type": ["string", "null"] },
+    "symbol": { "type": "string" },
+    "timeframe": { "type": "string" },
+    "side": { "type": "string", "enum": ["BUY", "SELL"] },
+    "entry_timestamp": { "type": "string", "format": "date-time" },
+    "signal_snapshot_id": { "type": ["integer", "null"] },
+    "trade_history_id": { "type": ["integer", "null"] },
+    "entry_reason": { "type": ["string", "null"] },
+    "market_regime": { "type": ["string", "null"] },
+    "trend_regime": { "type": ["string", "null"] },
+    "volatility_regime": { "type": ["string", "null"] },
+    "volume_regime": { "type": ["string", "null"] },
+    "indicator_context": {
+      "type": "object",
+      "properties": {
+        "adx": { "type": ["number", "null"] },
+        "atr": { "type": ["number", "null"] },
+        "atr_pct": { "type": ["number", "null"] },
+        "rsi": { "type": ["number", "null"] },
+        "macd": { "type": ["number", "null"] },
+        "macd_signal": { "type": ["number", "null"] },
+        "macd_hist": { "type": ["number", "null"] },
+        "ema_fast": { "type": ["number", "null"] },
+        "ema_slow": { "type": ["number", "null"] },
+        "relative_volume": { "type": ["number", "null"] },
+        "donchian_upper": { "type": ["number", "null"] },
+        "donchian_lower": { "type": ["number", "null"] },
+        "donchian_width": { "type": ["number", "null"] },
+        "candle_body": { "type": ["number", "null"] },
+        "candle_range": { "type": ["number", "null"] },
+        "spread": { "type": ["number", "null"] },
+        "distance_breakout": { "type": ["number", "null"] },
+        "distance_to_ema_fast": { "type": ["number", "null"] },
+        "distance_to_ema_slow": { "type": ["number", "null"] },
+        "close": { "type": ["number", "null"] },
+        "high": { "type": ["number", "null"] },
+        "low": { "type": ["number", "null"] },
+        "open": { "type": ["number", "null"] },
+        "volume": { "type": ["number", "null"] },
+        "volume_average": { "type": ["number", "null"] }
+      },
+      "required": ["adx", "atr", "rsi", "ema_fast", "ema_slow", "donchian_upper", "donchian_lower"]
+    },
+    "entry_snapshot": { "type": "object" },
+    "exit_snapshot": { "type": ["object", "null"] },
+    "snapshot_complete": { "type": "boolean" },
+    "missing_fields": {
+      "type": ["array", "null"],
+      "items": { "type": "string" }
+    }
+  },
+  "required": [
+    "execution_id",
+    "strategy",
+    "symbol",
+    "timeframe",
+    "side",
+    "entry_timestamp",
+    "indicator_context",
+    "entry_snapshot",
+    "snapshot_complete"
+  ]
+}
