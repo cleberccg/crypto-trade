@@ -1,0 +1,418 @@
+{
+  "cycle": "STRATEGY_DISCOVERY_CYCLE_5",
+  "generated_at": "2026-08-19T03:21:18.786596+00:00",
+  "data": {
+    "start": "2024-01-01T00:00:00+00:00",
+    "end": "2026-08-18T18:00:00+00:00",
+    "days": 960.75,
+    "source": "database candles table",
+    "symbols": [
+      "BTC/USDT",
+      "ETH/USDT",
+      "SOL/USDT",
+      "BNB/USDT"
+    ],
+    "timeframes": [
+      "5m",
+      "15m",
+      "1h"
+    ],
+    "fee_model": "0.1% per side",
+    "slippage_model": "0.0% explicit slippage; higher-cost stress at 0.15% per side"
+  },
+  "split": {
+    "DEV": {
+      "start": "2024-01-01T00:00:00+00:00",
+      "end": "2025-07-30T10:48:00+00:00"
+    },
+    "VALIDATION": {
+      "start": "2025-07-30T10:48:00+00:00",
+      "end": "2026-02-07T14:24:00+00:00"
+    },
+    "OOS": {
+      "start": "2026-02-07T14:24:00+00:00",
+      "end": "2026-08-18T18:00:00+00:00"
+    }
+  },
+  "lookahead_bias_check": {
+    "status": "PASS",
+    "lookahead_bias": "NO",
+    "rule": "signals use rows <= t and fills use open[t+1]"
+  },
+  "search_budget": {
+    "per_family": 12,
+    "total": 36,
+    "maximum_allowed": 81
+  },
+  "families": {
+    "CROSS_SECTIONAL_STRENGTH": {
+      "hypothesis": {
+        "statement": "O ativo lider do retorno recente entre os quatro pares pode continuar relativamente forte no proximo horizonte.",
+        "parameters": [
+          "roc_window",
+          "trend_window",
+          "leader_margin"
+        ],
+        "search_space": {
+          "roc_window": [
+            12,
+            24,
+            48
+          ],
+          "trend_window": [
+            24,
+            48
+          ],
+          "leader_margin": [
+            0.0,
+            0.002
+          ]
+        }
+      },
+      "configurations_tested": 12,
+      "dev_positive_configurations": 0,
+      "selected": [],
+      "best_dev": {
+        "family": "CROSS_SECTIONAL_STRENGTH",
+        "parameters": "{\"leader_margin\": 0.002, \"roc_window\": 48, \"trend_window\": 48}",
+        "dev_trades": 38287,
+        "dev_trade_class": "USABLE",
+        "dev_pf": 0.6188709863595753,
+        "dev_expectancy": -2.135116137242869,
+        "dev_max_dd": 8.150409137581256,
+        "dev_sharpe": -2.06656210682841,
+        "dev_win_rate": 0.30067646982004337,
+        "dev_net_profit": -81747.19154661773,
+        "validation_trades": null,
+        "validation_pf": null,
+        "validation_expectancy": null,
+        "oos_trades": null,
+        "oos_pf": null,
+        "oos_expectancy": null,
+        "oos_max_dd": null,
+        "oos_sharpe": null,
+        "oos_net_profit": null,
+        "best_cell_pnl_share": 1.0,
+        "generalization": "CONCENTRATED",
+        "degradation": "NOT_EVALUATED",
+        "bootstrap": {
+          "iterations": 10000,
+          "pf_ci95": null,
+          "expectancy_ci95": null
+        },
+        "cost_robustness": "NOT_EVALUATED",
+        "status": "REJECTED_DEV_FAST_GATE",
+        "reproducibility": {
+          "strategy": "DiscoveryCROSS_SECTIONAL_STRENGTH",
+          "family": "CROSS_SECTIONAL_STRENGTH",
+          "parameters": {
+            "roc_window": 48,
+            "trend_window": 48,
+            "leader_margin": 0.002
+          },
+          "symbols": [
+            "BNB/USDT",
+            "BTC/USDT",
+            "ETH/USDT",
+            "SOL/USDT"
+          ],
+          "timeframes": [
+            "15m",
+            "1h",
+            "5m"
+          ],
+          "split": "DEV",
+          "dataset_start": "2024-01-01T00:00:00+00:00",
+          "dataset_end": "2025-07-30T10:45:00+00:00",
+          "dataset_rows": 940772,
+          "dataset_hash": "9a16e73ed71b4cb3e28490215ba6942a80af1bc7fa1935d565ee43cdf9d73889",
+          "engine": "BacktestEngine",
+          "commission": 0.001,
+          "slippage": 0.0,
+          "initial_capital": 10000.0,
+          "git_commit": "94bf33dec9f92b920b791cf93a62629aa9df6a0e",
+          "execution_timestamp": "2026-08-19T01:50:43.495194+00:00",
+          "runs": [
+            {
+              "trades": 38287,
+              "pf": 0.6188709863595753,
+              "expectancy": -2.135116137242869,
+              "pnl": -81747.19154661773,
+              "drawdown": 8.150409137581256
+            },
+            {
+              "trades": 38287,
+              "pf": 0.6188709863595753,
+              "expectancy": -2.135116137242869,
+              "pnl": -81747.19154661773,
+              "drawdown": 8.150409137581256
+            },
+            {
+              "trades": 38287,
+              "pf": 0.6188709863595753,
+              "expectancy": -2.135116137242869,
+              "pnl": -81747.19154661773,
+              "drawdown": 8.150409137581256
+            }
+          ],
+          "reproducible": true
+        }
+      }
+    },
+    "IMPULSE_PULLBACK": {
+      "hypothesis": {
+        "statement": "Apos um impulso de alta, um recuo controlado ate a media seguido de recuperacao pode oferecer entrada com melhor assimetria.",
+        "parameters": [
+          "trend_window",
+          "pullback_fraction",
+          "max_holding_bars"
+        ],
+        "search_space": {
+          "trend_window": [
+            24,
+            48,
+            96
+          ],
+          "pullback_fraction": [
+            0.25,
+            0.5
+          ],
+          "max_holding_bars": [
+            6,
+            12
+          ]
+        }
+      },
+      "configurations_tested": 12,
+      "dev_positive_configurations": 0,
+      "selected": [],
+      "best_dev": {
+        "family": "IMPULSE_PULLBACK",
+        "parameters": "{\"max_holding_bars\": 12, \"pullback_fraction\": 0.5, \"trend_window\": 48}",
+        "dev_trades": 22544,
+        "dev_trade_class": "USABLE",
+        "dev_pf": 0.5456535321176657,
+        "dev_expectancy": -3.1539535798992606,
+        "dev_max_dd": 7.098836215212386,
+        "dev_sharpe": -3.0715849677020786,
+        "dev_win_rate": 0.2913413768630234,
+        "dev_net_profit": -71102.72950524894,
+        "validation_trades": null,
+        "validation_pf": null,
+        "validation_expectancy": null,
+        "oos_trades": null,
+        "oos_pf": null,
+        "oos_expectancy": null,
+        "oos_max_dd": null,
+        "oos_sharpe": null,
+        "oos_net_profit": null,
+        "best_cell_pnl_share": 1.0,
+        "generalization": "CONCENTRATED",
+        "degradation": "NOT_EVALUATED",
+        "bootstrap": {
+          "iterations": 10000,
+          "pf_ci95": null,
+          "expectancy_ci95": null
+        },
+        "cost_robustness": "NOT_EVALUATED",
+        "status": "REJECTED_DEV_FAST_GATE",
+        "reproducibility": {
+          "strategy": "DiscoveryIMPULSE_PULLBACK",
+          "family": "IMPULSE_PULLBACK",
+          "parameters": {
+            "trend_window": 48,
+            "pullback_fraction": 0.5,
+            "max_holding_bars": 12
+          },
+          "symbols": [
+            "BNB/USDT",
+            "BTC/USDT",
+            "ETH/USDT",
+            "SOL/USDT"
+          ],
+          "timeframes": [
+            "15m",
+            "1h",
+            "5m"
+          ],
+          "split": "DEV",
+          "dataset_start": "2024-01-01T00:00:00+00:00",
+          "dataset_end": "2025-07-30T10:45:00+00:00",
+          "dataset_rows": 940772,
+          "dataset_hash": "9a16e73ed71b4cb3e28490215ba6942a80af1bc7fa1935d565ee43cdf9d73889",
+          "engine": "BacktestEngine",
+          "commission": 0.001,
+          "slippage": 0.0,
+          "initial_capital": 10000.0,
+          "git_commit": "94bf33dec9f92b920b791cf93a62629aa9df6a0e",
+          "execution_timestamp": "2026-08-19T02:19:58.148825+00:00",
+          "runs": [
+            {
+              "trades": 22544,
+              "pf": 0.5456535321176657,
+              "expectancy": -3.1539535798992606,
+              "pnl": -71102.72950524894,
+              "drawdown": 7.098836215212386
+            },
+            {
+              "trades": 22544,
+              "pf": 0.5456535321176657,
+              "expectancy": -3.1539535798992606,
+              "pnl": -71102.72950524894,
+              "drawdown": 7.098836215212386
+            },
+            {
+              "trades": 22544,
+              "pf": 0.5456535321176657,
+              "expectancy": -3.1539535798992606,
+              "pnl": -71102.72950524894,
+              "drawdown": 7.098836215212386
+            }
+          ],
+          "reproducible": true
+        }
+      }
+    },
+    "VOLUME_CONFIRMED_BREAKOUT": {
+      "hypothesis": {
+        "statement": "Rompimento de maxima recente acompanhado de volume relativo acima da media pode representar participacao nova e continuidade.",
+        "parameters": [
+          "range_window",
+          "volume_ratio",
+          "breakout_buffer"
+        ],
+        "search_space": {
+          "range_window": [
+            24,
+            48,
+            96
+          ],
+          "volume_ratio": [
+            1.2,
+            1.5
+          ],
+          "breakout_buffer": [
+            0.0,
+            0.001
+          ]
+        }
+      },
+      "configurations_tested": 12,
+      "dev_positive_configurations": 0,
+      "selected": [],
+      "best_dev": {
+        "family": "VOLUME_CONFIRMED_BREAKOUT",
+        "parameters": "{\"breakout_buffer\": 0.001, \"range_window\": 96, \"volume_ratio\": 1.5}",
+        "dev_trades": 7250,
+        "dev_trade_class": "USABLE",
+        "dev_pf": 0.6093687902714888,
+        "dev_expectancy": -4.729482282726774,
+        "dev_max_dd": 3.4326399986923484,
+        "dev_sharpe": -3.1136099516746856,
+        "dev_win_rate": 0.32468965517241377,
+        "dev_net_profit": -34288.746549769116,
+        "validation_trades": null,
+        "validation_pf": null,
+        "validation_expectancy": null,
+        "oos_trades": null,
+        "oos_pf": null,
+        "oos_expectancy": null,
+        "oos_max_dd": null,
+        "oos_sharpe": null,
+        "oos_net_profit": null,
+        "best_cell_pnl_share": 1.0,
+        "generalization": "CONCENTRATED",
+        "degradation": "NOT_EVALUATED",
+        "bootstrap": {
+          "iterations": 10000,
+          "pf_ci95": null,
+          "expectancy_ci95": null
+        },
+        "cost_robustness": "NOT_EVALUATED",
+        "status": "REJECTED_DEV_FAST_GATE",
+        "reproducibility": {
+          "strategy": "DiscoveryVOLUME_CONFIRMED_BREAKOUT",
+          "family": "VOLUME_CONFIRMED_BREAKOUT",
+          "parameters": {
+            "range_window": 96,
+            "volume_ratio": 1.5,
+            "breakout_buffer": 0.001
+          },
+          "symbols": [
+            "BNB/USDT",
+            "BTC/USDT",
+            "ETH/USDT",
+            "SOL/USDT"
+          ],
+          "timeframes": [
+            "15m",
+            "1h",
+            "5m"
+          ],
+          "split": "DEV",
+          "dataset_start": "2024-01-01T00:00:00+00:00",
+          "dataset_end": "2025-07-30T10:45:00+00:00",
+          "dataset_rows": 940772,
+          "dataset_hash": "9a16e73ed71b4cb3e28490215ba6942a80af1bc7fa1935d565ee43cdf9d73889",
+          "engine": "BacktestEngine",
+          "commission": 0.001,
+          "slippage": 0.0,
+          "initial_capital": 10000.0,
+          "git_commit": "94bf33dec9f92b920b791cf93a62629aa9df6a0e",
+          "execution_timestamp": "2026-08-19T03:17:52.505124+00:00",
+          "runs": [
+            {
+              "trades": 7250,
+              "pf": 0.6093687902714888,
+              "expectancy": -4.729482282726774,
+              "pnl": -34288.746549769116,
+              "drawdown": 3.4326399986923484
+            },
+            {
+              "trades": 7250,
+              "pf": 0.6093687902714888,
+              "expectancy": -4.729482282726774,
+              "pnl": -34288.746549769116,
+              "drawdown": 3.4326399986923484
+            },
+            {
+              "trades": 7250,
+              "pf": 0.6093687902714888,
+              "expectancy": -4.729482282726774,
+              "pnl": -34288.746549769116,
+              "drawdown": 3.4326399986923484
+            }
+          ],
+          "reproducible": true
+        }
+      }
+    }
+  },
+  "decision": {
+    "scientific_decision": "ALL_FAILED",
+    "winner": null,
+    "ready_for_paper": false,
+    "beats_cdb": false,
+    "baseline_cdb": {
+      "trades": 446,
+      "pf": 1.000983,
+      "expectancy": 0.010224,
+      "max_dd": 0.070645
+    }
+  },
+  "campaign": {
+    "campaign_running": "YES",
+    "contexts_active": "12/12",
+    "contexts_stale": 0,
+    "desync": 0,
+    "cycles_advancing": "YES"
+  },
+  "files_created": [
+    "strategy_discovery_cycle5_latest.json",
+    "strategy_discovery_cycle5_latest.csv",
+    "strategy_discovery_cycle5_latest.md"
+  ],
+  "files_modified": [
+    "strategy_discovery_cycle1.py"
+  ]
+}

@@ -1,0 +1,466 @@
+{
+  "cycle": "STRATEGY_DISCOVERY_CYCLE_6",
+  "generated_at": "2026-08-19T19:56:46.471802+00:00",
+  "data": {
+    "start": "2024-01-01T00:00:00+00:00",
+    "end": "2026-08-18T18:00:00+00:00",
+    "days": 960.75,
+    "source": "database candles table",
+    "symbols": [
+      "BTC/USDT",
+      "ETH/USDT",
+      "SOL/USDT",
+      "BNB/USDT"
+    ],
+    "timeframes": [
+      "5m",
+      "15m",
+      "1h"
+    ],
+    "fee_model": "0.1% per side",
+    "slippage_model": "0.0% explicit slippage; higher-cost stress at 0.15% per side"
+  },
+  "split": {
+    "DEV": {
+      "start": "2024-01-01T00:00:00+00:00",
+      "end": "2025-07-30T10:48:00+00:00"
+    },
+    "VALIDATION": {
+      "start": "2025-07-30T10:48:00+00:00",
+      "end": "2026-02-07T14:24:00+00:00"
+    },
+    "OOS": {
+      "start": "2026-02-07T14:24:00+00:00",
+      "end": "2026-08-18T18:00:00+00:00"
+    }
+  },
+  "lookahead_bias_check": {
+    "status": "PASS",
+    "lookahead_bias": "NO",
+    "rule": "signals use rows <= t and fills use open[t+1]"
+  },
+  "search_budget": {
+    "per_family": 12,
+    "total": 36,
+    "maximum_allowed": 81
+  },
+  "families": {
+    "BTC_LEAD_LAG": {
+      "hypothesis": {
+        "statement": "Um movimento recente do BTC pode se propagar aos demais ativos com atraso quando o ativo ainda nao acompanhou o retorno do lider.",
+        "parameters": [
+          "lead_window",
+          "lead_threshold",
+          "lag_threshold"
+        ],
+        "search_space": {
+          "lead_window": [
+            6,
+            12,
+            24
+          ],
+          "lead_threshold": [
+            0.003,
+            0.006
+          ],
+          "lag_threshold": [
+            0.0,
+            0.002
+          ]
+        }
+      },
+      "configurations_tested": 12,
+      "dev_positive_configurations": 0,
+      "selected": [],
+      "best_dev": {
+        "family": "BTC_LEAD_LAG",
+        "parameters": "{\"lag_threshold\": 0.002, \"lead_threshold\": 0.006, \"lead_window\": 24}",
+        "dev_trades": 19126,
+        "dev_trade_class": "USABLE",
+        "dev_pf": 0.521990985755444,
+        "dev_expectancy": -3.492457653753271,
+        "dev_max_dd": 6.685920078742272,
+        "dev_sharpe": -3.336580691966368,
+        "dev_win_rate": 0.3204015476314964,
+        "dev_net_profit": -66796.74508568506,
+        "dev_diagnostics": {
+          "total_trades": 19126,
+          "independent_events": 14610,
+          "reentries": 4516,
+          "reentry_inflation_pct": 30.91033538672142,
+          "average_signal_duration": 4.946204825515171,
+          "average_trade_interval": 48.96060479229884,
+          "persistent_signal_reentries": 4516,
+          "pf_all": 0.521990985755444,
+          "expectancy_all": -3.492457653753271,
+          "pf_deduplicated": 0.5108471935905522,
+          "expectancy_deduplicated": -3.389622307424422,
+          "signal_episodes": 19314
+        },
+        "validation_trades": null,
+        "validation_pf": null,
+        "validation_expectancy": null,
+        "validation_diagnostics": null,
+        "oos_trades": null,
+        "oos_pf": null,
+        "oos_expectancy": null,
+        "oos_diagnostics": null,
+        "oos_max_dd": null,
+        "oos_sharpe": null,
+        "oos_net_profit": null,
+        "best_cell_pnl_share": 1.0,
+        "generalization": "CONCENTRATED",
+        "degradation": "NOT_EVALUATED",
+        "bootstrap": {
+          "iterations": 10000,
+          "pf_ci95": null,
+          "expectancy_ci95": null
+        },
+        "cost_robustness": "NOT_EVALUATED",
+        "status": "REJECTED_DEV_FAST_GATE",
+        "reproducibility": {
+          "strategy": "DiscoveryBTC_LEAD_LAG",
+          "family": "BTC_LEAD_LAG",
+          "parameters": {
+            "lead_window": 24,
+            "lead_threshold": 0.006,
+            "lag_threshold": 0.002
+          },
+          "symbols": [
+            "BNB/USDT",
+            "BTC/USDT",
+            "ETH/USDT",
+            "SOL/USDT"
+          ],
+          "timeframes": [
+            "15m",
+            "1h",
+            "5m"
+          ],
+          "split": "DEV",
+          "dataset_start": "2024-01-01T00:00:00+00:00",
+          "dataset_end": "2025-07-30T10:45:00+00:00",
+          "dataset_rows": 940772,
+          "dataset_hash": "9a16e73ed71b4cb3e28490215ba6942a80af1bc7fa1935d565ee43cdf9d73889",
+          "engine": "BacktestEngine",
+          "commission": 0.001,
+          "slippage": 0.0,
+          "initial_capital": 10000.0,
+          "git_commit": "94bf33dec9f92b920b791cf93a62629aa9df6a0e",
+          "execution_timestamp": "2026-08-19T16:26:18.434359+00:00",
+          "runs": [
+            {
+              "trades": 19126,
+              "pf": 0.521990985755444,
+              "expectancy": -3.492457653753271,
+              "pnl": -66796.74508568506,
+              "drawdown": 6.685920078742272
+            },
+            {
+              "trades": 19126,
+              "pf": 0.521990985755444,
+              "expectancy": -3.492457653753271,
+              "pnl": -66796.74508568506,
+              "drawdown": 6.685920078742272
+            },
+            {
+              "trades": 19126,
+              "pf": 0.521990985755444,
+              "expectancy": -3.492457653753271,
+              "pnl": -66796.74508568506,
+              "drawdown": 6.685920078742272
+            }
+          ],
+          "reproducible": true
+        }
+      }
+    },
+    "MARKET_BREADTH_ALIGNMENT": {
+      "hypothesis": {
+        "statement": "A continuidade de alta de um ativo pode ser mais provavel quando a participacao direcional e ampla entre os quatro pares, em vez de isolada.",
+        "parameters": [
+          "breadth_window",
+          "breadth_min_assets",
+          "own_threshold"
+        ],
+        "search_space": {
+          "breadth_window": [
+            12,
+            24,
+            48
+          ],
+          "breadth_min_assets": [
+            3,
+            4
+          ],
+          "own_threshold": [
+            0.0,
+            0.001
+          ]
+        }
+      },
+      "configurations_tested": 12,
+      "dev_positive_configurations": 0,
+      "selected": [],
+      "best_dev": {
+        "family": "MARKET_BREADTH_ALIGNMENT",
+        "parameters": "{\"breadth_min_assets\": 3, \"breadth_window\": 48, \"own_threshold\": 0.001}",
+        "dev_trades": 56228,
+        "dev_trade_class": "USABLE",
+        "dev_pf": 0.564247834305609,
+        "dev_expectancy": -1.6062027852604865,
+        "dev_max_dd": 9.042767945208944,
+        "dev_sharpe": -2.0953750780293894,
+        "dev_win_rate": 0.2582165469161272,
+        "dev_net_profit": -90313.57020962663,
+        "dev_diagnostics": {
+          "total_trades": 56228,
+          "independent_events": 31491,
+          "reentries": 24737,
+          "reentry_inflation_pct": 78.55260233082468,
+          "average_signal_duration": 10.9617903930131,
+          "average_trade_interval": 16.716699871922586,
+          "persistent_signal_reentries": 24737,
+          "pf_all": 0.564247834305609,
+          "expectancy_all": -1.6062027852604865,
+          "pf_deduplicated": 0.47235900556086885,
+          "expectancy_deduplicated": -1.6913524883848425,
+          "signal_episodes": 33892
+        },
+        "validation_trades": null,
+        "validation_pf": null,
+        "validation_expectancy": null,
+        "validation_diagnostics": null,
+        "oos_trades": null,
+        "oos_pf": null,
+        "oos_expectancy": null,
+        "oos_diagnostics": null,
+        "oos_max_dd": null,
+        "oos_sharpe": null,
+        "oos_net_profit": null,
+        "best_cell_pnl_share": 1.0,
+        "generalization": "CONCENTRATED",
+        "degradation": "NOT_EVALUATED",
+        "bootstrap": {
+          "iterations": 10000,
+          "pf_ci95": null,
+          "expectancy_ci95": null
+        },
+        "cost_robustness": "NOT_EVALUATED",
+        "status": "REJECTED_DEV_FAST_GATE",
+        "reproducibility": {
+          "strategy": "DiscoveryMARKET_BREADTH_ALIGNMENT",
+          "family": "MARKET_BREADTH_ALIGNMENT",
+          "parameters": {
+            "breadth_window": 48,
+            "breadth_min_assets": 3,
+            "own_threshold": 0.001
+          },
+          "symbols": [
+            "BNB/USDT",
+            "BTC/USDT",
+            "ETH/USDT",
+            "SOL/USDT"
+          ],
+          "timeframes": [
+            "15m",
+            "1h",
+            "5m"
+          ],
+          "split": "DEV",
+          "dataset_start": "2024-01-01T00:00:00+00:00",
+          "dataset_end": "2025-07-30T10:45:00+00:00",
+          "dataset_rows": 940772,
+          "dataset_hash": "9a16e73ed71b4cb3e28490215ba6942a80af1bc7fa1935d565ee43cdf9d73889",
+          "engine": "BacktestEngine",
+          "commission": 0.001,
+          "slippage": 0.0,
+          "initial_capital": 10000.0,
+          "git_commit": "94bf33dec9f92b920b791cf93a62629aa9df6a0e",
+          "execution_timestamp": "2026-08-19T18:01:28.315718+00:00",
+          "runs": [
+            {
+              "trades": 56228,
+              "pf": 0.564247834305609,
+              "expectancy": -1.6062027852604865,
+              "pnl": -90313.57020962663,
+              "drawdown": 9.042767945208944
+            },
+            {
+              "trades": 56228,
+              "pf": 0.564247834305609,
+              "expectancy": -1.6062027852604865,
+              "pnl": -90313.57020962663,
+              "drawdown": 9.042767945208944
+            },
+            {
+              "trades": 56228,
+              "pf": 0.564247834305609,
+              "expectancy": -1.6062027852604865,
+              "pnl": -90313.57020962663,
+              "drawdown": 9.042767945208944
+            }
+          ],
+          "reproducible": true
+        }
+      }
+    },
+    "CORRELATION_DECOUPLING": {
+      "hypothesis": {
+        "statement": "Um ativo com retorno positivo e correlacao recente baixa com o ativo de referencia pode refletir fluxo idiossincratico com persistencia curta.",
+        "parameters": [
+          "correlation_window",
+          "correlation_ceiling",
+          "own_roc_threshold"
+        ],
+        "search_space": {
+          "correlation_window": [
+            24,
+            48,
+            96
+          ],
+          "correlation_ceiling": [
+            0.4,
+            0.6
+          ],
+          "own_roc_threshold": [
+            0.002,
+            0.004
+          ]
+        }
+      },
+      "configurations_tested": 12,
+      "dev_positive_configurations": 0,
+      "selected": [],
+      "best_dev": {
+        "family": "CORRELATION_DECOUPLING",
+        "parameters": "{\"correlation_ceiling\": 0.6, \"correlation_window\": 96, \"own_roc_threshold\": 0.004}",
+        "dev_trades": 7797,
+        "dev_trade_class": "USABLE",
+        "dev_pf": 0.5570195863993596,
+        "dev_expectancy": -4.303856134045078,
+        "dev_max_dd": 3.359274602390069,
+        "dev_sharpe": -3.0745013473526903,
+        "dev_win_rate": 0.29293317942798514,
+        "dev_net_profit": -33557.166277149474,
+        "dev_diagnostics": {
+          "total_trades": 7797,
+          "independent_events": 3285,
+          "reentries": 4512,
+          "reentry_inflation_pct": 137.35159817351598,
+          "average_signal_duration": 15.559071191630517,
+          "average_trade_interval": 119.9490044958253,
+          "persistent_signal_reentries": 4512,
+          "pf_all": 0.5570195863993596,
+          "expectancy_all": -4.303856134045078,
+          "pf_deduplicated": 0.44845512002602406,
+          "expectancy_deduplicated": -4.376096725240083,
+          "signal_episodes": 3919
+        },
+        "validation_trades": null,
+        "validation_pf": null,
+        "validation_expectancy": null,
+        "validation_diagnostics": null,
+        "oos_trades": null,
+        "oos_pf": null,
+        "oos_expectancy": null,
+        "oos_diagnostics": null,
+        "oos_max_dd": null,
+        "oos_sharpe": null,
+        "oos_net_profit": null,
+        "best_cell_pnl_share": 1.0,
+        "generalization": "CONCENTRATED",
+        "degradation": "NOT_EVALUATED",
+        "bootstrap": {
+          "iterations": 10000,
+          "pf_ci95": null,
+          "expectancy_ci95": null
+        },
+        "cost_robustness": "NOT_EVALUATED",
+        "status": "REJECTED_DEV_FAST_GATE",
+        "reproducibility": {
+          "strategy": "DiscoveryCORRELATION_DECOUPLING",
+          "family": "CORRELATION_DECOUPLING",
+          "parameters": {
+            "correlation_window": 96,
+            "correlation_ceiling": 0.6,
+            "own_roc_threshold": 0.004
+          },
+          "symbols": [
+            "BNB/USDT",
+            "BTC/USDT",
+            "ETH/USDT",
+            "SOL/USDT"
+          ],
+          "timeframes": [
+            "15m",
+            "1h",
+            "5m"
+          ],
+          "split": "DEV",
+          "dataset_start": "2024-01-01T00:00:00+00:00",
+          "dataset_end": "2025-07-30T10:45:00+00:00",
+          "dataset_rows": 940772,
+          "dataset_hash": "9a16e73ed71b4cb3e28490215ba6942a80af1bc7fa1935d565ee43cdf9d73889",
+          "engine": "BacktestEngine",
+          "commission": 0.001,
+          "slippage": 0.0,
+          "initial_capital": 10000.0,
+          "git_commit": "94bf33dec9f92b920b791cf93a62629aa9df6a0e",
+          "execution_timestamp": "2026-08-19T19:51:55.883226+00:00",
+          "runs": [
+            {
+              "trades": 7797,
+              "pf": 0.5570195863993596,
+              "expectancy": -4.303856134045078,
+              "pnl": -33557.166277149474,
+              "drawdown": 3.359274602390069
+            },
+            {
+              "trades": 7797,
+              "pf": 0.5570195863993596,
+              "expectancy": -4.303856134045078,
+              "pnl": -33557.166277149474,
+              "drawdown": 3.359274602390069
+            },
+            {
+              "trades": 7797,
+              "pf": 0.5570195863993596,
+              "expectancy": -4.303856134045078,
+              "pnl": -33557.166277149474,
+              "drawdown": 3.359274602390069
+            }
+          ],
+          "reproducible": true
+        }
+      }
+    }
+  },
+  "decision": {
+    "scientific_decision": "ALL_FAILED",
+    "winner": null,
+    "ready_for_paper": false,
+    "beats_cdb": false,
+    "baseline_cdb": {
+      "trades": 446,
+      "pf": 1.000983,
+      "expectancy": 0.010224,
+      "max_dd": 0.070645
+    }
+  },
+  "campaign": {
+    "campaign_running": "YES",
+    "contexts_active": "12/12",
+    "contexts_stale": 0,
+    "desync": 0,
+    "cycles_advancing": "YES"
+  },
+  "files_created": [
+    "strategy_discovery_cycle6_latest.json",
+    "strategy_discovery_cycle6_latest.csv",
+    "strategy_discovery_cycle6_latest.md"
+  ],
+  "files_modified": [
+    "strategy_discovery_cycle1.py"
+  ]
+}

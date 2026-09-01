@@ -6,10 +6,12 @@ pipelines are independent from execution/testnet settings.
 """
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import Any
 
 import ccxt
 import pandas as pd
+import requests
 
 from exchange.base_exchange import BaseExchange
 from utils.helpers import normalize_ohlcv_dataframe, retry, timeit
@@ -101,6 +103,79 @@ class BinanceMarketDataClient(BaseExchange):
     def fetch_order_book(self, symbol: str, limit: int = 20) -> dict[str, Any]:
         symbol = validate_symbol(symbol)
         return self._client.fetch_order_book(symbol, limit=limit)
+
+    @retry(max_attempts=3, delay_seconds=2.0)
+    def fetch_aggtrades_page(
+        self,
+        symbol: str,
+        start: datetime,
+        end: datetime,
+        from_id: int | None = None,
+        limit: int = 1000,
+    ) -> list[dict[str, Any]]:
+        """Fetch one deterministic page of Binance Spot aggregated trades."""
+        symbol = validate_symbol(symbol)
+        params: dict[str, Any] = {"symbol": symbol.replace("/", ""), "limit": min(1000, max(1, int(limit)))}
+        if from_id is not None:
+            params["fromId"] = int(from_id)
+        else:
+            params["startTime"] = int(start.astimezone(timezone.utc).timestamp() * 1000)
+            params["endTime"] = int(end.astimezone(timezone.utc).timestamp() * 1000)
+        response = requests.get(
+            "https://api.binance.com/api/v3/aggTrades",
+            params=params,
+            timeout=30,
+        )
+        response.raise_for_status()
+        payload = response.json()
+        if not isinstance(payload, list):
+            raise RuntimeError(f"Unexpected aggTrades response: {payload}")
+        return payload
+
+    @retry(max_attempts=3, delay_seconds=2.0)
+    def fetch_extended_klines(
+        self,
+        symbol: str,
+        timeframe: str,
+        start: datetime,
+        end: datetime,
+    ) -> pd.DataFrame:
+        """Fetch Binance Spot klines including trade-flow fields.
+
+        The response is still candle-based and uses only closed klines. The
+        extra fields are quote volume, trade count and taker-buy volumes.
+        """
+        symbol = validate_symbol(symbol)
+        timeframe = validate_timeframe(timeframe)
+        interval_ms = int((pd.Timedelta(timeframe).total_seconds()) * 1000)
+        cursor = int(start.astimezone(timezone.utc).timestamp() * 1000)
+        end_ms = int(end.astimezone(timezone.utc).timestamp() * 1000)
+        rows: list[list[Any]] = []
+        session = requests.Session()
+        while cursor <= end_ms:
+            response = session.get(
+                "https://api.binance.com/api/v3/klines",
+                params={"symbol": symbol.replace("/", ""), "interval": timeframe, "startTime": cursor, "endTime": end_ms, "limit": 1000},
+                timeout=30,
+            )
+            response.raise_for_status()
+            batch = response.json()
+            if not batch:
+                break
+            rows.extend(batch)
+            last_open = int(batch[-1][0])
+            if len(batch) < 1000 or last_open >= end_ms:
+                break
+            cursor = last_open + interval_ms
+        columns = ["open_time", "open", "high", "low", "close", "volume", "close_time", "quote_volume", "trade_count", "taker_buy_base_volume", "taker_buy_quote_volume", "ignore"]
+        frame = pd.DataFrame(rows, columns=columns)
+        if frame.empty:
+            return frame
+        frame["open_time"] = pd.to_datetime(frame["open_time"], unit="ms", utc=True)
+        frame["close_time"] = pd.to_datetime(frame["close_time"], unit="ms", utc=True)
+        numeric = [column for column in columns if column not in {"open_time", "close_time", "ignore"}]
+        frame[numeric] = frame[numeric].apply(pd.to_numeric, errors="coerce")
+        return frame.drop(columns=["ignore"]).drop_duplicates("open_time").set_index("open_time").sort_index()
 
     def fetch_balance(self) -> dict[str, Any]:
         raise RuntimeError("Read-only market data client does not expose account balance.")

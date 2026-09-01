@@ -1,0 +1,253 @@
+{
+  "cycle": "STRATEGY_DISCOVERY_CYCLE_3",
+  "generated_at": "2026-08-18T23:40:11.190276+00:00",
+  "data": {
+    "start": "2024-01-01T00:00:00+00:00",
+    "end": "2026-08-18T18:00:00+00:00",
+    "days": 960.75,
+    "source": "database candles table",
+    "symbols": [
+      "BTC/USDT",
+      "ETH/USDT",
+      "SOL/USDT",
+      "BNB/USDT"
+    ],
+    "timeframes": [
+      "5m",
+      "15m",
+      "1h"
+    ],
+    "fee_model": "0.1% per side",
+    "slippage_model": "0.0% explicit slippage; higher-cost stress at 0.15% per side"
+  },
+  "split": {
+    "DEV": {
+      "start": "2024-01-01T00:00:00+00:00",
+      "end": "2025-07-30T10:48:00+00:00"
+    },
+    "VALIDATION": {
+      "start": "2025-07-30T10:48:00+00:00",
+      "end": "2026-02-07T14:24:00+00:00"
+    },
+    "OOS": {
+      "start": "2026-02-07T14:24:00+00:00",
+      "end": "2026-08-18T18:00:00+00:00"
+    }
+  },
+  "lookahead_bias_check": {
+    "status": "PASS",
+    "lookahead_bias": "NO",
+    "rule": "signals use rows <= t and fills use open[t+1]"
+  },
+  "search_budget": {
+    "per_family": 12,
+    "total": 36,
+    "maximum_allowed": 81
+  },
+  "families": {
+    "MARKET_STRUCTURE": {
+      "hypothesis": {
+        "statement": "A quebra confirmada de uma maxima estrutural recente, acima de uma media de tendencia, pode iniciar continuacao direcional.",
+        "parameters": [
+          "swing_window",
+          "trend_window",
+          "breakout_buffer"
+        ],
+        "search_space": {
+          "swing_window": [
+            24,
+            48,
+            96
+          ],
+          "trend_window": [
+            24,
+            48
+          ],
+          "breakout_buffer": [
+            0.0,
+            0.001
+          ]
+        }
+      },
+      "configurations_tested": 12,
+      "dev_positive_configurations": 0,
+      "selected": [],
+      "best_dev": {
+        "family": "MARKET_STRUCTURE",
+        "parameters": "{\"breakout_buffer\": 0.001, \"swing_window\": 96, \"trend_window\": 48}",
+        "dev_trades": 8080,
+        "dev_trade_class": "USABLE",
+        "dev_pf": 0.5962501509399651,
+        "dev_expectancy": -4.758947058875955,
+        "dev_max_dd": 3.8473133094959824,
+        "dev_sharpe": -3.2011186098841855,
+        "dev_win_rate": 0.3193069306930693,
+        "dev_net_profit": -38452.292235717716,
+        "validation_trades": null,
+        "validation_pf": null,
+        "validation_expectancy": null,
+        "oos_trades": null,
+        "oos_pf": null,
+        "oos_expectancy": null,
+        "oos_max_dd": null,
+        "oos_sharpe": null,
+        "oos_net_profit": null,
+        "best_cell_pnl_share": 1.0,
+        "generalization": "CONCENTRATED",
+        "degradation": "NOT_EVALUATED",
+        "bootstrap": {
+          "iterations": 10000,
+          "pf_ci95": null,
+          "expectancy_ci95": null
+        },
+        "cost_robustness": "NOT_EVALUATED",
+        "status": "REJECTED_DEV_FAST_GATE"
+      }
+    },
+    "VWAP": {
+      "hypothesis": {
+        "statement": "Deslocamentos negativos relevantes em relacao ao VWAP diario tendem a retornar ao VWAP quando nao ha ruptura estrutural persistente.",
+        "parameters": [
+          "deviation_threshold",
+          "max_holding_bars",
+          "trend_filter"
+        ],
+        "search_space": {
+          "deviation_threshold": [
+            0.002,
+            0.004,
+            0.006
+          ],
+          "max_holding_bars": [
+            6,
+            12
+          ],
+          "trend_filter": [
+            0.0,
+            0.002
+          ]
+        }
+      },
+      "configurations_tested": 12,
+      "dev_positive_configurations": 0,
+      "selected": [],
+      "best_dev": {
+        "family": "VWAP",
+        "parameters": "{\"deviation_threshold\": 0.006, \"max_holding_bars\": 12, \"trend_filter\": 0.0}",
+        "dev_trades": 8957,
+        "dev_trade_class": "USABLE",
+        "dev_pf": 0.5005155291516735,
+        "dev_expectancy": -4.628949285659229,
+        "dev_max_dd": 4.134093254111453,
+        "dev_sharpe": -3.9904740240974435,
+        "dev_win_rate": 0.36954337389751035,
+        "dev_net_profit": -41461.49875164971,
+        "validation_trades": null,
+        "validation_pf": null,
+        "validation_expectancy": null,
+        "oos_trades": null,
+        "oos_pf": null,
+        "oos_expectancy": null,
+        "oos_max_dd": null,
+        "oos_sharpe": null,
+        "oos_net_profit": null,
+        "best_cell_pnl_share": 1.0,
+        "generalization": "CONCENTRATED",
+        "degradation": "NOT_EVALUATED",
+        "bootstrap": {
+          "iterations": 10000,
+          "pf_ci95": null,
+          "expectancy_ci95": null
+        },
+        "cost_robustness": "NOT_EVALUATED",
+        "status": "REJECTED_DEV_FAST_GATE"
+      }
+    },
+    "RELATIVE_STRENGTH": {
+      "hypothesis": {
+        "statement": "Ativos com forca relativa persistente acima da propria tendencia media podem continuar performando no horizonte curto.",
+        "parameters": [
+          "roc_window",
+          "trend_window",
+          "strength_threshold"
+        ],
+        "search_space": {
+          "roc_window": [
+            12,
+            24,
+            48
+          ],
+          "trend_window": [
+            24,
+            48
+          ],
+          "strength_threshold": [
+            0.0,
+            0.002
+          ]
+        }
+      },
+      "configurations_tested": 12,
+      "dev_positive_configurations": 0,
+      "selected": [],
+      "best_dev": {
+        "family": "RELATIVE_STRENGTH",
+        "parameters": "{\"roc_window\": 48, \"strength_threshold\": 0.002, \"trend_window\": 48}",
+        "dev_trades": 52289,
+        "dev_trade_class": "USABLE",
+        "dev_pf": 0.6130377110887119,
+        "dev_expectancy": -1.7330551124914113,
+        "dev_max_dd": 9.070557776713063,
+        "dev_sharpe": -1.9387566117556323,
+        "dev_win_rate": 0.295052496701027,
+        "dev_net_profit": -90619.7187770634,
+        "validation_trades": null,
+        "validation_pf": null,
+        "validation_expectancy": null,
+        "oos_trades": null,
+        "oos_pf": null,
+        "oos_expectancy": null,
+        "oos_max_dd": null,
+        "oos_sharpe": null,
+        "oos_net_profit": null,
+        "best_cell_pnl_share": 1.0,
+        "generalization": "CONCENTRATED",
+        "degradation": "NOT_EVALUATED",
+        "bootstrap": {
+          "iterations": 10000,
+          "pf_ci95": null,
+          "expectancy_ci95": null
+        },
+        "cost_robustness": "NOT_EVALUATED",
+        "status": "REJECTED_DEV_FAST_GATE"
+      }
+    }
+  },
+  "decision": {
+    "scientific_decision": "ALL_FAILED",
+    "winner": null,
+    "ready_for_paper": false,
+    "beats_cdb": false,
+    "baseline_cdb": {
+      "trades": 446,
+      "pf": 1.000983,
+      "expectancy": 0.010224,
+      "max_dd": 0.070645
+    }
+  },
+  "campaign": {
+    "campaign_running": "YES",
+    "contexts_active": "12/12",
+    "contexts_stale": 0,
+    "desync": 0,
+    "cycles_advancing": "YES"
+  },
+  "files_created": [
+    "strategy_discovery_cycle3_latest.json",
+    "strategy_discovery_cycle3_latest.csv",
+    "strategy_discovery_cycle3_latest.md"
+  ],
+  "files_modified": [
+    "strategy_discovery_cycle1.py"
+  ]
+}

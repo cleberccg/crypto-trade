@@ -1,0 +1,42 @@
+{
+  "dataset_manifest_hash": "f5b3f9ce0566d2d3be7a3220483017a64dcda0c0b10c34bf32964d3c8f8b4a55",
+  "hypotheses": {
+    "REGIME_TRANSITION|regime_transition_signal|0.5|long_above": {
+      "status": "REJECTED_DEV",
+      "family": "REGIME_TRANSITION",
+      "dev_cells": 30
+    },
+    "REGIME_TRANSITION|regime_transition_signal|-0.5|long_below": {
+      "status": "REJECTED_DEV",
+      "family": "REGIME_TRANSITION",
+      "dev_cells": 30
+    },
+    "BTC_ETH_FLOW_LEADLAG|btc_eth_leadlag_signal|1.0|long_above": {
+      "status": "REJECTED_DEV",
+      "family": "BTC_ETH_FLOW_LEADLAG",
+      "dev_cells": 90
+    },
+    "BTC_ETH_FLOW_LEADLAG|btc_eth_leadlag_signal|-1.0|long_below": {
+      "status": "REJECTED_DEV",
+      "family": "BTC_ETH_FLOW_LEADLAG",
+      "dev_cells": 90
+    },
+    "BTC_ETH_FLOW_LEADLAG|btc_eth_leadlag_signal|1.5|long_above": {
+      "status": "REJECTED_DEV",
+      "family": "BTC_ETH_FLOW_LEADLAG",
+      "dev_cells": 90
+    },
+    "BTC_ETH_FLOW_LEADLAG|btc_eth_leadlag_signal|-1.5|long_below": {
+      "status": "REJECTED_DEV",
+      "family": "BTC_ETH_FLOW_LEADLAG",
+      "dev_cells": 90
+    }
+  },
+  "candidates": [],
+  "totals": {
+    "hypotheses_tested": 6,
+    "configurations_tested": 6,
+    "cells_evaluated": 420
+  },
+  "status": "SEARCH_SPACE_EXHAUSTED"
+}

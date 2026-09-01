@@ -1,0 +1,1327 @@
+{
+  "etapa1_splits": {
+    "BTC_4H_SMA200_TREND / APEX_NO_PYRAMID / QUATTRO_DONCHIAN (BTC 4h frame)": {
+      "DEV_START": "2017-08-17 04:00:00+00:00",
+      "DEV_END": "2022-01-24 04:00:00+00:00",
+      "VALIDATION_START": "2022-01-24 08:00:00+00:00",
+      "VALIDATION_END": "2024-12-08 04:00:00+00:00",
+      "OOS_START": "2024-12-08 08:00:00+00:00",
+      "OOS_END": "2026-05-31 20:00:00+00:00",
+      "overlap_detected": false,
+      "label": "btc_4h"
+    },
+    "5EMA_WEEKLY_FILTER (BTC weekly frame)": {
+      "DEV_START": "2017-08-14 00:00:00+00:00",
+      "DEV_END": "2022-01-17 00:00:00+00:00",
+      "VALIDATION_START": "2022-01-24 00:00:00+00:00",
+      "VALIDATION_END": "2024-11-25 00:00:00+00:00",
+      "OOS_START": "2024-12-02 00:00:00+00:00",
+      "OOS_END": "2026-05-25 00:00:00+00:00",
+      "overlap_detected": false,
+      "label": "btc_weekly"
+    },
+    "MULTI_ASSET_VOL_NORMALIZED_TREND (BTC daily frame)": {
+      "DEV_START": "2017-08-17 00:00:00+00:00",
+      "DEV_END": "2022-01-22 00:00:00+00:00",
+      "VALIDATION_START": "2022-01-23 00:00:00+00:00",
+      "VALIDATION_END": "2024-12-06 00:00:00+00:00",
+      "OOS_START": "2024-12-07 00:00:00+00:00",
+      "OOS_END": "2026-05-31 00:00:00+00:00",
+      "overlap_detected": false,
+      "label": "btc_daily"
+    }
+  },
+  "etapa1_structural_notes": {
+    "lookahead_guard": "All rolling/breakout features (donchian_high, breakout_high, trail_low) use .rolling(...).shift(1); SMA/EMA use only bars up to and including the current bar (standard, no future leak); daily/weekly filter merges use pandas.merge_asof(direction='backward') so a daily/weekly bar is only visible after it has closed.",
+    "same_bar_execution_caveat": "Entries/exits execute at the CLOSE of the signal bar (platform convention shared by every strategy already on this platform, not unique to this experiment) -- this is an idealization (zero-latency reaction at candle close), NOT a lookahead bug: the signal is computed from data already fully known at that close.",
+    "overlap_check": "no overlap detected in any of the 3 frames (see overlap_detected=False per split above); DEV/VALIDATION/OOS are contiguous, non-shuffled, temporal slices."
+  },
+  "etapa2_regime": {
+    "DEV": {
+      "split": "DEV",
+      "start": "2017-08-18 00:00:00+00:00",
+      "end": "2022-01-24 00:00:00+00:00",
+      "bars": 1621,
+      "btc_return": 7.9233,
+      "annualized_volatility": 0.8173,
+      "max_drawdown": 0.8319,
+      "adx_mean": 30.28,
+      "trend_strength": "STRONG",
+      "percent_time_above_sma200": 0.5595,
+      "number_of_sma200_crosses": 44,
+      "directional_efficiency": 0.0382,
+      "regime_classification": "TRENDING_BULL"
+    },
+    "VALIDATION": {
+      "split": "VALIDATION",
+      "start": "2022-01-25 00:00:00+00:00",
+      "end": "2024-12-08 00:00:00+00:00",
+      "bars": 540,
+      "btc_return": 1.7358,
+      "annualized_volatility": 0.7989,
+      "max_drawdown": 0.6001,
+      "adx_mean": 28.89,
+      "trend_strength": "STRONG",
+      "percent_time_above_sma200": 0.6,
+      "number_of_sma200_crosses": 27,
+      "directional_efficiency": 0.1022,
+      "regime_classification": "TRENDING_BULL"
+    },
+    "OOS": {
+      "split": "OOS",
+      "start": "2024-12-09 00:00:00+00:00",
+      "end": "2026-05-31 00:00:00+00:00",
+      "bars": 539,
+      "btc_return": -0.2426,
+      "annualized_volatility": 0.4428,
+      "max_drawdown": 0.4953,
+      "adx_mean": 26.15,
+      "trend_strength": "STRONG",
+      "percent_time_above_sma200": 0.41,
+      "number_of_sma200_crosses": 16,
+      "directional_efficiency": 0.0293,
+      "regime_classification": "TRENDING_BEAR"
+    }
+  },
+  "etapa345_per_strategy": {
+    "BTC_4H_SMA200_TREND": {
+      "splits": {
+        "DEV": {
+          "trades": 131,
+          "gross_pf": 2.7344,
+          "net_pf": 2.4808,
+          "net_pf_stress": 2.327,
+          "gross_expectancy": 3.1924,
+          "net_expectancy": 2.9832,
+          "net_expectancy_stress": 2.8356,
+          "total_fees": 27.4,
+          "turnover_x_capital": 1.349,
+          "sharpe": 0.336,
+          "max_drawdown_pct": 0.0211,
+          "cost_classification": "EDGE_PRESENT_NET_OF_COSTS"
+        },
+        "VALIDATION": {
+          "trades": 32,
+          "gross_pf": 4.3979,
+          "net_pf": 3.8531,
+          "net_pf_stress": 3.5412,
+          "gross_expectancy": 4.1007,
+          "net_expectancy": 3.8932,
+          "net_expectancy_stress": 3.7482,
+          "total_fees": 6.64,
+          "turnover_x_capital": 0.325,
+          "sharpe": 0.485,
+          "max_drawdown_pct": 0.0039,
+          "cost_classification": "EDGE_PRESENT_NET_OF_COSTS"
+        },
+        "OOS": {
+          "trades": 40,
+          "gross_pf": 0.9727,
+          "net_pf": 0.8028,
+          "net_pf_stress": 0.7121,
+          "gross_expectancy": -0.0271,
+          "net_expectancy": -0.2291,
+          "net_expectancy_stress": -0.3703,
+          "total_fees": 8.08,
+          "turnover_x_capital": 0.404,
+          "sharpe": -0.082,
+          "max_drawdown_pct": 0.0035,
+          "cost_classification": "NO_GROSS_EDGE",
+          "wins": 6,
+          "losses": 34,
+          "avg_win": 6.22,
+          "avg_loss": -1.37,
+          "median_win": 3.83,
+          "median_loss": -1.1,
+          "best_trade": 21.22,
+          "worst_trade": -5.13,
+          "profit_concentration_top1_of_gross_profit": 0.569,
+          "avg_duration_bars": 35.1,
+          "exit_reasons": {
+            "sma_flip": 40
+          }
+        }
+      },
+      "oos_monthly": [
+        {
+          "month": "2025-02",
+          "trades": 2,
+          "net_pnl": -3.5847,
+          "gross_pnl": -3.1838,
+          "market_return": -0.1618
+        },
+        {
+          "month": "2025-03",
+          "trades": 2,
+          "net_pnl": -4.2386,
+          "gross_pnl": -3.8386,
+          "market_return": -0.0408
+        },
+        {
+          "month": "2025-04",
+          "trades": 4,
+          "net_pnl": -8.0991,
+          "gross_pnl": -7.2993,
+          "market_return": 0.1058
+        },
+        {
+          "month": "2025-06",
+          "trades": 5,
+          "net_pnl": 18.2018,
+          "gross_pnl": 19.2312,
+          "market_return": 0.0142
+        },
+        {
+          "month": "2025-07",
+          "trades": 1,
+          "net_pnl": -0.8529,
+          "gross_pnl": -0.6514,
+          "market_return": 0.0954
+        },
+        {
+          "month": "2025-08",
+          "trades": 7,
+          "net_pnl": 2.9335,
+          "gross_pnl": 4.3529,
+          "market_return": -0.0446
+        },
+        {
+          "month": "2025-09",
+          "trades": 4,
+          "net_pnl": -2.9483,
+          "gross_pnl": -2.1421,
+          "market_return": 0.0441
+        },
+        {
+          "month": "2025-10",
+          "trades": 3,
+          "net_pnl": -2.5436,
+          "gross_pnl": -1.9394,
+          "market_return": -0.0758
+        },
+        {
+          "month": "2025-12",
+          "trades": 3,
+          "net_pnl": -6.7963,
+          "gross_pnl": -6.1966,
+          "market_return": 0.0158
+        },
+        {
+          "month": "2026-01",
+          "trades": 1,
+          "net_pnl": 0.0491,
+          "gross_pnl": 0.2512,
+          "market_return": -0.1137
+        },
+        {
+          "month": "2026-03",
+          "trades": 4,
+          "net_pnl": -6.529,
+          "gross_pnl": -5.7275,
+          "market_return": 0.0381
+        },
+        {
+          "month": "2026-04",
+          "trades": 1,
+          "net_pnl": -1.3035,
+          "gross_pnl": -1.1029,
+          "market_return": 0.1209
+        },
+        {
+          "month": "2026-05",
+          "trades": 3,
+          "net_pnl": 6.5487,
+          "gross_pnl": 7.1613,
+          "market_return": -0.0582
+        }
+      ]
+    },
+    "APEX_NO_PYRAMID_BTC": {
+      "splits": {
+        "DEV": {
+          "trades": 10,
+          "gross_pf": 3.8656,
+          "net_pf": 3.7526,
+          "net_pf_stress": 3.6764,
+          "gross_expectancy": 10.8934,
+          "net_expectancy": 10.6787,
+          "net_expectancy_stress": 10.5306,
+          "total_fees": 2.15,
+          "turnover_x_capital": 0.102,
+          "sharpe": 0.262,
+          "max_drawdown_pct": 0.0079,
+          "cost_classification": "EDGE_PRESENT_NET_OF_COSTS"
+        },
+        "VALIDATION": {
+          "trades": 3,
+          "gross_pf": 11.0929,
+          "net_pf": 10.6376,
+          "net_pf_stress": 10.337,
+          "gross_expectancy": 18.9477,
+          "net_expectancy": 18.7263,
+          "net_expectancy_stress": 18.5749,
+          "total_fees": 0.66,
+          "turnover_x_capital": 0.03,
+          "sharpe": 0.634,
+          "max_drawdown_pct": 0.0018,
+          "cost_classification": "EDGE_PRESENT_NET_OF_COSTS"
+        },
+        "OOS": {
+          "trades": 2,
+          "gross_pf": 0.6718,
+          "net_pf": 0.6016,
+          "net_pf_stress": 0.5558,
+          "gross_expectancy": -0.7571,
+          "net_expectancy": -0.9584,
+          "net_expectancy_stress": -1.0994,
+          "total_fees": 0.4,
+          "turnover_x_capital": 0.02,
+          "sharpe": -0.098,
+          "max_drawdown_pct": 0.001,
+          "cost_classification": "NO_GROSS_EDGE",
+          "wins": 1,
+          "losses": 1,
+          "avg_win": 2.89,
+          "avg_loss": -4.81,
+          "median_win": 2.89,
+          "median_loss": -4.81,
+          "best_trade": 2.89,
+          "worst_trade": -4.81,
+          "profit_concentration_top1_of_gross_profit": 1.0,
+          "avg_duration_bars": 29.5,
+          "exit_reasons": {
+            "trail_20bar_low": 2
+          }
+        }
+      },
+      "oos_monthly": [
+        {
+          "month": "2025-07",
+          "trades": 1,
+          "net_pnl": 2.8947,
+          "gross_pnl": 3.0998,
+          "market_return": 0.0954
+        },
+        {
+          "month": "2025-10",
+          "trades": 1,
+          "net_pnl": -4.8114,
+          "gross_pnl": -4.6139,
+          "market_return": -0.0758
+        }
+      ]
+    },
+    "QUATTRO_DONCHIAN_BTC": {
+      "splits": {
+        "DEV": {
+          "trades": 85,
+          "gross_pf": 2.3404,
+          "net_pf": 2.1692,
+          "net_pf_stress": 2.0593,
+          "gross_expectancy": 63.3003,
+          "net_expectancy": 58.2826,
+          "net_expectancy_stress": 54.3118,
+          "total_fees": 426.51,
+          "turnover_x_capital": 21.056,
+          "sharpe": 0.421,
+          "max_drawdown_pct": 0.1092,
+          "cost_classification": "EDGE_PRESENT_NET_OF_COSTS"
+        },
+        "VALIDATION": {
+          "trades": 32,
+          "gross_pf": 2.179,
+          "net_pf": 1.9157,
+          "net_pf_stress": 1.7558,
+          "gross_expectancy": 28.7454,
+          "net_expectancy": 24.6033,
+          "net_expectancy_stress": 21.6229,
+          "total_fees": 132.54,
+          "turnover_x_capital": 6.581,
+          "sharpe": 0.353,
+          "max_drawdown_pct": 0.0436,
+          "cost_classification": "EDGE_PRESENT_NET_OF_COSTS"
+        },
+        "OOS": {
+          "trades": 21,
+          "gross_pf": 0.874,
+          "net_pf": 0.7469,
+          "net_pf_stress": 0.6721,
+          "gross_expectancy": -3.233,
+          "net_expectancy": -7.2077,
+          "net_expectancy_stress": -9.9673,
+          "total_fees": 83.47,
+          "turnover_x_capital": 4.177,
+          "sharpe": -0.158,
+          "max_drawdown_pct": 0.0287,
+          "cost_classification": "NO_GROSS_EDGE",
+          "wins": 6,
+          "losses": 15,
+          "avg_win": 74.46,
+          "avg_loss": -39.87,
+          "median_win": 45.34,
+          "median_loss": -39.77,
+          "best_trade": 165.59,
+          "worst_trade": -93.84,
+          "profit_concentration_top1_of_gross_profit": 0.371,
+          "avg_duration_bars": 16.3,
+          "exit_reasons": {
+            "chandelier_2atr": 21
+          }
+        }
+      },
+      "oos_monthly": [
+        {
+          "month": "2025-05",
+          "trades": 3,
+          "net_pnl": -24.2342,
+          "gross_pnl": -12.2221,
+          "market_return": 0.084
+        },
+        {
+          "month": "2025-06",
+          "trades": 3,
+          "net_pnl": -39.0459,
+          "gross_pnl": -27.1215,
+          "market_return": 0.0142
+        },
+        {
+          "month": "2025-07",
+          "trades": 3,
+          "net_pnl": 82.7046,
+          "gross_pnl": 94.6946,
+          "market_return": 0.0954
+        },
+        {
+          "month": "2025-08",
+          "trades": 3,
+          "net_pnl": -69.485,
+          "gross_pnl": -57.5181,
+          "market_return": -0.0446
+        },
+        {
+          "month": "2025-09",
+          "trades": 5,
+          "net_pnl": -121.0318,
+          "gross_pnl": -101.3468,
+          "market_return": 0.0441
+        },
+        {
+          "month": "2025-10",
+          "trades": 4,
+          "net_pnl": 19.7298,
+          "gross_pnl": 35.6198,
+          "market_return": -0.0758
+        }
+      ]
+    },
+    "5EMA_WEEKLY_FILTER_BTC": {
+      "splits": {
+        "DEV": {
+          "trades": 20,
+          "gross_pf": 4.7861,
+          "net_pf": 4.6444,
+          "net_pf_stress": 4.5494,
+          "gross_expectancy": 18.4434,
+          "net_expectancy": 18.2202,
+          "net_expectancy_stress": 18.0655,
+          "total_fees": 4.46,
+          "turnover_x_capital": 0.205,
+          "sharpe": 1.646,
+          "max_drawdown_pct": 0.0124,
+          "cost_classification": "EDGE_PRESENT_NET_OF_COSTS"
+        },
+        "VALIDATION": {
+          "trades": 4,
+          "gross_pf": 2.2878,
+          "net_pf": 2.2369,
+          "net_pf_stress": 2.2023,
+          "gross_expectancy": 8.3195,
+          "net_expectancy": 8.1083,
+          "net_expectancy_stress": 7.9624,
+          "total_fees": 0.84,
+          "turnover_x_capital": 0.041,
+          "sharpe": 3.344,
+          "max_drawdown_pct": 0.0039,
+          "cost_classification": "EDGE_PRESENT_NET_OF_COSTS"
+        },
+        "OOS": {
+          "trades": 6,
+          "gross_pf": 0.6953,
+          "net_pf": 0.6443,
+          "net_pf_stress": 0.6111,
+          "gross_expectancy": -0.9221,
+          "net_expectancy": -1.1233,
+          "net_expectancy_stress": -1.2642,
+          "total_fees": 1.21,
+          "turnover_x_capital": 0.061,
+          "sharpe": -0.677,
+          "max_drawdown_pct": 0.0024,
+          "cost_classification": "NO_GROSS_EDGE",
+          "wins": 2,
+          "losses": 4,
+          "avg_win": 6.1,
+          "avg_loss": -4.74,
+          "median_win": 6.1,
+          "median_loss": -4.43,
+          "best_trade": 6.95,
+          "worst_trade": -7.17,
+          "profit_concentration_top1_of_gross_profit": 0.57,
+          "avg_duration_bars": 3.0,
+          "exit_reasons": {
+            "weekly_condition_lost": 6
+          }
+        }
+      },
+      "oos_monthly": [
+        {
+          "month": "2025-06",
+          "trades": 1,
+          "net_pnl": 6.9547,
+          "gross_pnl": 7.1639,
+          "market_return": 0.0142
+        },
+        {
+          "month": "2025-07",
+          "trades": 1,
+          "net_pnl": 5.2514,
+          "gross_pnl": 5.459,
+          "market_return": 0.0954
+        },
+        {
+          "month": "2025-08",
+          "trades": 1,
+          "net_pnl": -5.1144,
+          "gross_pnl": -4.9171,
+          "market_return": -0.0446
+        },
+        {
+          "month": "2025-09",
+          "trades": 1,
+          "net_pnl": -2.9214,
+          "gross_pnl": -2.722,
+          "market_return": 0.0441
+        },
+        {
+          "month": "2025-10",
+          "trades": 2,
+          "net_pnl": -10.9102,
+          "gross_pnl": -10.5166,
+          "market_return": -0.0758
+        }
+      ]
+    },
+    "MULTI_ASSET_VOL_NORMALIZED_TREND_BTC": {
+      "splits": {
+        "DEV": {
+          "trades": 5,
+          "gross_pf": 4.9759,
+          "net_pf": 4.9251,
+          "net_pf_stress": 4.8901,
+          "gross_expectancy": 34.5991,
+          "net_expectancy": 34.4276,
+          "net_expectancy_stress": 34.3138,
+          "total_fees": 0.86,
+          "turnover_x_capital": 0.034,
+          "sharpe": 0.381,
+          "max_drawdown_pct": 0.0163,
+          "cost_classification": "EDGE_PRESENT_NET_OF_COSTS"
+        },
+        "VALIDATION": {
+          "trades": 1,
+          "gross_pf": Infinity,
+          "net_pf": Infinity,
+          "net_pf_stress": Infinity,
+          "gross_expectancy": 29.0777,
+          "net_expectancy": 28.9184,
+          "net_expectancy_stress": 28.8127,
+          "total_fees": 0.16,
+          "turnover_x_capital": 0.007,
+          "sharpe": 1.38,
+          "max_drawdown_pct": 0.0029,
+          "cost_classification": "EDGE_PRESENT_NET_OF_COSTS"
+        },
+        "OOS": {
+          "trades": 1,
+          "gross_pf": 0.0,
+          "net_pf": 0.0,
+          "net_pf_stress": 0.0,
+          "gross_expectancy": -16.6629,
+          "net_expectancy": -16.9049,
+          "net_expectancy_stress": -17.0777,
+          "total_fees": 0.24,
+          "turnover_x_capital": 0.013,
+          "sharpe": -0.505,
+          "max_drawdown_pct": 0.0036,
+          "cost_classification": "NO_GROSS_EDGE",
+          "wins": 0,
+          "losses": 1,
+          "avg_win": 0.0,
+          "avg_loss": -16.9,
+          "median_win": 0.0,
+          "median_loss": -16.9,
+          "best_trade": -16.9,
+          "worst_trade": -16.9,
+          "profit_concentration_top1_of_gross_profit": null,
+          "avg_duration_bars": 134.0,
+          "exit_reasons": {
+            "sma_cross_down": 1
+          }
+        }
+      },
+      "oos_monthly": [
+        {
+          "month": "2025-11",
+          "trades": 1,
+          "net_pnl": -16.9049,
+          "gross_pnl": -16.6629,
+          "market_return": -0.1793
+        }
+      ]
+    }
+  },
+  "etapa6_walk_forward": {
+    "window_description": "~6-month rolling windows of BTC 4h bars, ~3-month step, ORIGINAL frozen parameters only (no optimization), full pre-holdout history.",
+    "SMA200": {
+      "windows": [
+        {
+          "start": "2017-08-17 04:00:00+00:00",
+          "end": "2018-02-14 04:00:00+00:00",
+          "trades": 13,
+          "net_pf": 3.765,
+          "expectancy": 8.3482,
+          "sharpe": 0.478,
+          "max_drawdown_pct": 0.0142,
+          "buy_hold_return": 1.0391,
+          "classification": "STABLE_EDGE"
+        },
+        {
+          "start": "2017-11-15 04:00:00+00:00",
+          "end": "2018-05-15 04:00:00+00:00",
+          "trades": 16,
+          "net_pf": 0.105,
+          "expectancy": -4.4037,
+          "sharpe": -0.82,
+          "max_drawdown_pct": 0.0085,
+          "buy_hold_return": 0.2767,
+          "classification": "NO_EDGE"
+        },
+        {
+          "start": "2018-02-14 08:00:00+00:00",
+          "end": "2018-08-13 16:00:00+00:00",
+          "trades": 3,
+          "net_pf": 2.214,
+          "expectancy": 2.4518,
+          "sharpe": 0.154,
+          "max_drawdown_pct": 0.0023,
+          "buy_hold_return": -0.3016,
+          "classification": "STABLE_EDGE"
+        },
+        {
+          "start": "2018-05-15 08:00:00+00:00",
+          "end": "2018-11-11 16:00:00+00:00",
+          "trades": 16,
+          "net_pf": 0.159,
+          "expectancy": -1.6711,
+          "sharpe": -0.687,
+          "max_drawdown_pct": 0.0047,
+          "buy_hold_return": -0.267,
+          "classification": "NO_EDGE"
+        },
+        {
+          "start": "2018-08-13 20:00:00+00:00",
+          "end": "2019-02-09 20:00:00+00:00",
+          "trades": 21,
+          "net_pf": 0.0,
+          "expectancy": -1.9028,
+          "sharpe": -1.232,
+          "max_drawdown_pct": 0.0042,
+          "buy_hold_return": -0.4132,
+          "classification": "NO_EDGE"
+        },
+        {
+          "start": "2018-11-11 20:00:00+00:00",
+          "end": "2019-05-11 00:00:00+00:00",
+          "trades": 9,
+          "net_pf": 0.0,
+          "expectancy": -2.6869,
+          "sharpe": 0.852,
+          "max_drawdown_pct": 0.0028,
+          "buy_hold_return": 0.02,
+          "classification": "NO_EDGE"
+        },
+        {
+          "start": "2019-02-10 00:00:00+00:00",
+          "end": "2019-08-09 08:00:00+00:00",
+          "trades": 4,
+          "net_pf": 36.056,
+          "expectancy": 30.9934,
+          "sharpe": 0.99,
+          "max_drawdown_pct": 0.0052,
+          "buy_hold_return": 2.2026,
+          "classification": "STABLE_EDGE"
+        },
+        {
+          "start": "2019-05-11 04:00:00+00:00",
+          "end": "2019-11-07 12:00:00+00:00",
+          "trades": 13,
+          "net_pf": 0.93,
+          "expectancy": -0.1097,
+          "sharpe": 0.118,
+          "max_drawdown_pct": 0.0061,
+          "buy_hold_return": 0.3514,
+          "classification": "NO_EDGE"
+        },
+        {
+          "start": "2019-08-09 12:00:00+00:00",
+          "end": "2020-02-05 12:00:00+00:00",
+          "trades": 10,
+          "net_pf": 0.426,
+          "expectancy": -0.6384,
+          "sharpe": 0.497,
+          "max_drawdown_pct": 0.0019,
+          "buy_hold_return": -0.1923,
+          "classification": "NO_EDGE"
+        },
+        {
+          "start": "2019-11-07 16:00:00+00:00",
+          "end": "2020-05-05 16:00:00+00:00",
+          "trades": 7,
+          "net_pf": 2.573,
+          "expectancy": 2.598,
+          "sharpe": 0.808,
+          "max_drawdown_pct": 0.0021,
+          "buy_hold_return": -0.0322,
+          "classification": "STABLE_EDGE"
+        },
+        {
+          "start": "2020-02-05 16:00:00+00:00",
+          "end": "2020-08-03 16:00:00+00:00",
+          "trades": 15,
+          "net_pf": 1.792,
+          "expectancy": 0.838,
+          "sharpe": 0.5,
+          "max_drawdown_pct": 0.003,
+          "buy_hold_return": 0.1806,
+          "classification": "STABLE_EDGE"
+        },
+        {
+          "start": "2020-05-05 20:00:00+00:00",
+          "end": "2020-11-01 16:00:00+00:00",
+          "trades": 24,
+          "net_pf": 0.739,
+          "expectancy": -0.3113,
+          "sharpe": 0.508,
+          "max_drawdown_pct": 0.0026,
+          "buy_hold_return": 0.5285,
+          "classification": "NO_EDGE"
+        },
+        {
+          "start": "2020-08-03 20:00:00+00:00",
+          "end": "2021-01-30 16:00:00+00:00",
+          "trades": 17,
+          "net_pf": 3.529,
+          "expectancy": 5.9473,
+          "sharpe": 0.723,
+          "max_drawdown_pct": 0.0086,
+          "buy_hold_return": 2.0559,
+          "classification": "STABLE_EDGE"
+        },
+        {
+          "start": "2020-11-01 20:00:00+00:00",
+          "end": "2021-04-30 16:00:00+00:00",
+          "trades": 17,
+          "net_pf": 2.595,
+          "expectancy": 4.4077,
+          "sharpe": 0.493,
+          "max_drawdown_pct": 0.0087,
+          "buy_hold_return": 3.1425,
+          "classification": "STABLE_EDGE"
+        },
+        {
+          "start": "2021-01-30 20:00:00+00:00",
+          "end": "2021-07-29 16:00:00+00:00",
+          "trades": 18,
+          "net_pf": 0.309,
+          "expectancy": -1.4956,
+          "sharpe": -0.153,
+          "max_drawdown_pct": 0.0053,
+          "buy_hold_return": 0.1575,
+          "classification": "NO_EDGE"
+        },
+        {
+          "start": "2021-04-30 20:00:00+00:00",
+          "end": "2021-10-27 16:00:00+00:00",
+          "trades": 12,
+          "net_pf": 1.767,
+          "expectancy": 1.4039,
+          "sharpe": 0.557,
+          "max_drawdown_pct": 0.0025,
+          "buy_hold_return": 0.0237,
+          "classification": "STABLE_EDGE"
+        },
+        {
+          "start": "2021-07-29 20:00:00+00:00",
+          "end": "2022-01-25 16:00:00+00:00",
+          "trades": 7,
+          "net_pf": 2.132,
+          "expectancy": 2.1452,
+          "sharpe": 0.282,
+          "max_drawdown_pct": 0.0019,
+          "buy_hold_return": -0.0737,
+          "classification": "STABLE_EDGE"
+        },
+        {
+          "start": "2021-10-27 20:00:00+00:00",
+          "end": "2022-04-25 16:00:00+00:00",
+          "trades": 8,
+          "net_pf": 0.417,
+          "expectancy": -0.7171,
+          "sharpe": -0.167,
+          "max_drawdown_pct": 0.0017,
+          "buy_hold_return": -0.3114,
+          "classification": "NO_EDGE"
+        },
+        {
+          "start": "2022-01-25 20:00:00+00:00",
+          "end": "2022-07-24 16:00:00+00:00",
+          "trades": 11,
+          "net_pf": 0.149,
+          "expectancy": -2.1239,
+          "sharpe": -0.334,
+          "max_drawdown_pct": 0.0032,
+          "buy_hold_return": -0.3858,
+          "classification": "NO_EDGE"
+        },
+        {
+          "start": "2022-04-25 20:00:00+00:00",
+          "end": "2024-03-15 04:00:00+00:00",
+          "trades": 13,
+          "net_pf": 5.478,
+          "expectancy": 6.4507,
+          "sharpe": 0.767,
+          "max_drawdown_pct": 0.0039,
+          "buy_hold_return": 0.6932,
+          "classification": "STABLE_EDGE"
+        },
+        {
+          "start": "2022-07-24 20:00:00+00:00",
+          "end": "2024-06-13 04:00:00+00:00",
+          "trades": 14,
+          "net_pf": 4.811,
+          "expectancy": 3.4951,
+          "sharpe": 0.682,
+          "max_drawdown_pct": 0.0027,
+          "buy_hold_return": 1.9994,
+          "classification": "STABLE_EDGE"
+        },
+        {
+          "start": "2024-03-15 08:00:00+00:00",
+          "end": "2024-09-11 04:00:00+00:00",
+          "trades": 7,
+          "net_pf": 0.277,
+          "expectancy": -1.1836,
+          "sharpe": -0.255,
+          "max_drawdown_pct": 0.0019,
+          "buy_hold_return": -0.163,
+          "classification": "NO_EDGE"
+        },
+        {
+          "start": "2024-06-13 08:00:00+00:00",
+          "end": "2024-12-10 04:00:00+00:00",
+          "trades": 5,
+          "net_pf": 0.171,
+          "expectancy": -2.0635,
+          "sharpe": 0.798,
+          "max_drawdown_pct": 0.002,
+          "buy_hold_return": 0.4348,
+          "classification": "NO_EDGE"
+        },
+        {
+          "start": "2024-09-11 08:00:00+00:00",
+          "end": "2025-03-10 04:00:00+00:00",
+          "trades": 10,
+          "net_pf": 4.389,
+          "expectancy": 3.3488,
+          "sharpe": 0.581,
+          "max_drawdown_pct": 0.0024,
+          "buy_hold_return": 0.4493,
+          "classification": "STABLE_EDGE"
+        },
+        {
+          "start": "2024-12-10 08:00:00+00:00",
+          "end": "2025-06-08 04:00:00+00:00",
+          "trades": 10,
+          "net_pf": 1.25,
+          "expectancy": 0.4253,
+          "sharpe": 0.115,
+          "max_drawdown_pct": 0.0025,
+          "buy_hold_return": 0.0788,
+          "classification": "REGIME_DEPENDENT_EDGE"
+        },
+        {
+          "start": "2025-03-10 08:00:00+00:00",
+          "end": "2025-09-06 04:00:00+00:00",
+          "trades": 14,
+          "net_pf": 2.71,
+          "expectancy": 1.3036,
+          "sharpe": 0.49,
+          "max_drawdown_pct": 0.0016,
+          "buy_hold_return": 0.326,
+          "classification": "STABLE_EDGE"
+        },
+        {
+          "start": "2025-06-08 08:00:00+00:00",
+          "end": "2025-12-05 04:00:00+00:00",
+          "trades": 14,
+          "net_pf": 0.0,
+          "expectancy": -0.9931,
+          "sharpe": -0.6,
+          "max_drawdown_pct": 0.0018,
+          "buy_hold_return": -0.1271,
+          "classification": "NO_EDGE"
+        },
+        {
+          "start": "2025-09-06 08:00:00+00:00",
+          "end": "2026-03-05 04:00:00+00:00",
+          "trades": 6,
+          "net_pf": 0.006,
+          "expectancy": -1.3607,
+          "sharpe": -0.423,
+          "max_drawdown_pct": 0.0009,
+          "buy_hold_return": -0.3496,
+          "classification": "NO_EDGE"
+        }
+      ],
+      "summary_classification": "REGIME_DEPENDENT_EDGE"
+    },
+    "QUATTRO_DONCHIAN": {
+      "windows": [
+        {
+          "start": "2017-08-17 04:00:00+00:00",
+          "end": "2018-02-14 04:00:00+00:00",
+          "trades": 15,
+          "net_pf": 1.437,
+          "expectancy": 29.0931,
+          "sharpe": 0.292,
+          "max_drawdown_pct": 0.1069,
+          "buy_hold_return": 1.0391,
+          "classification": "STABLE_EDGE"
+        },
+        {
+          "start": "2017-11-15 04:00:00+00:00",
+          "end": "2018-05-15 04:00:00+00:00",
+          "trades": 7,
+          "net_pf": 0.0,
+          "expectancy": -85.2315,
+          "sharpe": -1.058,
+          "max_drawdown_pct": 0.0597,
+          "buy_hold_return": 0.2767,
+          "classification": "NO_EDGE"
+        },
+        {
+          "start": "2018-02-14 08:00:00+00:00",
+          "end": "2018-08-13 16:00:00+00:00",
+          "trades": 0,
+          "net_pf": 0.0,
+          "expectancy": 0.0,
+          "sharpe": 0.0,
+          "max_drawdown_pct": 0.0,
+          "buy_hold_return": -0.3016,
+          "classification": "NO_EDGE"
+        },
+        {
+          "start": "2018-05-15 08:00:00+00:00",
+          "end": "2018-11-11 16:00:00+00:00",
+          "trades": 0,
+          "net_pf": 0.0,
+          "expectancy": 0.0,
+          "sharpe": 0.0,
+          "max_drawdown_pct": 0.0,
+          "buy_hold_return": -0.267,
+          "classification": "NO_EDGE"
+        },
+        {
+          "start": "2018-08-13 20:00:00+00:00",
+          "end": "2019-02-09 20:00:00+00:00",
+          "trades": 3,
+          "net_pf": 0.0,
+          "expectancy": -35.6776,
+          "sharpe": -0.546,
+          "max_drawdown_pct": 0.0142,
+          "buy_hold_return": -0.4132,
+          "classification": "NO_EDGE"
+        },
+        {
+          "start": "2018-11-11 20:00:00+00:00",
+          "end": "2019-05-11 00:00:00+00:00",
+          "trades": 2,
+          "net_pf": Infinity,
+          "expectancy": 67.9901,
+          "sharpe": 0.895,
+          "max_drawdown_pct": 0.0137,
+          "buy_hold_return": 0.02,
+          "classification": "STABLE_EDGE"
+        },
+        {
+          "start": "2019-02-10 00:00:00+00:00",
+          "end": "2019-08-09 08:00:00+00:00",
+          "trades": 13,
+          "net_pf": 4.279,
+          "expectancy": 144.0437,
+          "sharpe": 1.288,
+          "max_drawdown_pct": 0.0493,
+          "buy_hold_return": 2.2026,
+          "classification": "STABLE_EDGE"
+        },
+        {
+          "start": "2019-05-11 04:00:00+00:00",
+          "end": "2019-11-07 12:00:00+00:00",
+          "trades": 8,
+          "net_pf": 1.739,
+          "expectancy": 33.0501,
+          "sharpe": 0.332,
+          "max_drawdown_pct": 0.0418,
+          "buy_hold_return": 0.3514,
+          "classification": "STABLE_EDGE"
+        },
+        {
+          "start": "2019-08-09 12:00:00+00:00",
+          "end": "2020-02-05 12:00:00+00:00",
+          "trades": 0,
+          "net_pf": 0.0,
+          "expectancy": 0.0,
+          "sharpe": 0.0,
+          "max_drawdown_pct": 0.0,
+          "buy_hold_return": -0.1923,
+          "classification": "NO_EDGE"
+        },
+        {
+          "start": "2019-11-07 16:00:00+00:00",
+          "end": "2020-05-05 16:00:00+00:00",
+          "trades": 4,
+          "net_pf": 1.337,
+          "expectancy": 9.1139,
+          "sharpe": 0.11,
+          "max_drawdown_pct": 0.0176,
+          "buy_hold_return": -0.0322,
+          "classification": "STABLE_EDGE"
+        },
+        {
+          "start": "2020-02-05 16:00:00+00:00",
+          "end": "2020-08-03 16:00:00+00:00",
+          "trades": 7,
+          "net_pf": 2.785,
+          "expectancy": 40.2377,
+          "sharpe": 0.412,
+          "max_drawdown_pct": 0.0303,
+          "buy_hold_return": 0.1806,
+          "classification": "STABLE_EDGE"
+        },
+        {
+          "start": "2020-05-05 20:00:00+00:00",
+          "end": "2020-11-01 16:00:00+00:00",
+          "trades": 12,
+          "net_pf": 3.188,
+          "expectancy": 51.1564,
+          "sharpe": 0.813,
+          "max_drawdown_pct": 0.0293,
+          "buy_hold_return": 0.5285,
+          "classification": "STABLE_EDGE"
+        },
+        {
+          "start": "2020-08-03 20:00:00+00:00",
+          "end": "2021-01-30 16:00:00+00:00",
+          "trades": 13,
+          "net_pf": 2.3,
+          "expectancy": 58.9946,
+          "sharpe": 0.656,
+          "max_drawdown_pct": 0.055,
+          "buy_hold_return": 2.0559,
+          "classification": "STABLE_EDGE"
+        },
+        {
+          "start": "2020-11-01 20:00:00+00:00",
+          "end": "2021-04-30 16:00:00+00:00",
+          "trades": 12,
+          "net_pf": 4.237,
+          "expectancy": 115.9193,
+          "sharpe": 1.069,
+          "max_drawdown_pct": 0.0568,
+          "buy_hold_return": 3.1425,
+          "classification": "STABLE_EDGE"
+        },
+        {
+          "start": "2021-01-30 20:00:00+00:00",
+          "end": "2021-07-29 16:00:00+00:00",
+          "trades": 4,
+          "net_pf": 0.986,
+          "expectancy": -0.459,
+          "sharpe": 0.004,
+          "max_drawdown_pct": 0.0154,
+          "buy_hold_return": 0.1575,
+          "classification": "NO_EDGE"
+        },
+        {
+          "start": "2021-04-30 20:00:00+00:00",
+          "end": "2021-10-27 16:00:00+00:00",
+          "trades": 5,
+          "net_pf": 0.835,
+          "expectancy": -8.4011,
+          "sharpe": -0.078,
+          "max_drawdown_pct": 0.027,
+          "buy_hold_return": 0.0237,
+          "classification": "NO_EDGE"
+        },
+        {
+          "start": "2021-07-29 20:00:00+00:00",
+          "end": "2022-01-25 16:00:00+00:00",
+          "trades": 7,
+          "net_pf": 2.184,
+          "expectancy": 50.4119,
+          "sharpe": 0.479,
+          "max_drawdown_pct": 0.03,
+          "buy_hold_return": -0.0737,
+          "classification": "STABLE_EDGE"
+        },
+        {
+          "start": "2021-10-27 20:00:00+00:00",
+          "end": "2022-04-25 16:00:00+00:00",
+          "trades": 0,
+          "net_pf": 0.0,
+          "expectancy": 0.0,
+          "sharpe": 0.0,
+          "max_drawdown_pct": 0.0,
+          "buy_hold_return": -0.3114,
+          "classification": "NO_EDGE"
+        },
+        {
+          "start": "2022-01-25 20:00:00+00:00",
+          "end": "2022-07-24 16:00:00+00:00",
+          "trades": 4,
+          "net_pf": 0.491,
+          "expectancy": -27.3411,
+          "sharpe": -0.317,
+          "max_drawdown_pct": 0.0231,
+          "buy_hold_return": -0.3858,
+          "classification": "NO_EDGE"
+        },
+        {
+          "start": "2022-04-25 20:00:00+00:00",
+          "end": "2024-03-15 04:00:00+00:00",
+          "trades": 5,
+          "net_pf": 10.82,
+          "expectancy": 126.2825,
+          "sharpe": 0.882,
+          "max_drawdown_pct": 0.0295,
+          "buy_hold_return": 0.6932,
+          "classification": "STABLE_EDGE"
+        },
+        {
+          "start": "2022-07-24 20:00:00+00:00",
+          "end": "2024-06-13 04:00:00+00:00",
+          "trades": 11,
+          "net_pf": 3.265,
+          "expectancy": 50.8082,
+          "sharpe": 0.713,
+          "max_drawdown_pct": 0.0375,
+          "buy_hold_return": 1.9994,
+          "classification": "STABLE_EDGE"
+        },
+        {
+          "start": "2024-03-15 08:00:00+00:00",
+          "end": "2024-09-11 04:00:00+00:00",
+          "trades": 1,
+          "net_pf": 0.0,
+          "expectancy": -14.3408,
+          "sharpe": -0.091,
+          "max_drawdown_pct": 0.0072,
+          "buy_hold_return": -0.163,
+          "classification": "NO_EDGE"
+        },
+        {
+          "start": "2024-06-13 08:00:00+00:00",
+          "end": "2024-12-10 04:00:00+00:00",
+          "trades": 7,
+          "net_pf": 3.931,
+          "expectancy": 47.7884,
+          "sharpe": 0.599,
+          "max_drawdown_pct": 0.0177,
+          "buy_hold_return": 0.4348,
+          "classification": "STABLE_EDGE"
+        },
+        {
+          "start": "2024-09-11 08:00:00+00:00",
+          "end": "2025-03-10 04:00:00+00:00",
+          "trades": 11,
+          "net_pf": 1.831,
+          "expectancy": 23.6032,
+          "sharpe": 0.35,
+          "max_drawdown_pct": 0.0315,
+          "buy_hold_return": 0.4493,
+          "classification": "STABLE_EDGE"
+        },
+        {
+          "start": "2024-12-10 08:00:00+00:00",
+          "end": "2025-06-08 04:00:00+00:00",
+          "trades": 4,
+          "net_pf": 0.866,
+          "expectancy": -3.8544,
+          "sharpe": -0.055,
+          "max_drawdown_pct": 0.0175,
+          "buy_hold_return": 0.0788,
+          "classification": "NO_EDGE"
+        },
+        {
+          "start": "2025-03-10 08:00:00+00:00",
+          "end": "2025-09-06 04:00:00+00:00",
+          "trades": 14,
+          "net_pf": 1.485,
+          "expectancy": 11.7001,
+          "sharpe": 0.266,
+          "max_drawdown_pct": 0.0246,
+          "buy_hold_return": 0.326,
+          "classification": "STABLE_EDGE"
+        },
+        {
+          "start": "2025-06-08 08:00:00+00:00",
+          "end": "2025-12-05 04:00:00+00:00",
+          "trades": 12,
+          "net_pf": 0.569,
+          "expectancy": -14.2047,
+          "sharpe": -0.495,
+          "max_drawdown_pct": 0.0282,
+          "buy_hold_return": -0.1271,
+          "classification": "NO_EDGE"
+        },
+        {
+          "start": "2025-09-06 08:00:00+00:00",
+          "end": "2026-03-05 04:00:00+00:00",
+          "trades": 3,
+          "net_pf": 0.0,
+          "expectancy": -48.6452,
+          "sharpe": -0.916,
+          "max_drawdown_pct": 0.0162,
+          "buy_hold_return": -0.3496,
+          "classification": "NO_EDGE"
+        }
+      ],
+      "summary_classification": "REGIME_DEPENDENT_EDGE"
+    }
+  },
+  "etapa8_cross_asset": {
+    "ETH/USDT": {
+      "SMA200_OOS": {
+        "trades": 52,
+        "gross_pf": 2.0946,
+        "net_pf": 1.8601,
+        "net_pf_stress": 1.7225,
+        "gross_expectancy": 1.6254,
+        "net_expectancy": 1.4205,
+        "net_expectancy_stress": 1.2773,
+        "total_fees": 10.65,
+        "turnover_x_capital": 0.528,
+        "sharpe": 0.274,
+        "max_drawdown_pct": 0.0066,
+        "cost_classification": "EDGE_PRESENT_NET_OF_COSTS",
+        "wins": 9,
+        "losses": 43,
+        "avg_win": 17.75,
+        "avg_loss": -2.0,
+        "median_win": 1.5,
+        "median_loss": -1.4,
+        "best_trade": 70.53,
+        "worst_trade": -8.35,
+        "profit_concentration_top1_of_gross_profit": 0.442,
+        "avg_duration_bars": 32.0,
+        "exit_reasons": {
+          "sma_flip": 52
+        }
+      },
+      "QUATTRO_OOS": {
+        "trades": 26,
+        "gross_pf": 2.619,
+        "net_pf": 2.3854,
+        "net_pf_stress": 2.2405,
+        "gross_expectancy": 52.994,
+        "net_expectancy": 48.7075,
+        "net_expectancy_stress": 45.5983,
+        "total_fees": 111.45,
+        "turnover_x_capital": 5.503,
+        "sharpe": 0.48,
+        "max_drawdown_pct": 0.0514,
+        "cost_classification": "EDGE_PRESENT_NET_OF_COSTS",
+        "wins": 11,
+        "losses": 15,
+        "avg_win": 198.23,
+        "avg_loss": -60.94,
+        "median_win": 111.69,
+        "median_loss": -57.72,
+        "best_trade": 794.51,
+        "worst_trade": -118.81,
+        "profit_concentration_top1_of_gross_profit": 0.364,
+        "avg_duration_bars": 23.3,
+        "exit_reasons": {
+          "chandelier_2atr": 24,
+          "stop_loss": 2
+        }
+      }
+    },
+    "BNB/USDT": {
+      "SMA200_OOS": {
+        "trades": 75,
+        "gross_pf": 1.1514,
+        "net_pf": 0.9648,
+        "net_pf_stress": 0.8636,
+        "gross_expectancy": 0.1589,
+        "net_expectancy": -0.0432,
+        "net_expectancy_stress": -0.1846,
+        "total_fees": 15.16,
+        "turnover_x_capital": 0.757,
+        "sharpe": 0.02,
+        "max_drawdown_pct": 0.0073,
+        "cost_classification": "GROSS_EDGE_DESTROYED_BY_COSTS",
+        "wins": 7,
+        "losses": 68,
+        "avg_win": 12.68,
+        "avg_loss": -1.35,
+        "median_win": 2.87,
+        "median_loss": -1.16,
+        "best_trade": 61.8,
+        "worst_trade": -5.03,
+        "profit_concentration_top1_of_gross_profit": 0.696,
+        "avg_duration_bars": 27.3,
+        "exit_reasons": {
+          "sma_flip": 75
+        }
+      },
+      "QUATTRO_OOS": {
+        "trades": 40,
+        "gross_pf": 0.961,
+        "net_pf": 0.8341,
+        "net_pf_stress": 0.7567,
+        "gross_expectancy": -1.093,
+        "net_expectancy": -5.0449,
+        "net_expectancy_stress": -7.7848,
+        "total_fees": 158.08,
+        "turnover_x_capital": 7.906,
+        "sharpe": -0.075,
+        "max_drawdown_pct": 0.0581,
+        "cost_classification": "NO_GROSS_EDGE",
+        "wins": 15,
+        "losses": 25,
+        "avg_win": 67.64,
+        "avg_loss": -48.66,
+        "median_win": 30.62,
+        "median_loss": -46.15,
+        "best_trade": 312.47,
+        "worst_trade": -106.07,
+        "profit_concentration_top1_of_gross_profit": 0.308,
+        "avg_duration_bars": 16.9,
+        "exit_reasons": {
+          "chandelier_2atr": 38,
+          "stop_loss": 2
+        }
+      }
+    }
+  }
+}

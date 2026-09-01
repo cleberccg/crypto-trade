@@ -32,6 +32,8 @@ class StateRow:
     timeframe: str
     cycles: int
     updated_at: datetime | None
+    paper_start_timestamp: datetime | None
+    latest_candle: datetime | None
     open_trade_qty: float
     open_trade_symbol: str
     broker_available_qty: float
@@ -109,6 +111,8 @@ def load_state(path: Path) -> StateRow | None:
         timeframe=str(payload.get("timeframe") or ""),
         cycles=cycles,
         updated_at=parse_dt(payload.get("updated_at")),
+        paper_start_timestamp=parse_dt(payload.get("paper_start_timestamp")),
+        latest_candle=parse_dt(payload.get("last_open_time")),
         open_trade_qty=open_trade_qty,
         open_trade_symbol=open_trade_symbol,
         broker_available_qty=broker_available_qty,
@@ -370,6 +374,10 @@ def main() -> int:
     parser.add_argument("--campaign-id", default="", help="Filtra por campaign_id. Se vazio, usa a campanha mais recente.")
     parser.add_argument("--max-stale-min", type=float, default=5.0, help="Limite para considerar contexto stale.")
     parser.add_argument("--show-contexts", action="store_true", help="Mostra todos os contextos com lag e ciclos.")
+    parser.add_argument("--strategy", default="", help="Filtra por strategy_name do state.")
+    parser.add_argument("--symbol", default="", help="Filtra por simbolo do state.")
+    parser.add_argument("--timeframe", default="", help="Filtra por timeframe do state.")
+    parser.add_argument("--focused", action="store_true", help="Imprime resumo operacional de um unico contexto.")
     args = parser.parse_args()
 
     results_dir = Path(args.results_dir)
@@ -377,14 +385,22 @@ def main() -> int:
         print(f"[ERRO] diretorio nao encontrado: {results_dir}")
         return 2
 
-    rows = [row for row in (load_state(p) for p in sorted(results_dir.glob("paper_live_state__*.json"))) if row is not None]
+    state_paths = [path for path in sorted(results_dir.glob("paper_live_state__*.json")) if ".contaminated_" not in path.name]
+    rows = [row for row in (load_state(path) for path in state_paths) if row is not None]
     if not rows:
         print("[ERRO] nenhum state file encontrado (paper_live_state__*.json)")
         return 2
 
-    campaign_id = str(args.campaign_id or "").strip() or infer_current_campaign(rows)
+    has_explicit_context_filter = bool(args.strategy or args.symbol or args.timeframe)
+    campaign_id = str(args.campaign_id or "").strip() or ("" if has_explicit_context_filter else infer_current_campaign(rows))
     if campaign_id:
         rows = [r for r in rows if r.campaign_id == campaign_id]
+    if args.strategy:
+        rows = [r for r in rows if r.strategy_name == str(args.strategy)]
+    if args.symbol:
+        rows = [r for r in rows if r.symbol == str(args.symbol)]
+    if args.timeframe:
+        rows = [r for r in rows if r.timeframe == str(args.timeframe)]
 
     if not rows:
         print("[ERRO] nenhum contexto encontrado para o filtro de campanha informado")
@@ -412,6 +428,35 @@ def main() -> int:
     supervisor_payload = safe_read_json(latest_supervisor)
     supervisor_summary = supervisor_payload.get("summary") if isinstance(supervisor_payload, dict) and isinstance(supervisor_payload.get("summary"), dict) else {}
     state_trade_metrics = fetch_closed_trades_metrics([r.execution_id for r in rows])
+    if args.focused:
+        row = rows[0] if len(rows) == 1 else None
+        if row is None:
+            print("[ERRO] --focused requer exatamente um contexto")
+            return 2
+        now_utc = datetime.now(timezone.utc)
+        runtime_days = None if row.paper_start_timestamp is None else max(0.0, (now_utc - row.paper_start_timestamp).total_seconds() / 86400.0)
+        is_stale = row.updated_at is None or row.lag_seconds is None or row.lag_seconds > max(1.0, float(args.max_stale_min)) * 60.0
+        alerts = ["WORKER_STOPPED" if is_stale else ""]
+        metrics_available = int(state_trade_metrics["closed_trades"]) > 0
+        metric = lambda key, fmt: fmt(float(state_trade_metrics[key])) if metrics_available else "N/A"
+        evidence = "TOO_EARLY" if not metrics_available else "ACCUMULATING"
+        print(f"WORKER_STATUS: {'STOPPED' if is_stale else 'RUNNING'}")
+        print(f"LATEST_CANDLE: {row.latest_candle.isoformat() if row.latest_candle else 'N/A'}")
+        print(f"CURRENT_REGIME: N/A")
+        print(f"CURRENT_POSITION: {'OPEN' if row.open_trade_qty > 0 else 'NONE'}")
+        print(f"PAPER_START_TIMESTAMP: {row.paper_start_timestamp.isoformat() if row.paper_start_timestamp else 'N/A'}")
+        print(f"PAPER_RUNTIME_DAYS: {runtime_days:.4f}" if runtime_days is not None else "PAPER_RUNTIME_DAYS: N/A")
+        print(f"CLOSED_TRADES: {int(state_trade_metrics['closed_trades'])}")
+        print(f"WIN_RATE: {metric('win_rate', lambda value: f'{value * 100.0:.2f}%')}")
+        print(f"NET_PNL: {metric('net_profit', lambda value: f'{value:+.6f}')}")
+        print(f"NET_PF: {metric('profit_factor', lambda value: f'{value:.6f}')}")
+        print(f"NET_EXPECTANCY: {metric('expectancy', lambda value: f'{value:+.6f}')}")
+        print(f"SHARPE: {metric('sharpe', lambda value: f'{value:.6f}')}")
+        print(f"MAX_DRAWDOWN: {metric('max_drawdown', lambda value: f'{value:.6f}')}")
+        print("TOTAL_FEES: N/A")
+        print(f"EVIDENCE_STATUS: {evidence}")
+        print(f"OPERATIONAL_ALERTS: {', '.join(alert for alert in alerts if alert) or 'NONE'}")
+        return 0
     database_trade_metrics, db_latest_trade_time, db_latest_entry_time, db_latest_exit_time = fetch_database_trade_metrics(
         strategy_names, strategy_versions
     )

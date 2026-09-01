@@ -1,0 +1,875 @@
+{
+  "dataset_manifest_hash": "f5b3f9ce0566d2d3be7a3220483017a64dcda0c0b10c34bf32964d3c8f8b4a55",
+  "timeframe": "1m",
+  "target_candidates": 2,
+  "final_holdout_locked": true,
+  "previous_rejections": [
+    {
+      "hypothesis_key": "REGIME_TRANSITION|regime_transition_signal|0.5|long_above",
+      "family": "REGIME_TRANSITION",
+      "signal": "regime_transition_signal",
+      "threshold": 0.5,
+      "direction": "long_above",
+      "rejection_stage": "REJECTED_DEV",
+      "rejection_reason": "REJECTED_DEV"
+    },
+    {
+      "hypothesis_key": "REGIME_TRANSITION|regime_transition_signal|-0.5|long_below",
+      "family": "REGIME_TRANSITION",
+      "signal": "regime_transition_signal",
+      "threshold": -0.5,
+      "direction": "long_below",
+      "rejection_stage": "REJECTED_DEV",
+      "rejection_reason": "REJECTED_DEV"
+    },
+    {
+      "hypothesis_key": "BTC_ETH_FLOW_LEADLAG|btc_eth_leadlag_signal|1.0|long_above",
+      "family": "BTC_ETH_FLOW_LEADLAG",
+      "signal": "btc_eth_leadlag_signal",
+      "threshold": 1.0,
+      "direction": "long_above",
+      "rejection_stage": "REJECTED_DEV",
+      "rejection_reason": "REJECTED_DEV"
+    },
+    {
+      "hypothesis_key": "BTC_ETH_FLOW_LEADLAG|btc_eth_leadlag_signal|-1.0|long_below",
+      "family": "BTC_ETH_FLOW_LEADLAG",
+      "signal": "btc_eth_leadlag_signal",
+      "threshold": -1.0,
+      "direction": "long_below",
+      "rejection_stage": "REJECTED_DEV",
+      "rejection_reason": "REJECTED_DEV"
+    },
+    {
+      "hypothesis_key": "BTC_ETH_FLOW_LEADLAG|btc_eth_leadlag_signal|1.5|long_above",
+      "family": "BTC_ETH_FLOW_LEADLAG",
+      "signal": "btc_eth_leadlag_signal",
+      "threshold": 1.5,
+      "direction": "long_above",
+      "rejection_stage": "REJECTED_DEV",
+      "rejection_reason": "REJECTED_DEV"
+    },
+    {
+      "hypothesis_key": "BTC_ETH_FLOW_LEADLAG|btc_eth_leadlag_signal|-1.5|long_below",
+      "family": "BTC_ETH_FLOW_LEADLAG",
+      "signal": "btc_eth_leadlag_signal",
+      "threshold": -1.5,
+      "direction": "long_below",
+      "rejection_stage": "REJECTED_DEV",
+      "rejection_reason": "REJECTED_DEV"
+    }
+  ],
+  "hypotheses": {
+    "H0001_FLOW_REVERSAL_long_above": {
+      "hypothesis": {
+        "HYPOTHESIS_ID": "H0001_FLOW_REVERSAL_long_above",
+        "FAMILY": "FLOW_REVERSAL",
+        "ECONOMIC_RATIONALE": "abrupt aggressor dominance reversal",
+        "SIGNAL_DEFINITION": "flow_reversal_signal with long_above threshold=0.000167 (DEV quantile-based)",
+        "FEATURES_USED": [
+          "flow_reversal_signal"
+        ],
+        "DIRECTION": "long_above",
+        "PARAMETERS": {
+          "signal_feature": "flow_reversal_signal",
+          "threshold": 0.0001668601405371159,
+          "hold_bars": 5,
+          "window": 20
+        },
+        "EXPECTED_MECHANISM": "reversal"
+      },
+      "equivalence_key": "FLOW_REVERSAL|flow_reversal_signal|long_above|0.000167|20|reversal",
+      "stage": "REJECTED_DEV",
+      "dev_cells": 90,
+      "dev_survivors": 0,
+      "status": "REJECTED_DEV",
+      "validation_survivors": 0,
+      "oos_survivors": 0
+    },
+    "H0002_FLOW_REVERSAL_long_below": {
+      "hypothesis": {
+        "HYPOTHESIS_ID": "H0002_FLOW_REVERSAL_long_below",
+        "FAMILY": "FLOW_REVERSAL",
+        "ECONOMIC_RATIONALE": "abrupt aggressor dominance reversal",
+        "SIGNAL_DEFINITION": "flow_reversal_signal with long_below threshold=-0.000164 (DEV quantile-based)",
+        "FEATURES_USED": [
+          "flow_reversal_signal"
+        ],
+        "DIRECTION": "long_below",
+        "PARAMETERS": {
+          "signal_feature": "flow_reversal_signal",
+          "threshold": -0.00016396366351609083,
+          "hold_bars": 5,
+          "window": 20
+        },
+        "EXPECTED_MECHANISM": "reversal"
+      },
+      "equivalence_key": "FLOW_REVERSAL|flow_reversal_signal|long_below|-0.000164|20|reversal",
+      "stage": "REJECTED_DEV",
+      "dev_cells": 90,
+      "dev_survivors": 0,
+      "status": "REJECTED_DEV",
+      "validation_survivors": 0,
+      "oos_survivors": 0
+    },
+    "H0003_FLOW_CONTINUATION_long_above": {
+      "hypothesis": {
+        "HYPOTHESIS_ID": "H0003_FLOW_CONTINUATION_long_above",
+        "FAMILY": "FLOW_CONTINUATION",
+        "ECONOMIC_RATIONALE": "persistent aggressive flow with efficient price response",
+        "SIGNAL_DEFINITION": "flow_continuation_signal with long_above threshold=0.000411 (DEV quantile-based)",
+        "FEATURES_USED": [
+          "flow_continuation_signal"
+        ],
+        "DIRECTION": "long_above",
+        "PARAMETERS": {
+          "signal_feature": "flow_continuation_signal",
+          "threshold": 0.00041071479910126537,
+          "hold_bars": 5,
+          "window": 20
+        },
+        "EXPECTED_MECHANISM": "continuation"
+      },
+      "equivalence_key": "FLOW_CONTINUATION|flow_continuation_signal|long_above|0.000411|20|continuation",
+      "stage": "REJECTED_DEV",
+      "dev_cells": 90,
+      "dev_survivors": 0,
+      "status": "REJECTED_DEV",
+      "validation_survivors": 0,
+      "oos_survivors": 0
+    },
+    "H0004_FLOW_CONTINUATION_long_below": {
+      "hypothesis": {
+        "HYPOTHESIS_ID": "H0004_FLOW_CONTINUATION_long_below",
+        "FAMILY": "FLOW_CONTINUATION",
+        "ECONOMIC_RATIONALE": "persistent aggressive flow with efficient price response",
+        "SIGNAL_DEFINITION": "flow_continuation_signal with long_below threshold=-0.000096 (DEV quantile-based)",
+        "FEATURES_USED": [
+          "flow_continuation_signal"
+        ],
+        "DIRECTION": "long_below",
+        "PARAMETERS": {
+          "signal_feature": "flow_continuation_signal",
+          "threshold": -9.639976453787527e-05,
+          "hold_bars": 5,
+          "window": 20
+        },
+        "EXPECTED_MECHANISM": "continuation"
+      },
+      "equivalence_key": "FLOW_CONTINUATION|flow_continuation_signal|long_below|-9.6e-05|20|continuation",
+      "stage": "REJECTED_DEV",
+      "dev_cells": 90,
+      "dev_survivors": 0,
+      "status": "REJECTED_DEV",
+      "validation_survivors": 0,
+      "oos_survivors": 0
+    },
+    "H0005_ABSORPTION_RELEASE_long_above": {
+      "hypothesis": {
+        "HYPOTHESIS_ID": "H0005_ABSORPTION_RELEASE_long_above",
+        "FAMILY": "ABSORPTION_RELEASE",
+        "ECONOMIC_RATIONALE": "aggressive flow absorbed then released",
+        "SIGNAL_DEFINITION": "absorption_release_signal with long_above threshold=0.000575 (DEV quantile-based)",
+        "FEATURES_USED": [
+          "absorption_release_signal"
+        ],
+        "DIRECTION": "long_above",
+        "PARAMETERS": {
+          "signal_feature": "absorption_release_signal",
+          "threshold": 0.0005748550029641488,
+          "hold_bars": 5,
+          "window": 20
+        },
+        "EXPECTED_MECHANISM": "absorption_release"
+      },
+      "equivalence_key": "ABSORPTION_RELEASE|absorption_release_signal|long_above|0.000575|20|absorption_release",
+      "stage": "REJECTED_VALIDATION_OR_OOS",
+      "dev_cells": 90,
+      "dev_survivors": 77,
+      "cost_stress": {
+        "gross_pf": 1.603465971323448,
+        "gross_expectancy": 0.0006153429321632273,
+        "net_pf_base_fee": 0.3616599718446526,
+        "net_expectancy_base_fee": -0.0013846570678367732,
+        "net_pf_stress": 0.14881330154794545,
+        "net_expectancy_stress": -0.002784657067836773,
+        "trades": 4823
+      },
+      "status": "REJECTED_VALIDATION_OR_OOS",
+      "validation_survivors": 56,
+      "oos_survivors": 54
+    },
+    "H0006_ABSORPTION_RELEASE_long_below": {
+      "hypothesis": {
+        "HYPOTHESIS_ID": "H0006_ABSORPTION_RELEASE_long_below",
+        "FAMILY": "ABSORPTION_RELEASE",
+        "ECONOMIC_RATIONALE": "aggressive flow absorbed then released",
+        "SIGNAL_DEFINITION": "absorption_release_signal with long_below threshold=-0.000577 (DEV quantile-based)",
+        "FEATURES_USED": [
+          "absorption_release_signal"
+        ],
+        "DIRECTION": "long_below",
+        "PARAMETERS": {
+          "signal_feature": "absorption_release_signal",
+          "threshold": -0.0005768109350590664,
+          "hold_bars": 5,
+          "window": 20
+        },
+        "EXPECTED_MECHANISM": "absorption_release"
+      },
+      "equivalence_key": "ABSORPTION_RELEASE|absorption_release_signal|long_below|-0.000577|20|absorption_release",
+      "stage": "REJECTED_VALIDATION_OR_OOS",
+      "dev_cells": 90,
+      "dev_survivors": 74,
+      "cost_stress": {
+        "gross_pf": 1.687786081880697,
+        "gross_expectancy": 0.0006793341463282881,
+        "net_pf_base_fee": 0.36511200497499047,
+        "net_expectancy_base_fee": -0.0013206658536717123,
+        "net_pf_stress": 0.1354908283498177,
+        "net_expectancy_stress": -0.002720665853671712,
+        "trades": 4823
+      },
+      "status": "REJECTED_VALIDATION_OR_OOS",
+      "validation_survivors": 71,
+      "oos_survivors": 65
+    },
+    "H0007_FAILED_BREAKOUT_long_above": {
+      "hypothesis": {
+        "HYPOTHESIS_ID": "H0007_FAILED_BREAKOUT_long_above",
+        "FAMILY": "FAILED_BREAKOUT",
+        "ECONOMIC_RATIONALE": "aggressive break of recent extremes followed by snap-back",
+        "SIGNAL_DEFINITION": "failed_breakout_signal with long_above threshold=1.250000 (DEV quantile-based)",
+        "FEATURES_USED": [
+          "failed_breakout_signal"
+        ],
+        "DIRECTION": "long_above",
+        "PARAMETERS": {
+          "signal_feature": "failed_breakout_signal",
+          "threshold": 1.25,
+          "hold_bars": 5,
+          "window": 20
+        },
+        "EXPECTED_MECHANISM": "failed_auction"
+      },
+      "equivalence_key": "FAILED_BREAKOUT|failed_breakout_signal|long_above|1.25|20|failed_auction",
+      "stage": "REJECTED_DEV",
+      "dev_cells": 0,
+      "dev_survivors": 0,
+      "status": "REJECTED_DEV",
+      "validation_survivors": 0,
+      "oos_survivors": 0
+    },
+    "H0008_FAILED_BREAKOUT_long_below": {
+      "hypothesis": {
+        "HYPOTHESIS_ID": "H0008_FAILED_BREAKOUT_long_below",
+        "FAMILY": "FAILED_BREAKOUT",
+        "ECONOMIC_RATIONALE": "aggressive break of recent extremes followed by snap-back",
+        "SIGNAL_DEFINITION": "failed_breakout_signal with long_below threshold=-1.250000 (DEV quantile-based)",
+        "FEATURES_USED": [
+          "failed_breakout_signal"
+        ],
+        "DIRECTION": "long_below",
+        "PARAMETERS": {
+          "signal_feature": "failed_breakout_signal",
+          "threshold": -1.25,
+          "hold_bars": 5,
+          "window": 20
+        },
+        "EXPECTED_MECHANISM": "failed_auction"
+      },
+      "equivalence_key": "FAILED_BREAKOUT|failed_breakout_signal|long_below|-1.25|20|failed_auction",
+      "stage": "REJECTED_DEV",
+      "dev_cells": 0,
+      "dev_survivors": 0,
+      "status": "REJECTED_DEV",
+      "validation_survivors": 0,
+      "oos_survivors": 0
+    },
+    "H0009_IMPACT_EFFICIENCY_long_above": {
+      "hypothesis": {
+        "HYPOTHESIS_ID": "H0009_IMPACT_EFFICIENCY_long_above",
+        "FAMILY": "IMPACT_EFFICIENCY",
+        "ECONOMIC_RATIONALE": "price displacement per aggressive volume unit",
+        "SIGNAL_DEFINITION": "impact_efficiency_signal with long_above threshold=0.002101 (DEV quantile-based)",
+        "FEATURES_USED": [
+          "impact_efficiency_signal"
+        ],
+        "DIRECTION": "long_above",
+        "PARAMETERS": {
+          "signal_feature": "impact_efficiency_signal",
+          "threshold": 0.002100812162198034,
+          "hold_bars": 5,
+          "window": 20
+        },
+        "EXPECTED_MECHANISM": "impact_efficiency"
+      },
+      "equivalence_key": "IMPACT_EFFICIENCY|impact_efficiency_signal|long_above|0.002101|20|impact_efficiency",
+      "stage": "REJECTED_DEV",
+      "dev_cells": 90,
+      "dev_survivors": 0,
+      "status": "REJECTED_DEV",
+      "validation_survivors": 0,
+      "oos_survivors": 0
+    },
+    "H0010_IMPACT_EFFICIENCY_long_below": {
+      "hypothesis": {
+        "HYPOTHESIS_ID": "H0010_IMPACT_EFFICIENCY_long_below",
+        "FAMILY": "IMPACT_EFFICIENCY",
+        "ECONOMIC_RATIONALE": "price displacement per aggressive volume unit",
+        "SIGNAL_DEFINITION": "impact_efficiency_signal with long_below threshold=-0.002028 (DEV quantile-based)",
+        "FEATURES_USED": [
+          "impact_efficiency_signal"
+        ],
+        "DIRECTION": "long_below",
+        "PARAMETERS": {
+          "signal_feature": "impact_efficiency_signal",
+          "threshold": -0.00202778579762766,
+          "hold_bars": 5,
+          "window": 20
+        },
+        "EXPECTED_MECHANISM": "impact_efficiency"
+      },
+      "equivalence_key": "IMPACT_EFFICIENCY|impact_efficiency_signal|long_below|-0.002028|20|impact_efficiency",
+      "stage": "REJECTED_DEV",
+      "dev_cells": 90,
+      "dev_survivors": 0,
+      "status": "REJECTED_DEV",
+      "validation_survivors": 0,
+      "oos_survivors": 0
+    },
+    "H0011_IMPACT_DECAY_long_above": {
+      "hypothesis": {
+        "HYPOTHESIS_ID": "H0011_IMPACT_DECAY_long_above",
+        "FAMILY": "IMPACT_DECAY",
+        "ECONOMIC_RATIONALE": "post-shock impact persistence or reversal",
+        "SIGNAL_DEFINITION": "impact_decay_signal with long_above threshold=0.000418 (DEV quantile-based)",
+        "FEATURES_USED": [
+          "impact_decay_signal"
+        ],
+        "DIRECTION": "long_above",
+        "PARAMETERS": {
+          "signal_feature": "impact_decay_signal",
+          "threshold": 0.00041776893041908607,
+          "hold_bars": 5,
+          "window": 20
+        },
+        "EXPECTED_MECHANISM": "impact_decay"
+      },
+      "equivalence_key": "IMPACT_DECAY|impact_decay_signal|long_above|0.000418|20|impact_decay",
+      "stage": "REJECTED_DEV",
+      "dev_cells": 90,
+      "dev_survivors": 0,
+      "status": "REJECTED_DEV",
+      "validation_survivors": 0,
+      "oos_survivors": 0
+    },
+    "H0012_IMPACT_DECAY_long_below": {
+      "hypothesis": {
+        "HYPOTHESIS_ID": "H0012_IMPACT_DECAY_long_below",
+        "FAMILY": "IMPACT_DECAY",
+        "ECONOMIC_RATIONALE": "post-shock impact persistence or reversal",
+        "SIGNAL_DEFINITION": "impact_decay_signal with long_below threshold=-0.000412 (DEV quantile-based)",
+        "FEATURES_USED": [
+          "impact_decay_signal"
+        ],
+        "DIRECTION": "long_below",
+        "PARAMETERS": {
+          "signal_feature": "impact_decay_signal",
+          "threshold": -0.0004123116755071618,
+          "hold_bars": 5,
+          "window": 20
+        },
+        "EXPECTED_MECHANISM": "impact_decay"
+      },
+      "equivalence_key": "IMPACT_DECAY|impact_decay_signal|long_below|-0.000412|20|impact_decay",
+      "stage": "REJECTED_DEV",
+      "dev_cells": 90,
+      "dev_survivors": 0,
+      "status": "REJECTED_DEV",
+      "validation_survivors": 0,
+      "oos_survivors": 0
+    },
+    "H0013_INTENSITY_X_RESPONSE_long_above": {
+      "hypothesis": {
+        "HYPOTHESIS_ID": "H0013_INTENSITY_X_RESPONSE_long_above",
+        "FAMILY": "INTENSITY_X_RESPONSE",
+        "ECONOMIC_RATIONALE": "trade frequency conditioned by move efficiency",
+        "SIGNAL_DEFINITION": "intensity_price_response_signal with long_above threshold=0.514395 (DEV quantile-based)",
+        "FEATURES_USED": [
+          "intensity_price_response_signal"
+        ],
+        "DIRECTION": "long_above",
+        "PARAMETERS": {
+          "signal_feature": "intensity_price_response_signal",
+          "threshold": 0.5143948329389396,
+          "hold_bars": 5,
+          "window": 20
+        },
+        "EXPECTED_MECHANISM": "intensity_response"
+      },
+      "equivalence_key": "INTENSITY_X_RESPONSE|intensity_price_response_signal|long_above|0.514395|20|intensity_response",
+      "stage": "REJECTED_DEV",
+      "dev_cells": 90,
+      "dev_survivors": 0,
+      "status": "REJECTED_DEV",
+      "validation_survivors": 0,
+      "oos_survivors": 0
+    },
+    "H0014_INTENSITY_X_RESPONSE_long_below": {
+      "hypothesis": {
+        "HYPOTHESIS_ID": "H0014_INTENSITY_X_RESPONSE_long_below",
+        "FAMILY": "INTENSITY_X_RESPONSE",
+        "ECONOMIC_RATIONALE": "trade frequency conditioned by move efficiency",
+        "SIGNAL_DEFINITION": "intensity_price_response_signal with long_below threshold=-0.526498 (DEV quantile-based)",
+        "FEATURES_USED": [
+          "intensity_price_response_signal"
+        ],
+        "DIRECTION": "long_below",
+        "PARAMETERS": {
+          "signal_feature": "intensity_price_response_signal",
+          "threshold": -0.5264981618845137,
+          "hold_bars": 5,
+          "window": 20
+        },
+        "EXPECTED_MECHANISM": "intensity_response"
+      },
+      "equivalence_key": "INTENSITY_X_RESPONSE|intensity_price_response_signal|long_below|-0.526498|20|intensity_response",
+      "stage": "REJECTED_DEV",
+      "dev_cells": 90,
+      "dev_survivors": 0,
+      "status": "REJECTED_DEV",
+      "validation_survivors": 0,
+      "oos_survivors": 0
+    },
+    "H0015_LARGE_TRADE_FOLLOW_long_above": {
+      "hypothesis": {
+        "HYPOTHESIS_ID": "H0015_LARGE_TRADE_FOLLOW_long_above",
+        "FAMILY": "LARGE_TRADE_FOLLOW",
+        "ECONOMIC_RATIONALE": "large trade concentration followed by continuation/reversal",
+        "SIGNAL_DEFINITION": "large_trade_follow_signal with long_above threshold=0.000754 (DEV quantile-based)",
+        "FEATURES_USED": [
+          "large_trade_follow_signal"
+        ],
+        "DIRECTION": "long_above",
+        "PARAMETERS": {
+          "signal_feature": "large_trade_follow_signal",
+          "threshold": 0.0007535201952770096,
+          "hold_bars": 5,
+          "window": 20
+        },
+        "EXPECTED_MECHANISM": "large_trade"
+      },
+      "equivalence_key": "LARGE_TRADE_FOLLOW|large_trade_follow_signal|long_above|0.000754|20|large_trade",
+      "stage": "REJECTED_DEV",
+      "dev_cells": 90,
+      "dev_survivors": 0,
+      "status": "REJECTED_DEV",
+      "validation_survivors": 0,
+      "oos_survivors": 0
+    },
+    "H0016_LARGE_TRADE_FOLLOW_long_below": {
+      "hypothesis": {
+        "HYPOTHESIS_ID": "H0016_LARGE_TRADE_FOLLOW_long_below",
+        "FAMILY": "LARGE_TRADE_FOLLOW",
+        "ECONOMIC_RATIONALE": "large trade concentration followed by continuation/reversal",
+        "SIGNAL_DEFINITION": "large_trade_follow_signal with long_below threshold=-0.000741 (DEV quantile-based)",
+        "FEATURES_USED": [
+          "large_trade_follow_signal"
+        ],
+        "DIRECTION": "long_below",
+        "PARAMETERS": {
+          "signal_feature": "large_trade_follow_signal",
+          "threshold": -0.0007407362688524331,
+          "hold_bars": 5,
+          "window": 20
+        },
+        "EXPECTED_MECHANISM": "large_trade"
+      },
+      "equivalence_key": "LARGE_TRADE_FOLLOW|large_trade_follow_signal|long_below|-0.000741|20|large_trade",
+      "stage": "REJECTED_DEV",
+      "dev_cells": 90,
+      "dev_survivors": 0,
+      "status": "REJECTED_DEV",
+      "validation_survivors": 0,
+      "oos_survivors": 0
+    },
+    "H0017_MICRO_MOMENTUM_long_above": {
+      "hypothesis": {
+        "HYPOTHESIS_ID": "H0017_MICRO_MOMENTUM_long_above",
+        "FAMILY": "MICRO_MOMENTUM",
+        "ECONOMIC_RATIONALE": "combined aggression+intensity+price response",
+        "SIGNAL_DEFINITION": "micro_momentum_signal with long_above threshold=0.252258 (DEV quantile-based)",
+        "FEATURES_USED": [
+          "micro_momentum_signal"
+        ],
+        "DIRECTION": "long_above",
+        "PARAMETERS": {
+          "signal_feature": "micro_momentum_signal",
+          "threshold": 0.2522579536849098,
+          "hold_bars": 5,
+          "window": 20
+        },
+        "EXPECTED_MECHANISM": "micro_momentum"
+      },
+      "equivalence_key": "MICRO_MOMENTUM|micro_momentum_signal|long_above|0.252258|20|micro_momentum",
+      "stage": "REJECTED_DEV",
+      "dev_cells": 90,
+      "dev_survivors": 0,
+      "status": "REJECTED_DEV",
+      "validation_survivors": 0,
+      "oos_survivors": 0
+    },
+    "H0018_MICRO_MOMENTUM_long_below": {
+      "hypothesis": {
+        "HYPOTHESIS_ID": "H0018_MICRO_MOMENTUM_long_below",
+        "FAMILY": "MICRO_MOMENTUM",
+        "ECONOMIC_RATIONALE": "combined aggression+intensity+price response",
+        "SIGNAL_DEFINITION": "micro_momentum_signal with long_below threshold=-0.307907 (DEV quantile-based)",
+        "FEATURES_USED": [
+          "micro_momentum_signal"
+        ],
+        "DIRECTION": "long_below",
+        "PARAMETERS": {
+          "signal_feature": "micro_momentum_signal",
+          "threshold": -0.3079065967595709,
+          "hold_bars": 5,
+          "window": 20
+        },
+        "EXPECTED_MECHANISM": "micro_momentum"
+      },
+      "equivalence_key": "MICRO_MOMENTUM|micro_momentum_signal|long_below|-0.307907|20|micro_momentum",
+      "stage": "REJECTED_DEV",
+      "dev_cells": 90,
+      "dev_survivors": 0,
+      "status": "REJECTED_DEV",
+      "validation_survivors": 0,
+      "oos_survivors": 0
+    },
+    "H0019_MICRO_MEAN_REVERSION_long_above": {
+      "hypothesis": {
+        "HYPOTHESIS_ID": "H0019_MICRO_MEAN_REVERSION_long_above",
+        "FAMILY": "MICRO_MEAN_REVERSION",
+        "ECONOMIC_RATIONALE": "extreme imbalance without proportional displacement",
+        "SIGNAL_DEFINITION": "micro_mean_reversion_signal with long_above threshold=0.483780 (DEV quantile-based)",
+        "FEATURES_USED": [
+          "micro_mean_reversion_signal"
+        ],
+        "DIRECTION": "long_above",
+        "PARAMETERS": {
+          "signal_feature": "micro_mean_reversion_signal",
+          "threshold": 0.48377952713333083,
+          "hold_bars": 5,
+          "window": 20
+        },
+        "EXPECTED_MECHANISM": "micro_mean_reversion"
+      },
+      "equivalence_key": "MICRO_MEAN_REVERSION|micro_mean_reversion_signal|long_above|0.48378|20|micro_mean_reversion",
+      "stage": "REJECTED_DEV",
+      "dev_cells": 90,
+      "dev_survivors": 0,
+      "status": "REJECTED_DEV",
+      "validation_survivors": 0,
+      "oos_survivors": 0
+    },
+    "H0020_MICRO_MEAN_REVERSION_long_below": {
+      "hypothesis": {
+        "HYPOTHESIS_ID": "H0020_MICRO_MEAN_REVERSION_long_below",
+        "FAMILY": "MICRO_MEAN_REVERSION",
+        "ECONOMIC_RATIONALE": "extreme imbalance without proportional displacement",
+        "SIGNAL_DEFINITION": "micro_mean_reversion_signal with long_below threshold=-0.515357 (DEV quantile-based)",
+        "FEATURES_USED": [
+          "micro_mean_reversion_signal"
+        ],
+        "DIRECTION": "long_below",
+        "PARAMETERS": {
+          "signal_feature": "micro_mean_reversion_signal",
+          "threshold": -0.515357492659926,
+          "hold_bars": 5,
+          "window": 20
+        },
+        "EXPECTED_MECHANISM": "micro_mean_reversion"
+      },
+      "equivalence_key": "MICRO_MEAN_REVERSION|micro_mean_reversion_signal|long_below|-0.515357|20|micro_mean_reversion",
+      "stage": "REJECTED_DEV",
+      "dev_cells": 90,
+      "dev_survivors": 0,
+      "status": "REJECTED_DEV",
+      "validation_survivors": 0,
+      "oos_survivors": 0
+    },
+    "H0021_FLOW_COMPRESSION_VOL_EXPANSION_long_above": {
+      "hypothesis": {
+        "HYPOTHESIS_ID": "H0021_FLOW_COMPRESSION_VOL_EXPANSION_long_above",
+        "FAMILY": "FLOW_COMPRESSION_VOL_EXPANSION",
+        "ECONOMIC_RATIONALE": "compression then volatility expansion",
+        "SIGNAL_DEFINITION": "flow_compression_vol_expansion_signal with long_above threshold=-0.146208 (DEV quantile-based)",
+        "FEATURES_USED": [
+          "flow_compression_vol_expansion_signal"
+        ],
+        "DIRECTION": "long_above",
+        "PARAMETERS": {
+          "signal_feature": "flow_compression_vol_expansion_signal",
+          "threshold": -0.14620821610324636,
+          "hold_bars": 5,
+          "window": 20
+        },
+        "EXPECTED_MECHANISM": "vol_expansion"
+      },
+      "equivalence_key": "FLOW_COMPRESSION_VOL_EXPANSION|flow_compression_vol_expansion_signal|long_above|-0.146208|20|vol_expansion",
+      "stage": "REJECTED_VALIDATION_OR_OOS",
+      "dev_cells": 90,
+      "dev_survivors": 2,
+      "status": "REJECTED_VALIDATION_OR_OOS",
+      "validation_survivors": 0,
+      "oos_survivors": 0
+    },
+    "H0022_FLOW_COMPRESSION_VOL_EXPANSION_long_below": {
+      "hypothesis": {
+        "HYPOTHESIS_ID": "H0022_FLOW_COMPRESSION_VOL_EXPANSION_long_below",
+        "FAMILY": "FLOW_COMPRESSION_VOL_EXPANSION",
+        "ECONOMIC_RATIONALE": "compression then volatility expansion",
+        "SIGNAL_DEFINITION": "flow_compression_vol_expansion_signal with long_below threshold=-0.648080 (DEV quantile-based)",
+        "FEATURES_USED": [
+          "flow_compression_vol_expansion_signal"
+        ],
+        "DIRECTION": "long_below",
+        "PARAMETERS": {
+          "signal_feature": "flow_compression_vol_expansion_signal",
+          "threshold": -0.6480804377406759,
+          "hold_bars": 5,
+          "window": 20
+        },
+        "EXPECTED_MECHANISM": "vol_expansion"
+      },
+      "equivalence_key": "FLOW_COMPRESSION_VOL_EXPANSION|flow_compression_vol_expansion_signal|long_below|-0.64808|20|vol_expansion",
+      "stage": "REJECTED_DEV",
+      "dev_cells": 90,
+      "dev_survivors": 0,
+      "status": "REJECTED_DEV",
+      "validation_survivors": 0,
+      "oos_survivors": 0
+    },
+    "H0023_BTC_TO_ETH_LEAD_long_above": {
+      "hypothesis": {
+        "HYPOTHESIS_ID": "H0023_BTC_TO_ETH_LEAD_long_above",
+        "FAMILY": "BTC_TO_ETH_LEAD",
+        "ECONOMIC_RATIONALE": "BTC information leads ETH",
+        "SIGNAL_DEFINITION": "btc_to_eth_lead_signal with long_above threshold=1.238616 (DEV quantile-based)",
+        "FEATURES_USED": [
+          "btc_to_eth_lead_signal"
+        ],
+        "DIRECTION": "long_above",
+        "PARAMETERS": {
+          "signal_feature": "btc_to_eth_lead_signal",
+          "threshold": 1.238616190622868,
+          "hold_bars": 8,
+          "window": 20
+        },
+        "EXPECTED_MECHANISM": "cross_asset_lead"
+      },
+      "equivalence_key": "BTC_TO_ETH_LEAD|btc_to_eth_lead_signal|long_above|1.238616|20|cross_asset_lead",
+      "stage": "REJECTED_DEV",
+      "dev_cells": 45,
+      "dev_survivors": 0,
+      "status": "REJECTED_DEV",
+      "validation_survivors": 0,
+      "oos_survivors": 0
+    },
+    "H0024_BTC_TO_ETH_LEAD_long_below": {
+      "hypothesis": {
+        "HYPOTHESIS_ID": "H0024_BTC_TO_ETH_LEAD_long_below",
+        "FAMILY": "BTC_TO_ETH_LEAD",
+        "ECONOMIC_RATIONALE": "BTC information leads ETH",
+        "SIGNAL_DEFINITION": "btc_to_eth_lead_signal with long_below threshold=-1.235964 (DEV quantile-based)",
+        "FEATURES_USED": [
+          "btc_to_eth_lead_signal"
+        ],
+        "DIRECTION": "long_below",
+        "PARAMETERS": {
+          "signal_feature": "btc_to_eth_lead_signal",
+          "threshold": -1.2359639798897915,
+          "hold_bars": 8,
+          "window": 20
+        },
+        "EXPECTED_MECHANISM": "cross_asset_lead"
+      },
+      "equivalence_key": "BTC_TO_ETH_LEAD|btc_to_eth_lead_signal|long_below|-1.235964|20|cross_asset_lead",
+      "stage": "REJECTED_DEV",
+      "dev_cells": 45,
+      "dev_survivors": 0,
+      "status": "REJECTED_DEV",
+      "validation_survivors": 0,
+      "oos_survivors": 0
+    },
+    "H0025_ETH_TO_BTC_LEAD_long_above": {
+      "hypothesis": {
+        "HYPOTHESIS_ID": "H0025_ETH_TO_BTC_LEAD_long_above",
+        "FAMILY": "ETH_TO_BTC_LEAD",
+        "ECONOMIC_RATIONALE": "ETH information leads BTC",
+        "SIGNAL_DEFINITION": "eth_to_btc_lead_signal with long_above threshold=1.203623 (DEV quantile-based)",
+        "FEATURES_USED": [
+          "eth_to_btc_lead_signal"
+        ],
+        "DIRECTION": "long_above",
+        "PARAMETERS": {
+          "signal_feature": "eth_to_btc_lead_signal",
+          "threshold": 1.2036232641142686,
+          "hold_bars": 8,
+          "window": 20
+        },
+        "EXPECTED_MECHANISM": "cross_asset_lead"
+      },
+      "equivalence_key": "ETH_TO_BTC_LEAD|eth_to_btc_lead_signal|long_above|1.203623|20|cross_asset_lead",
+      "stage": "REJECTED_DEV",
+      "dev_cells": 45,
+      "dev_survivors": 0,
+      "status": "REJECTED_DEV",
+      "validation_survivors": 0,
+      "oos_survivors": 0
+    },
+    "H0026_ETH_TO_BTC_LEAD_long_below": {
+      "hypothesis": {
+        "HYPOTHESIS_ID": "H0026_ETH_TO_BTC_LEAD_long_below",
+        "FAMILY": "ETH_TO_BTC_LEAD",
+        "ECONOMIC_RATIONALE": "ETH information leads BTC",
+        "SIGNAL_DEFINITION": "eth_to_btc_lead_signal with long_below threshold=-1.200608 (DEV quantile-based)",
+        "FEATURES_USED": [
+          "eth_to_btc_lead_signal"
+        ],
+        "DIRECTION": "long_below",
+        "PARAMETERS": {
+          "signal_feature": "eth_to_btc_lead_signal",
+          "threshold": -1.200607663645476,
+          "hold_bars": 8,
+          "window": 20
+        },
+        "EXPECTED_MECHANISM": "cross_asset_lead"
+      },
+      "equivalence_key": "ETH_TO_BTC_LEAD|eth_to_btc_lead_signal|long_below|-1.200608|20|cross_asset_lead",
+      "stage": "REJECTED_DEV",
+      "dev_cells": 45,
+      "dev_survivors": 0,
+      "status": "REJECTED_DEV",
+      "validation_survivors": 0,
+      "oos_survivors": 0
+    },
+    "H0027_CROSS_ASSET_FLOW_DIVERGENCE_long_above": {
+      "hypothesis": {
+        "HYPOTHESIS_ID": "H0027_CROSS_ASSET_FLOW_DIVERGENCE_long_above",
+        "FAMILY": "CROSS_ASSET_FLOW_DIVERGENCE",
+        "ECONOMIC_RATIONALE": "abnormal BTC/ETH flow-price divergence",
+        "SIGNAL_DEFINITION": "cross_asset_flow_divergence_signal with long_above threshold=0.492211 (DEV quantile-based)",
+        "FEATURES_USED": [
+          "cross_asset_flow_divergence_signal"
+        ],
+        "DIRECTION": "long_above",
+        "PARAMETERS": {
+          "signal_feature": "cross_asset_flow_divergence_signal",
+          "threshold": 0.492211031211478,
+          "hold_bars": 5,
+          "window": 20
+        },
+        "EXPECTED_MECHANISM": "cross_asset_divergence"
+      },
+      "equivalence_key": "CROSS_ASSET_FLOW_DIVERGENCE|cross_asset_flow_divergence_signal|long_above|0.492211|20|cross_asset_divergence",
+      "stage": "REJECTED_DEV",
+      "dev_cells": 90,
+      "dev_survivors": 0,
+      "status": "REJECTED_DEV",
+      "validation_survivors": 0,
+      "oos_survivors": 0
+    },
+    "H0028_CROSS_ASSET_FLOW_DIVERGENCE_long_below": {
+      "hypothesis": {
+        "HYPOTHESIS_ID": "H0028_CROSS_ASSET_FLOW_DIVERGENCE_long_below",
+        "FAMILY": "CROSS_ASSET_FLOW_DIVERGENCE",
+        "ECONOMIC_RATIONALE": "abnormal BTC/ETH flow-price divergence",
+        "SIGNAL_DEFINITION": "cross_asset_flow_divergence_signal with long_below threshold=-0.492211 (DEV quantile-based)",
+        "FEATURES_USED": [
+          "cross_asset_flow_divergence_signal"
+        ],
+        "DIRECTION": "long_below",
+        "PARAMETERS": {
+          "signal_feature": "cross_asset_flow_divergence_signal",
+          "threshold": -0.4922110312114779,
+          "hold_bars": 5,
+          "window": 20
+        },
+        "EXPECTED_MECHANISM": "cross_asset_divergence"
+      },
+      "equivalence_key": "CROSS_ASSET_FLOW_DIVERGENCE|cross_asset_flow_divergence_signal|long_below|-0.492211|20|cross_asset_divergence",
+      "stage": "REJECTED_DEV",
+      "dev_cells": 90,
+      "dev_survivors": 0,
+      "status": "REJECTED_DEV",
+      "validation_survivors": 0,
+      "oos_survivors": 0
+    },
+    "H0029_REGIME_TRANSITION_EVENT_long_above": {
+      "hypothesis": {
+        "HYPOTHESIS_ID": "H0029_REGIME_TRANSITION_EVENT_long_above",
+        "FAMILY": "REGIME_TRANSITION_EVENT",
+        "ECONOMIC_RATIONALE": "signals near regime transitions, not universal filter",
+        "SIGNAL_DEFINITION": "regime_transition_signal with long_above threshold=1.250000 (DEV quantile-based)",
+        "FEATURES_USED": [
+          "regime_transition_signal"
+        ],
+        "DIRECTION": "long_above",
+        "PARAMETERS": {
+          "signal_feature": "regime_transition_signal",
+          "threshold": 1.25,
+          "hold_bars": 5,
+          "window": 20
+        },
+        "EXPECTED_MECHANISM": "regime_transition"
+      },
+      "equivalence_key": "REGIME_TRANSITION_EVENT|regime_transition_signal|long_above|1.25|20|regime_transition",
+      "stage": "REJECTED_DEV",
+      "dev_cells": 0,
+      "dev_survivors": 0,
+      "status": "REJECTED_DEV",
+      "validation_survivors": 0,
+      "oos_survivors": 0
+    },
+    "H0030_REGIME_TRANSITION_EVENT_long_below": {
+      "hypothesis": {
+        "HYPOTHESIS_ID": "H0030_REGIME_TRANSITION_EVENT_long_below",
+        "FAMILY": "REGIME_TRANSITION_EVENT",
+        "ECONOMIC_RATIONALE": "signals near regime transitions, not universal filter",
+        "SIGNAL_DEFINITION": "regime_transition_signal with long_below threshold=-1.250000 (DEV quantile-based)",
+        "FEATURES_USED": [
+          "regime_transition_signal"
+        ],
+        "DIRECTION": "long_below",
+        "PARAMETERS": {
+          "signal_feature": "regime_transition_signal",
+          "threshold": -1.25,
+          "hold_bars": 5,
+          "window": 20
+        },
+        "EXPECTED_MECHANISM": "regime_transition"
+      },
+      "equivalence_key": "REGIME_TRANSITION_EVENT|regime_transition_signal|long_below|-1.25|20|regime_transition",
+      "stage": "REJECTED_DEV",
+      "dev_cells": 0,
+      "dev_survivors": 0,
+      "status": "REJECTED_DEV",
+      "validation_survivors": 0,
+      "oos_survivors": 0
+    }
+  },
+  "candidates": [],
+  "totals": {
+    "TOTAL_HYPOTHESES_TESTED": 30,
+    "TOTAL_CONFIGURATIONS_TESTED": 30,
+    "TOTAL_CONTEXT_CELLS_TESTED": 2160,
+    "DEV_SURVIVORS": 3,
+    "VALIDATION_SURVIVORS": 0,
+    "OOS_SURVIVORS": 0
+  },
+  "status": "RESEARCH_SPACE_EXHAUSTED_WITHOUT_EDGE",
+  "round": 6,
+  "started_at": "2026-08-25T02:15:10.928835+00:00",
+  "updated_at": "2026-08-25T04:57:44.586831+00:00"
+}

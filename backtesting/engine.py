@@ -47,6 +47,7 @@ class _Position:
 
     entry_price: float
     quantity: float
+    entry_fee: float
     stop_loss: float
     take_profit: float
     trailing_stop_pct: float
@@ -221,8 +222,10 @@ class BacktestEngine:
                 position.highest_price = max(position.highest_price, current_price)
 
                 # Verifica stops antes dos sinais de saida da estrategia
-                stop_hit = current_price <= position.stop_loss
-                tp_hit = current_price >= position.take_profit
+                bar_high = float(current_bar["high"])
+                bar_low = float(current_bar["low"])
+                stop_hit = bar_low <= position.stop_loss
+                tp_hit = bar_high >= position.take_profit
                 trailing_hit = self._risk_manager.check_trailing_stop(
                     position.entry_price,
                     current_price,
@@ -253,7 +256,8 @@ class BacktestEngine:
                 if close_reason:
                     fee = position.quantity * close_price * self._config.fee_pct
                     proceeds = position.quantity * close_price - fee
-                    pnl = proceeds - position.quantity * position.entry_price
+                    exit_fee = position.quantity * close_price * self._config.fee_pct
+                    pnl = proceeds - position.quantity * position.entry_price - position.entry_fee
                     cash += proceeds
 
                     trade_record = {
@@ -261,6 +265,8 @@ class BacktestEngine:
                         "entry_time": position.entry_time,
                         "exit_price": close_price,
                         "quantity": position.quantity,
+                        "entry_fee": position.entry_fee,
+                        "exit_fee": exit_fee,
                         "pnl": pnl,
                         "pnl_pct": pnl / (position.quantity * position.entry_price),
                         "exit_reason": close_reason,
@@ -384,6 +390,7 @@ class BacktestEngine:
                         position = _Position(
                             entry_price=current_price,
                             quantity=qty_final,
+                            entry_fee=fee,
                             stop_loss=risk_params.stop_loss,
                             take_profit=risk_params.take_profit,
                             trailing_stop_pct=risk_params.trailing_stop_pct or 0.015,

@@ -604,7 +604,13 @@ class PaperLiveService:
         frame = self._bound_frame(frame, cfg.max_frame_bars)
 
         last_open_time = self._state_datetime(state.get("last_open_time"))
-        process_start_index = self._resolve_start_index(frame, last_open_time, cfg.bootstrap_replay_bars)
+        is_new_execution = not bool(state)
+        if is_new_execution:
+            # Historical candles warm indicators only; Paper starts at the next closed candle.
+            last_open_time = frame.index[-1].to_pydatetime()
+            process_start_index = len(frame)
+        else:
+            process_start_index = self._resolve_start_index(frame, last_open_time, cfg.bootstrap_replay_bars)
         cycles = int(state.get("cycles") or 0)
         last_report_at = self._state_datetime(state.get("last_report_at"))
         last_report_closed_trades = int(state.get("last_report_closed_trades") or 0)
@@ -628,6 +634,8 @@ class PaperLiveService:
                     frame=frame,
                     symbol=cfg.symbol,
                     start_index=process_start_index,
+                    timeframe=cfg.timeframe,
+                    paper_start_timestamp=started,
                 )
                 stats["processed_bars"] = int(stats["processed_bars"]) + processed_in_cycle
 
@@ -657,6 +665,7 @@ class PaperLiveService:
                     state_key,
                     {
                         "execution_id": execution_id,
+                        "paper_start_timestamp": started.isoformat(),
                         "symbol": cfg.symbol,
                         "timeframe": cfg.timeframe,
                         "strategy_name": cfg.strategy_name,
@@ -872,7 +881,7 @@ class PaperLiveService:
             [{"open": float(r[1]), "high": float(r[2]), "low": float(r[3]), "close": float(r[4]), "volume": float(r[5])} for r in records],
             index=pd.DatetimeIndex([r[0] for r in records], tz="UTC"),
         )
-        return frame
+        return self._closed_candles(frame, timeframe)
 
     def _load_candles_after(self, symbol: str, timeframe: str, last_open_time: Any) -> pd.DataFrame:
         if last_open_time is None:
@@ -905,7 +914,13 @@ class PaperLiveService:
             [{"open": float(r[1]), "high": float(r[2]), "low": float(r[3]), "close": float(r[4]), "volume": float(r[5])} for r in rows],
             index=pd.DatetimeIndex([r[0] for r in rows], tz="UTC"),
         )
-        return frame
+        return self._closed_candles(frame, timeframe)
+
+    @staticmethod
+    def _closed_candles(frame: pd.DataFrame, timeframe: str) -> pd.DataFrame:
+        duration = pd.Timedelta(timeframe)
+        now = pd.Timestamp.now(tz="UTC")
+        return frame.loc[frame.index + duration <= now]
 
     def _resolve_start_index(self, frame: pd.DataFrame, last_open_time: datetime | None, replay_bars: int) -> int:
         if frame.empty:
@@ -927,11 +942,16 @@ class PaperLiveService:
         frame: pd.DataFrame,
         symbol: str,
         start_index: int,
+        timeframe: str,
+        paper_start_timestamp: datetime,
     ) -> int:
         if frame.empty:
             return 0
         processed = 0
         for i in range(max(50, int(start_index)), len(frame)):
+            candle_close = frame.index[i] + pd.Timedelta(timeframe)
+            if candle_close <= pd.Timestamp(paper_start_timestamp):
+                continue
             window = frame.iloc[: i + 1]
             trader.on_bar(window, symbol)
             processed += 1

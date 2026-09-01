@@ -1,0 +1,254 @@
+{
+  "cycle": "STRATEGY_DISCOVERY_CYCLE_2",
+  "generated_at": "2026-08-18T19:24:10.089571+00:00",
+  "data": {
+    "start": "2024-01-01T00:00:00+00:00",
+    "end": "2026-08-18T18:00:00+00:00",
+    "days": 960.75,
+    "source": "database candles table",
+    "symbols": [
+      "BTC/USDT",
+      "ETH/USDT",
+      "SOL/USDT",
+      "BNB/USDT"
+    ],
+    "timeframes": [
+      "5m",
+      "15m",
+      "1h"
+    ],
+    "fee_model": "0.1% per side",
+    "slippage_model": "0.0% explicit slippage; higher-cost stress at 0.15% per side"
+  },
+  "split": {
+    "DEV": {
+      "start": "2024-01-01T00:00:00+00:00",
+      "end": "2025-07-30T10:48:00+00:00"
+    },
+    "VALIDATION": {
+      "start": "2025-07-30T10:48:00+00:00",
+      "end": "2026-02-07T14:24:00+00:00"
+    },
+    "OOS": {
+      "start": "2026-02-07T14:24:00+00:00",
+      "end": "2026-08-18T18:00:00+00:00"
+    }
+  },
+  "lookahead_bias_check": {
+    "status": "PASS",
+    "lookahead_bias": "NO",
+    "rule": "signals use rows <= t and fills use open[t+1]"
+  },
+  "search_budget": {
+    "per_family": 12,
+    "total": 36,
+    "maximum_allowed": 81
+  },
+  "families": {
+    "RANGE": {
+      "hypothesis": {
+        "statement": "Em mercados laterais, compras proximas ao limite inferior do range tendem a retornar ao centro antes de uma ruptura persistente.",
+        "parameters": [
+          "range_window",
+          "entry_fraction",
+          "max_holding_bars"
+        ],
+        "search_space": {
+          "range_window": [
+            24,
+            48,
+            96
+          ],
+          "entry_fraction": [
+            0.1,
+            0.2
+          ],
+          "max_holding_bars": [
+            6,
+            12
+          ]
+        }
+      },
+      "configurations_tested": 12,
+      "dev_positive_configurations": 0,
+      "selected": [],
+      "best_dev": {
+        "family": "RANGE",
+        "parameters": "{\"entry_fraction\": 0.1, \"max_holding_bars\": 12, \"range_window\": 96}",
+        "dev_trades": 16583,
+        "dev_trade_class": "USABLE",
+        "dev_pf": 0.565172499301968,
+        "dev_expectancy": -19.899867463726693,
+        "dev_max_dd": 32.24304298192825,
+        "dev_sharpe": -3.1906186624187063,
+        "dev_win_rate": 0.3259361997226075,
+        "dev_net_profit": -329999.50215097977,
+        "validation_trades": null,
+        "validation_pf": null,
+        "validation_expectancy": null,
+        "oos_trades": null,
+        "oos_pf": null,
+        "oos_expectancy": null,
+        "oos_max_dd": null,
+        "oos_sharpe": null,
+        "oos_net_profit": null,
+        "best_cell_pnl_share": 1.0,
+        "generalization": "CONCENTRATED",
+        "degradation": "NOT_EVALUATED",
+        "bootstrap": {
+          "iterations": 10000,
+          "pf_ci95": null,
+          "expectancy_ci95": null
+        },
+        "cost_robustness": "NOT_EVALUATED",
+        "status": "REJECTED_DEV_FAST_GATE"
+      }
+    },
+    "OPENING_RANGE": {
+      "hypothesis": {
+        "statement": "A quebra do range formado no inicio de cada dia UTC pode capturar a primeira expansao direcional intradiaria.",
+        "parameters": [
+          "opening_bars",
+          "breakout_buffer",
+          "max_holding_bars"
+        ],
+        "search_space": {
+          "opening_bars": [
+            3,
+            6,
+            12
+          ],
+          "breakout_buffer": [
+            0.0,
+            0.001
+          ],
+          "max_holding_bars": [
+            6,
+            12
+          ]
+        }
+      },
+      "configurations_tested": 12,
+      "dev_positive_configurations": 0,
+      "selected": [],
+      "best_dev": {
+        "family": "OPENING_RANGE",
+        "parameters": "{\"breakout_buffer\": 0.001, \"max_holding_bars\": 12, \"opening_bars\": 12}",
+        "dev_trades": 41995,
+        "dev_trade_class": "USABLE",
+        "dev_pf": 0.43928160989905435,
+        "dev_expectancy": -19.91243683657584,
+        "dev_max_dd": 83.97281374403431,
+        "dev_sharpe": -4.964225283851174,
+        "dev_win_rate": 0.2416954399333254,
+        "dev_net_profit": -836222.7849520023,
+        "validation_trades": null,
+        "validation_pf": null,
+        "validation_expectancy": null,
+        "oos_trades": null,
+        "oos_pf": null,
+        "oos_expectancy": null,
+        "oos_max_dd": null,
+        "oos_sharpe": null,
+        "oos_net_profit": null,
+        "best_cell_pnl_share": 1.0,
+        "generalization": "CONCENTRATED",
+        "degradation": "NOT_EVALUATED",
+        "bootstrap": {
+          "iterations": 10000,
+          "pf_ci95": null,
+          "expectancy_ci95": null
+        },
+        "cost_robustness": "NOT_EVALUATED",
+        "status": "REJECTED_DEV_FAST_GATE"
+      }
+    },
+    "LIQUIDITY_SWEEP": {
+      "hypothesis": {
+        "statement": "Um falso rompimento do fundo recente seguido de fechamento de recuperacao pode indicar absorcao e reversao curta.",
+        "parameters": [
+          "lookback",
+          "wick_ratio",
+          "max_holding_bars"
+        ],
+        "search_space": {
+          "lookback": [
+            24,
+            48,
+            96
+          ],
+          "wick_ratio": [
+            0.4,
+            0.6
+          ],
+          "max_holding_bars": [
+            6,
+            12
+          ]
+        },
+        "data_note": "Proxy OHLCV; o projeto nao possui order book, delta ou fluxo de liquidacoes."
+      },
+      "configurations_tested": 12,
+      "dev_positive_configurations": 0,
+      "selected": [],
+      "best_dev": {
+        "family": "LIQUIDITY_SWEEP",
+        "parameters": "{\"lookback\": 96, \"max_holding_bars\": 12, \"wick_ratio\": 0.4}",
+        "dev_trades": 7665,
+        "dev_trade_class": "USABLE",
+        "dev_pf": 0.5141485269627231,
+        "dev_expectancy": -21.24094595467206,
+        "dev_max_dd": 16.435556775264985,
+        "dev_sharpe": -3.973083789451265,
+        "dev_win_rate": 0.3338551859099804,
+        "dev_net_profit": -162811.85074256134,
+        "validation_trades": null,
+        "validation_pf": null,
+        "validation_expectancy": null,
+        "oos_trades": null,
+        "oos_pf": null,
+        "oos_expectancy": null,
+        "oos_max_dd": null,
+        "oos_sharpe": null,
+        "oos_net_profit": null,
+        "best_cell_pnl_share": 1.0,
+        "generalization": "CONCENTRATED",
+        "degradation": "NOT_EVALUATED",
+        "bootstrap": {
+          "iterations": 10000,
+          "pf_ci95": null,
+          "expectancy_ci95": null
+        },
+        "cost_robustness": "NOT_EVALUATED",
+        "status": "REJECTED_DEV_FAST_GATE"
+      }
+    }
+  },
+  "decision": {
+    "scientific_decision": "ALL_FAILED",
+    "winner": null,
+    "ready_for_paper": false,
+    "beats_cdb": false,
+    "baseline_cdb": {
+      "trades": 446,
+      "pf": 1.000983,
+      "expectancy": 0.010224,
+      "max_dd": 0.070645
+    }
+  },
+  "campaign": {
+    "campaign_running": "YES",
+    "contexts_active": "12/12",
+    "contexts_stale": 0,
+    "desync": 0,
+    "cycles_advancing": "YES"
+  },
+  "files_created": [
+    "strategy_discovery_cycle2_latest.json",
+    "strategy_discovery_cycle2_latest.csv",
+    "strategy_discovery_cycle2_latest.md"
+  ],
+  "files_modified": [
+    "strategy_discovery_cycle1.py"
+  ]
+}

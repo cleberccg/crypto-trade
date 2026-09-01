@@ -1,0 +1,41 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run Full Research Pipeline",
+			"type": "shell",
+			"command": "C:\\Python313\\python.exe",
+			"args": [
+				"run_full_research_pipeline.py"
+			],
+			"isBackground": true
+		},
+		{
+			"label": "Run Autonomous Research V3",
+			"type": "shell",
+			"command": "C:\\Python313\\python.exe",
+			"args": [
+				"run_autonomous_strategy_research_v3.py"
+			],
+			"isBackground": true
+		},
+		{
+			"label": "Run Autonomous Research V3",
+			"type": "shell",
+			"command": "C:\\Python313\\python.exe",
+			"args": [
+				"run_autonomous_strategy_research_v3.py"
+			],
+			"isBackground": true
+		},
+		{
+			"label": "Run Autonomous Research V3",
+			"type": "shell",
+			"command": "C:\\Python313\\python.exe",
+			"args": [
+				"run_autonomous_strategy_research_v3.py"
+			],
+			"isBackground": true
+		}
+	]
+}

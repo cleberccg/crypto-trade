@@ -1,0 +1,227 @@
+{
+  "dataset_hash": "92d692b65e17571e9248af3a51e9573f53884a39840bfc74996da73713ec73db",
+  "hypotheses": {
+    "FLOW_EXHAUSTION|flow_exhaustion_signal|1.0|long_above": {
+      "status": "REJECTED_DEV",
+      "family": "FLOW_EXHAUSTION",
+      "config": {
+        "feature": "flow_exhaustion_signal",
+        "threshold": 1.0,
+        "direction": "long_above"
+      },
+      "dev_cells": 90,
+      "reason": "no_cell_passed_dev_gate"
+    },
+    "FLOW_EXHAUSTION|flow_exhaustion_signal|-1.0|long_below": {
+      "status": "REJECTED_DEV",
+      "family": "FLOW_EXHAUSTION",
+      "config": {
+        "feature": "flow_exhaustion_signal",
+        "threshold": -1.0,
+        "direction": "long_below"
+      },
+      "dev_cells": 90,
+      "reason": "no_cell_passed_dev_gate"
+    },
+    "FLOW_EXHAUSTION|flow_exhaustion_signal|1.5|long_above": {
+      "status": "REJECTED_DEV",
+      "family": "FLOW_EXHAUSTION",
+      "config": {
+        "feature": "flow_exhaustion_signal",
+        "threshold": 1.5,
+        "direction": "long_above"
+      },
+      "dev_cells": 90,
+      "reason": "no_cell_passed_dev_gate"
+    },
+    "FLOW_EXHAUSTION|flow_exhaustion_signal|-1.5|long_below": {
+      "status": "REJECTED_DEV",
+      "family": "FLOW_EXHAUSTION",
+      "config": {
+        "feature": "flow_exhaustion_signal",
+        "threshold": -1.5,
+        "direction": "long_below"
+      },
+      "dev_cells": 90,
+      "reason": "no_cell_passed_dev_gate"
+    },
+    "TRADE_SIZE_SHIFT|trade_size_shift_signal|1.0|long_above": {
+      "status": "REJECTED_VALIDATION",
+      "family": "TRADE_SIZE_SHIFT",
+      "config": {
+        "feature": "trade_size_shift_signal",
+        "threshold": 1.0,
+        "direction": "long_above"
+      },
+      "dev_survivors": 1
+    },
+    "TRADE_SIZE_SHIFT|trade_size_shift_signal|-1.0|long_below": {
+      "status": "REJECTED_DEV",
+      "family": "TRADE_SIZE_SHIFT",
+      "config": {
+        "feature": "trade_size_shift_signal",
+        "threshold": -1.0,
+        "direction": "long_below"
+      },
+      "dev_cells": 90,
+      "reason": "no_cell_passed_dev_gate"
+    },
+    "TRADE_SIZE_SHIFT|trade_size_shift_signal|1.5|long_above": {
+      "status": "REJECTED_VALIDATION",
+      "family": "TRADE_SIZE_SHIFT",
+      "config": {
+        "feature": "trade_size_shift_signal",
+        "threshold": 1.5,
+        "direction": "long_above"
+      },
+      "dev_survivors": 2
+    },
+    "TRADE_SIZE_SHIFT|trade_size_shift_signal|-1.5|long_below": {
+      "status": "REJECTED_DEV",
+      "family": "TRADE_SIZE_SHIFT",
+      "config": {
+        "feature": "trade_size_shift_signal",
+        "threshold": -1.5,
+        "direction": "long_below"
+      },
+      "dev_cells": 90,
+      "reason": "no_cell_passed_dev_gate"
+    },
+    "ARRIVAL_RATE_SHOCK|arrival_rate_shock_signal|1.0|long_above": {
+      "status": "REJECTED_VALIDATION",
+      "family": "ARRIVAL_RATE_SHOCK",
+      "config": {
+        "feature": "arrival_rate_shock_signal",
+        "threshold": 1.0,
+        "direction": "long_above"
+      },
+      "dev_survivors": 2
+    },
+    "ARRIVAL_RATE_SHOCK|arrival_rate_shock_signal|-1.0|long_below": {
+      "status": "REJECTED_DEV",
+      "family": "ARRIVAL_RATE_SHOCK",
+      "config": {
+        "feature": "arrival_rate_shock_signal",
+        "threshold": -1.0,
+        "direction": "long_below"
+      },
+      "dev_cells": 90,
+      "reason": "no_cell_passed_dev_gate"
+    },
+    "ARRIVAL_RATE_SHOCK|arrival_rate_shock_signal|1.5|long_above": {
+      "status": "REJECTED_DEV",
+      "family": "ARRIVAL_RATE_SHOCK",
+      "config": {
+        "feature": "arrival_rate_shock_signal",
+        "threshold": 1.5,
+        "direction": "long_above"
+      },
+      "dev_cells": 90,
+      "reason": "no_cell_passed_dev_gate"
+    },
+    "ARRIVAL_RATE_SHOCK|arrival_rate_shock_signal|-1.5|long_below": {
+      "status": "REJECTED_DEV",
+      "family": "ARRIVAL_RATE_SHOCK",
+      "config": {
+        "feature": "arrival_rate_shock_signal",
+        "threshold": -1.5,
+        "direction": "long_below"
+      },
+      "dev_cells": 90,
+      "reason": "no_cell_passed_dev_gate"
+    },
+    "PRICE_FLOW_DIVERGENCE|price_flow_divergence_signal|1.0|long_above": {
+      "status": "REJECTED_DEV",
+      "family": "PRICE_FLOW_DIVERGENCE",
+      "config": {
+        "feature": "price_flow_divergence_signal",
+        "threshold": 1.0,
+        "direction": "long_above"
+      },
+      "dev_cells": 90,
+      "reason": "no_cell_passed_dev_gate"
+    },
+    "PRICE_FLOW_DIVERGENCE|price_flow_divergence_signal|-1.0|long_below": {
+      "status": "REJECTED_DEV",
+      "family": "PRICE_FLOW_DIVERGENCE",
+      "config": {
+        "feature": "price_flow_divergence_signal",
+        "threshold": -1.0,
+        "direction": "long_below"
+      },
+      "dev_cells": 90,
+      "reason": "no_cell_passed_dev_gate"
+    },
+    "PRICE_FLOW_DIVERGENCE|price_flow_divergence_signal|1.5|long_above": {
+      "status": "REJECTED_DEV",
+      "family": "PRICE_FLOW_DIVERGENCE",
+      "config": {
+        "feature": "price_flow_divergence_signal",
+        "threshold": 1.5,
+        "direction": "long_above"
+      },
+      "dev_cells": 90,
+      "reason": "no_cell_passed_dev_gate"
+    },
+    "PRICE_FLOW_DIVERGENCE|price_flow_divergence_signal|-1.5|long_below": {
+      "status": "REJECTED_DEV",
+      "family": "PRICE_FLOW_DIVERGENCE",
+      "config": {
+        "feature": "price_flow_divergence_signal",
+        "threshold": -1.5,
+        "direction": "long_below"
+      },
+      "dev_cells": 90,
+      "reason": "no_cell_passed_dev_gate"
+    },
+    "LARGE_TRADE_CONCENTRATION|large_trade_concentration_signal|1.0|long_above": {
+      "status": "REJECTED_VALIDATION",
+      "family": "LARGE_TRADE_CONCENTRATION",
+      "config": {
+        "feature": "large_trade_concentration_signal",
+        "threshold": 1.0,
+        "direction": "long_above"
+      },
+      "dev_survivors": 1
+    },
+    "LARGE_TRADE_CONCENTRATION|large_trade_concentration_signal|-1.0|long_below": {
+      "status": "REJECTED_OOS",
+      "family": "LARGE_TRADE_CONCENTRATION",
+      "config": {
+        "feature": "large_trade_concentration_signal",
+        "threshold": -1.0,
+        "direction": "long_below"
+      },
+      "dev_survivors": 1
+    },
+    "LARGE_TRADE_CONCENTRATION|large_trade_concentration_signal|1.5|long_above": {
+      "status": "REJECTED_DEV",
+      "family": "LARGE_TRADE_CONCENTRATION",
+      "config": {
+        "feature": "large_trade_concentration_signal",
+        "threshold": 1.5,
+        "direction": "long_above"
+      },
+      "dev_cells": 90,
+      "reason": "no_cell_passed_dev_gate"
+    },
+    "LARGE_TRADE_CONCENTRATION|large_trade_concentration_signal|-1.5|long_below": {
+      "status": "REJECTED_DEV",
+      "family": "LARGE_TRADE_CONCENTRATION",
+      "config": {
+        "feature": "large_trade_concentration_signal",
+        "threshold": -1.5,
+        "direction": "long_below"
+      },
+      "dev_cells": 90,
+      "reason": "no_cell_passed_dev_gate"
+    }
+  },
+  "candidates": [],
+  "totals": {
+    "hypotheses_tested": 20,
+    "configurations_tested": 20,
+    "cells_evaluated": 1800
+  },
+  "status": "SEARCH_SPACE_EXHAUSTED"
+}

@@ -1,0 +1,285 @@
+{
+  "cycle": "STRATEGY_DISCOVERY_CYCLE_1",
+  "generated_at": "2026-08-18T20:39:16.520391+00:00",
+  "data": {
+    "start": "2024-01-01T00:00:00+00:00",
+    "end": "2026-08-18T18:00:00+00:00",
+    "days": 960.75,
+    "source": "database candles table",
+    "symbols": [
+      "BTC/USDT",
+      "ETH/USDT",
+      "SOL/USDT",
+      "BNB/USDT"
+    ],
+    "timeframes": [
+      "5m",
+      "15m",
+      "1h"
+    ],
+    "fee_model": "0.1% per side",
+    "slippage_model": "0.0% explicit slippage; higher-cost stress at 0.15% per side"
+  },
+  "split": {
+    "DEV": {
+      "start": "2024-01-01T00:00:00+00:00",
+      "end": "2025-07-30T10:48:00+00:00"
+    },
+    "VALIDATION": {
+      "start": "2025-07-30T10:48:00+00:00",
+      "end": "2026-02-07T14:24:00+00:00"
+    },
+    "OOS": {
+      "start": "2026-02-07T14:24:00+00:00",
+      "end": "2026-08-18T18:00:00+00:00"
+    }
+  },
+  "lookahead_bias_check": {
+    "status": "PASS",
+    "lookahead_bias": "NO",
+    "rule": "signals use rows <= t and fills use open[t+1]"
+  },
+  "search_budget": {
+    "per_family": 12,
+    "total": 36,
+    "maximum_allowed": 81
+  },
+  "families": {
+    "MOMENTUM": {
+      "hypothesis": {
+        "statement": "Persistencia direcional e aceleracao recente podem continuar apos confirmacao de tendencia.",
+        "parameters": [
+          "lookback",
+          "trend_window",
+          "roc_threshold"
+        ],
+        "search_space": {
+          "lookback": [
+            12,
+            24,
+            48
+          ],
+          "trend_window": [
+            24,
+            48
+          ],
+          "roc_threshold": [
+            0.0,
+            0.002
+          ]
+        }
+      },
+      "configurations_tested": 12,
+      "dev_positive_configurations": 0,
+      "selected": [],
+      "best_dev": {
+        "family": "MOMENTUM",
+        "parameters": "{\"lookback\": 48, \"roc_threshold\": 0.002, \"trend_window\": 48}",
+        "dev_trades": 52289,
+        "dev_trade_class": "USABLE",
+        "dev_pf": 0.6130377110887119,
+        "dev_expectancy": -1.7330551124914113,
+        "dev_max_dd": 9.070557776713063,
+        "dev_sharpe": -1.9387566117556323,
+        "dev_win_rate": 0.295052496701027,
+        "dev_net_profit": -90619.7187770634,
+        "validation_trades": null,
+        "validation_pf": null,
+        "validation_expectancy": null,
+        "oos_trades": null,
+        "oos_pf": null,
+        "oos_expectancy": null,
+        "oos_max_dd": null,
+        "oos_sharpe": null,
+        "oos_net_profit": null,
+        "best_cell_pnl_share": 1.0,
+        "generalization": "CONCENTRATED",
+        "degradation": "NOT_EVALUATED",
+        "bootstrap": {
+          "iterations": 10000,
+          "pf_ci95": null,
+          "expectancy_ci95": null
+        },
+        "cost_robustness": "NOT_EVALUATED",
+        "status": "REJECTED_DEV_FAST_GATE"
+      }
+    },
+    "MEAN_REVERSION": {
+      "hypothesis": {
+        "statement": "Desvios extremos da media revertem quando a inclinacao recente nao indica tendencia forte.",
+        "parameters": [
+          "z_threshold",
+          "trend_window",
+          "max_holding_bars"
+        ],
+        "search_space": {
+          "z_threshold": [
+            1.5,
+            2.0,
+            2.5
+          ],
+          "trend_window": [
+            24,
+            48
+          ],
+          "max_holding_bars": [
+            6,
+            12
+          ]
+        }
+      },
+      "configurations_tested": 12,
+      "dev_positive_configurations": 0,
+      "selected": [],
+      "best_dev": {
+        "family": "MEAN_REVERSION",
+        "parameters": "{\"max_holding_bars\": 12, \"trend_window\": 48, \"z_threshold\": 1.5}",
+        "dev_trades": 20632,
+        "dev_trade_class": "USABLE",
+        "dev_pf": 0.3772511895641154,
+        "dev_expectancy": -2.8068337490860515,
+        "dev_max_dd": 5.798403998903424,
+        "dev_sharpe": -4.689480906998562,
+        "dev_win_rate": 0.3209092671578131,
+        "dev_net_profit": -57910.59391114341,
+        "validation_trades": null,
+        "validation_pf": null,
+        "validation_expectancy": null,
+        "oos_trades": null,
+        "oos_pf": null,
+        "oos_expectancy": null,
+        "oos_max_dd": null,
+        "oos_sharpe": null,
+        "oos_net_profit": null,
+        "best_cell_pnl_share": 1.0,
+        "generalization": "CONCENTRATED",
+        "degradation": "NOT_EVALUATED",
+        "bootstrap": {
+          "iterations": 10000,
+          "pf_ci95": null,
+          "expectancy_ci95": null
+        },
+        "cost_robustness": "NOT_EVALUATED",
+        "status": "REJECTED_DEV_FAST_GATE"
+      }
+    },
+    "VOLATILITY_BREAKOUT": {
+      "hypothesis": {
+        "statement": "Expansao de volatilidade apos compressao pode gerar rompimento direcional persistente.",
+        "parameters": [
+          "range_window",
+          "compression_ratio",
+          "expansion_ratio"
+        ],
+        "search_space": {
+          "range_window": [
+            12,
+            24,
+            48
+          ],
+          "compression_ratio": [
+            0.6,
+            0.8
+          ],
+          "expansion_ratio": [
+            1.2,
+            1.5
+          ]
+        }
+      },
+      "configurations_tested": 12,
+      "dev_positive_configurations": 1,
+      "selected": [
+        {
+          "family": "VOLATILITY_BREAKOUT",
+          "parameters": "{\"compression_ratio\": 0.8, \"expansion_ratio\": 1.2, \"range_window\": 48}",
+          "dev_trades": 5,
+          "dev_trade_class": "INSUFFICIENT",
+          "dev_pf": 11.99401189313365,
+          "dev_expectancy": 45.326944997082755,
+          "dev_max_dd": 0.001970728902840209,
+          "dev_sharpe": 9.859364860246856,
+          "dev_win_rate": 0.6,
+          "dev_net_profit": 226.63472498541378,
+          "validation_trades": 4,
+          "validation_pf": 0.0,
+          "validation_expectancy": -11.26393707027212,
+          "oos_trades": null,
+          "oos_pf": null,
+          "oos_expectancy": null,
+          "oos_max_dd": null,
+          "oos_sharpe": null,
+          "oos_net_profit": null,
+          "best_cell_pnl_share": 0.751292761570271,
+          "generalization": "CONCENTRATED",
+          "degradation": "NOT_EVALUATED",
+          "bootstrap": {
+            "iterations": 10000,
+            "pf_ci95": null,
+            "expectancy_ci95": null
+          },
+          "cost_robustness": "NOT_EVALUATED",
+          "status": "REJECTED_VALIDATION_GATE"
+        }
+      ],
+      "best": {
+        "family": "VOLATILITY_BREAKOUT",
+        "parameters": "{\"compression_ratio\": 0.8, \"expansion_ratio\": 1.2, \"range_window\": 48}",
+        "dev_trades": 5,
+        "dev_trade_class": "INSUFFICIENT",
+        "dev_pf": 11.99401189313365,
+        "dev_expectancy": 45.326944997082755,
+        "dev_max_dd": 0.001970728902840209,
+        "dev_sharpe": 9.859364860246856,
+        "dev_win_rate": 0.6,
+        "dev_net_profit": 226.63472498541378,
+        "validation_trades": 4,
+        "validation_pf": 0.0,
+        "validation_expectancy": -11.26393707027212,
+        "oos_trades": null,
+        "oos_pf": null,
+        "oos_expectancy": null,
+        "oos_max_dd": null,
+        "oos_sharpe": null,
+        "oos_net_profit": null,
+        "best_cell_pnl_share": 0.751292761570271,
+        "generalization": "CONCENTRATED",
+        "degradation": "NOT_EVALUATED",
+        "bootstrap": {
+          "iterations": 10000,
+          "pf_ci95": null,
+          "expectancy_ci95": null
+        },
+        "cost_robustness": "NOT_EVALUATED",
+        "status": "REJECTED_VALIDATION_GATE"
+      }
+    }
+  },
+  "decision": {
+    "scientific_decision": "ALL_FAILED",
+    "winner": null,
+    "ready_for_paper": false,
+    "beats_cdb": false,
+    "baseline_cdb": {
+      "trades": 446,
+      "pf": 1.000983,
+      "expectancy": 0.010224,
+      "max_dd": 0.070645
+    }
+  },
+  "campaign": {
+    "campaign_running": "YES",
+    "contexts_active": "12/12",
+    "contexts_stale": 0,
+    "desync": 0,
+    "cycles_advancing": "YES"
+  },
+  "files_created": [
+    "strategy_discovery_cycle1_latest.json",
+    "strategy_discovery_cycle1_latest.csv",
+    "strategy_discovery_cycle1_latest.md"
+  ],
+  "files_modified": [
+    "strategy_discovery_cycle1.py"
+  ]
+}
