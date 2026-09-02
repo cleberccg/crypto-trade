@@ -67,6 +67,9 @@ class PaperTrader:
         self._open_trade: OpenPosition | None = None
         self._highest_price_since_entry: float = 0.0
         self._lowest_price_since_entry: float = 0.0
+        self._latest_regime: str | None = None
+        self._last_strategy_evaluation: datetime | None = None
+        self._last_processed_candle: datetime | None = None
         self._execution_id = execution_id or str(uuid4())
         self._timeframe = timeframe
         self._strategy_version = str(strategy_version)
@@ -94,6 +97,9 @@ class PaperTrader:
             return {
                 "open_trade": None,
                 "highest_price_since_entry": self._highest_price_since_entry,
+                "latest_regime": self._latest_regime,
+                "last_strategy_evaluation": self._last_strategy_evaluation.isoformat() if self._last_strategy_evaluation else None,
+                "last_processed_candle": self._last_processed_candle.isoformat() if self._last_processed_candle else None,
                 "broker": self._broker.export_runtime_state(),
             }
         return {
@@ -113,6 +119,9 @@ class PaperTrader:
             },
             "highest_price_since_entry": self._highest_price_since_entry,
             "lowest_price_since_entry": self._lowest_price_since_entry,
+            "latest_regime": self._latest_regime,
+            "last_strategy_evaluation": self._last_strategy_evaluation.isoformat() if self._last_strategy_evaluation else None,
+            "last_processed_candle": self._last_processed_candle.isoformat() if self._last_processed_candle else None,
             "broker": self._broker.export_runtime_state(),
         }
 
@@ -120,6 +129,9 @@ class PaperTrader:
         if not state:
             return
         self._broker.import_runtime_state(state.get("broker") if isinstance(state, dict) else None)
+        self._latest_regime = str(state.get("latest_regime") or "") or None
+        self._last_strategy_evaluation = self._parse_datetime(state.get("last_strategy_evaluation"))
+        self._last_processed_candle = self._parse_datetime(state.get("last_processed_candle"))
 
         open_trade = state.get("open_trade")
         if not open_trade:
@@ -146,6 +158,15 @@ class PaperTrader:
         )
         self._highest_price_since_entry = float(state.get("highest_price_since_entry") or self._open_trade.entry_price)
         self._lowest_price_since_entry = float(state.get("lowest_price_since_entry") or self._open_trade.entry_price)
+
+    @staticmethod
+    def _parse_datetime(value: Any) -> datetime | None:
+        if not value:
+            return None
+        try:
+            return datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        except ValueError:
+            return None
 
         # Guard against stale or partial state where open_trade exists but broker has no base asset.
         available = self._broker.get_position_quantity(self._open_trade.symbol)
@@ -183,6 +204,7 @@ class PaperTrader:
         last = enriched.iloc[-1]
         current_price = float(last["close"])
         timestamp: datetime = last.name.to_pydatetime()  # type: ignore[union-attr]
+        self._update_telemetry(last, timestamp)
 
         if self._open_trade is not None:
             self._highest_price_since_entry = max(self._highest_price_since_entry, current_price)
@@ -226,6 +248,17 @@ class PaperTrader:
                 self._open_trade_action(symbol, current_price, timestamp, entry_sig, enriched)
 
         self._save_portfolio_snapshot(symbol, current_price, timestamp)
+
+    def refresh_telemetry(self, df: pd.DataFrame) -> None:
+        enriched = self._strategy.calculate(df)
+        last = enriched.iloc[-1]
+        timestamp: datetime = last.name.to_pydatetime()  # type: ignore[union-attr]
+        self._update_telemetry(last, timestamp)
+
+    def _update_telemetry(self, last: pd.Series, timestamp: datetime) -> None:
+        self._latest_regime = "TRENDING_BULL" if bool(last.get("regime_bull", False)) else "CASH"
+        self._last_strategy_evaluation = timestamp
+        self._last_processed_candle = timestamp
 
     def _open_trade_action(self, symbol: str, price: float, timestamp: datetime, signal, frame: pd.DataFrame) -> None:
         portfolio_value = float(self._portfolio_value_provider.get_available_portfolio_value())

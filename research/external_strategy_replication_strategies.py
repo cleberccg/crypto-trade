@@ -37,6 +37,8 @@ from backtesting.engine import BacktestConfig, BacktestEngine, BacktestResult
 from backtesting.metrics import compute_metrics
 from database.connection import get_session
 from database.repositories import CandleRepository
+from indicators.bollinger import BollingerBands
+from indicators.rsi import RSI
 from strategies.base_strategy import BaseStrategy, SignalType, StrategySignal
 from strategies.mean_reversion_v1 import MeanReversionV1Strategy
 
@@ -347,6 +349,192 @@ class RegimeAdaptiveStrategy(BaseStrategy):
         if bool(last.get("regime_sideways", False)):
             return self._mr.score(df)
         return 0.0
+
+
+class SimpleBollingerRsiMeanReversionStrategy(BaseStrategy):
+    """Public mean-reversion template: buy when close is below the lower
+    Bollinger Band and RSI is oversold; exit on reversion to the middle band
+    or RSI overbought. No trend, volume, ML, short, leverage, order-book, or
+    optimized filters."""
+
+    def __init__(
+        self,
+        bb_period: int = 20,
+        bb_std_dev: float = 2.0,
+        rsi_period: int = 14,
+        rsi_entry: float = 30.0,
+        rsi_exit: float = 70.0,
+    ) -> None:
+        self._bb_period = int(bb_period)
+        self._bb_std_dev = float(bb_std_dev)
+        self._rsi_period = int(rsi_period)
+        self._rsi_entry = float(rsi_entry)
+        self._rsi_exit = float(rsi_exit)
+        self._bb: BollingerBands | None = None
+        self._rsi: RSI | None = None
+
+    @property
+    def name(self) -> str:
+        return "ExtRepl_BollingerRsiMeanReversion"
+
+    def initialize(self) -> None:
+        self._bb = BollingerBands(period=self._bb_period, std_dev=self._bb_std_dev)
+        self._rsi = RSI(period=self._rsi_period)
+
+    def calculate(self, df: pd.DataFrame) -> pd.DataFrame:
+        if self._bb is None or self._rsi is None:
+            raise RuntimeError(f"{self.name} not initialized. Call initialize() first.")
+        out = df.copy()
+        bb = self._bb.calculate(df)
+        out["bb_middle"] = bb["middle"]
+        out["bb_upper"] = bb["upper"]
+        out["bb_lower"] = bb["lower"]
+        out["bb_percent_b"] = bb["percent_b"]
+        out["rsi"] = self._rsi.calculate(df)
+        return out
+
+    def entry_signal(self, df: pd.DataFrame) -> StrategySignal:
+        last = df.iloc[-1]
+        price = float(last["close"])
+        if any(pd.isna(last.get(col)) for col in ("bb_lower", "rsi")):
+            return StrategySignal(SignalType.HOLD, price, _ts(last.name), score=0.0)
+        if price < float(last["bb_lower"]) and float(last["rsi"]) <= self._rsi_entry:
+            return StrategySignal(
+                SignalType.BUY,
+                price,
+                _ts(last.name),
+                score=self.score(df),
+                stop_loss=price * NEVER_STOP_FRACTION,
+                take_profit=price * NEVER_TP_MULTIPLE,
+                trailing_stop_pct=NEVER_TRAILING_PCT,
+                metadata={"entry_reason": "bb_lower_plus_rsi_oversold"},
+            )
+        return StrategySignal(SignalType.HOLD, price, _ts(last.name), score=0.0)
+
+    def exit_signal(self, df: pd.DataFrame, entry_price: float) -> StrategySignal:
+        last = df.iloc[-1]
+        price = float(last["close"])
+        if any(pd.isna(last.get(col)) for col in ("bb_middle", "rsi")):
+            return StrategySignal(SignalType.HOLD, price, _ts(last.name), score=0.0)
+        if price >= float(last["bb_middle"]):
+            return StrategySignal(SignalType.SELL, price, _ts(last.name), score=self.score(df), metadata={"exit_reason": "reverted_to_middle_band"})
+        if float(last["rsi"]) >= self._rsi_exit:
+            return StrategySignal(SignalType.SELL, price, _ts(last.name), score=self.score(df), metadata={"exit_reason": "rsi_overbought"})
+        return StrategySignal(SignalType.HOLD, price, _ts(last.name), score=0.0)
+
+    def score(self, df: pd.DataFrame) -> float:
+        last = df.iloc[-1]
+        rsi = float(last.get("rsi", 100.0))
+        percent_b = float(last.get("bb_percent_b", 1.0))
+        rsi_score = max(0.0, min(1.0, (self._rsi_entry - rsi) / max(self._rsi_entry, 1e-9)))
+        band_score = max(0.0, min(1.0, -percent_b))
+        return round(float(max(0.1, 0.6 * rsi_score + 0.4 * band_score)), 4)
+
+
+class ZScoreMeanReversionStrategy(BaseStrategy):
+    """Public z-score mean reversion: buy when close is two rolling standard
+    deviations below its moving average; exit when price reverts to the mean."""
+
+    def __init__(self, lookback: int = 20, entry_z: float = -2.0, exit_z: float = 0.0) -> None:
+        self._lookback = int(lookback)
+        self._entry_z = float(entry_z)
+        self._exit_z = float(exit_z)
+
+    @property
+    def name(self) -> str:
+        return "ExtRepl_ZScoreMeanReversion"
+
+    def initialize(self) -> None:
+        return None
+
+    def calculate(self, df: pd.DataFrame) -> pd.DataFrame:
+        out = df.copy()
+        mean = out["close"].rolling(self._lookback).mean()
+        std = out["close"].rolling(self._lookback).std(ddof=0)
+        out["z_mean"] = mean
+        out["z_score"] = (out["close"] - mean) / std.replace(0.0, np.nan)
+        return out
+
+    def entry_signal(self, df: pd.DataFrame) -> StrategySignal:
+        last = df.iloc[-1]
+        price = float(last["close"])
+        z_score = last.get("z_score")
+        if z_score is not None and not pd.isna(z_score) and float(z_score) <= self._entry_z:
+            return StrategySignal(
+                SignalType.BUY,
+                price,
+                _ts(last.name),
+                score=self.score(df),
+                stop_loss=price * NEVER_STOP_FRACTION,
+                take_profit=price * NEVER_TP_MULTIPLE,
+                trailing_stop_pct=NEVER_TRAILING_PCT,
+                metadata={"entry_reason": "z_score_below_minus_2"},
+            )
+        return StrategySignal(SignalType.HOLD, price, _ts(last.name), score=0.0)
+
+    def exit_signal(self, df: pd.DataFrame, entry_price: float) -> StrategySignal:
+        last = df.iloc[-1]
+        price = float(last["close"])
+        z_score = last.get("z_score")
+        if z_score is not None and not pd.isna(z_score) and float(z_score) >= self._exit_z:
+            return StrategySignal(SignalType.SELL, price, _ts(last.name), score=self.score(df), metadata={"exit_reason": "z_score_reverted_to_mean"})
+        return StrategySignal(SignalType.HOLD, price, _ts(last.name), score=0.0)
+
+    def score(self, df: pd.DataFrame) -> float:
+        z_score = float(df.iloc[-1].get("z_score", 0.0))
+        return round(float(max(0.1, min(1.0, abs(min(0.0, z_score)) / max(abs(self._entry_z), 1e-9)))), 4)
+
+
+class MovingAverageDeviationReversalStrategy(BaseStrategy):
+    """Public deviation-from-moving-average reversal: buy when close is at
+    least 5% below the 50-period SMA; exit when price returns to the SMA."""
+
+    def __init__(self, ma_period: int = 50, entry_deviation: float = -0.05, exit_deviation: float = 0.0) -> None:
+        self._ma_period = int(ma_period)
+        self._entry_deviation = float(entry_deviation)
+        self._exit_deviation = float(exit_deviation)
+
+    @property
+    def name(self) -> str:
+        return "ExtRepl_MaDeviationReversal"
+
+    def initialize(self) -> None:
+        return None
+
+    def calculate(self, df: pd.DataFrame) -> pd.DataFrame:
+        out = df.copy()
+        out["ma"] = out["close"].rolling(self._ma_period).mean()
+        out["ma_deviation"] = (out["close"] / out["ma"]) - 1.0
+        return out
+
+    def entry_signal(self, df: pd.DataFrame) -> StrategySignal:
+        last = df.iloc[-1]
+        price = float(last["close"])
+        deviation = last.get("ma_deviation")
+        if deviation is not None and not pd.isna(deviation) and float(deviation) <= self._entry_deviation:
+            return StrategySignal(
+                SignalType.BUY,
+                price,
+                _ts(last.name),
+                score=self.score(df),
+                stop_loss=price * NEVER_STOP_FRACTION,
+                take_profit=price * NEVER_TP_MULTIPLE,
+                trailing_stop_pct=NEVER_TRAILING_PCT,
+                metadata={"entry_reason": "close_5pct_below_sma50"},
+            )
+        return StrategySignal(SignalType.HOLD, price, _ts(last.name), score=0.0)
+
+    def exit_signal(self, df: pd.DataFrame, entry_price: float) -> StrategySignal:
+        last = df.iloc[-1]
+        price = float(last["close"])
+        deviation = last.get("ma_deviation")
+        if deviation is not None and not pd.isna(deviation) and float(deviation) >= self._exit_deviation:
+            return StrategySignal(SignalType.SELL, price, _ts(last.name), score=self.score(df), metadata={"exit_reason": "returned_to_sma50"})
+        return StrategySignal(SignalType.HOLD, price, _ts(last.name), score=0.0)
+
+    def score(self, df: pd.DataFrame) -> float:
+        deviation = float(df.iloc[-1].get("ma_deviation", 0.0))
+        return round(float(max(0.1, min(1.0, abs(min(0.0, deviation)) / max(abs(self._entry_deviation), 1e-9)))), 4)
 
 
 # ---------------------------------------------------------------------------

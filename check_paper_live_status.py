@@ -34,6 +34,9 @@ class StateRow:
     updated_at: datetime | None
     paper_start_timestamp: datetime | None
     latest_candle: datetime | None
+    latest_regime: str | None
+    last_strategy_evaluation: datetime | None
+    last_processed_candle: datetime | None
     open_trade_qty: float
     open_trade_symbol: str
     broker_available_qty: float
@@ -113,6 +116,9 @@ def load_state(path: Path) -> StateRow | None:
         updated_at=parse_dt(payload.get("updated_at")),
         paper_start_timestamp=parse_dt(payload.get("paper_start_timestamp")),
         latest_candle=parse_dt(payload.get("last_open_time")),
+        latest_regime=str(runtime_state.get("latest_regime") or "") or None,
+        last_strategy_evaluation=parse_dt(runtime_state.get("last_strategy_evaluation")),
+        last_processed_candle=parse_dt(runtime_state.get("last_processed_candle")),
         open_trade_qty=open_trade_qty,
         open_trade_symbol=open_trade_symbol,
         broker_available_qty=broker_available_qty,
@@ -368,6 +374,44 @@ def fetch_database_trade_metrics(
     return metrics, latest_trade_time, latest_entry_time, latest_exit_time
 
 
+def print_paper_block(index: int, row: StateRow, stale_limit_seconds: float) -> dict[str, float | int]:
+    metrics = fetch_closed_trades_metrics([row.execution_id])
+    is_stale = row.lag_seconds is None or row.lag_seconds > stale_limit_seconds
+    runtime_days = (
+        None
+        if row.paper_start_timestamp is None
+        else max(0.0, (datetime.now(timezone.utc) - row.paper_start_timestamp).total_seconds() / 86400.0)
+    )
+    has_metrics = int(metrics["closed_trades"]) > 0
+    metric = lambda key, formatter: formatter(float(metrics[key])) if has_metrics else "N/A"
+
+    print("=" * 50)
+    print(f"PAPER {index} - {row.strategy_name} | {row.symbol} | {row.timeframe}")
+    print("=" * 50)
+    print(f"STRATEGY: {row.strategy_name}")
+    print(f"SYMBOL: {row.symbol}")
+    print(f"TIMEFRAME: {row.timeframe}")
+    print(f"WORKER_STATUS: {'STOPPED' if is_stale else 'RUNNING'}")
+    print(f"LATEST_CANDLE: {row.latest_candle.isoformat() if row.latest_candle else 'N/A'}")
+    print(f"LAST_STRATEGY_EVALUATION: {row.last_strategy_evaluation.isoformat() if row.last_strategy_evaluation else 'N/A'}")
+    print(f"LAST_PROCESSED_CANDLE: {row.last_processed_candle.isoformat() if row.last_processed_candle else 'N/A'}")
+    print(f"CURRENT_REGIME: {row.latest_regime or 'N/A'}")
+    print(f"CURRENT_POSITION: {'OPEN' if row.open_trade_qty > 0 else 'NONE'}")
+    print(f"PAPER_START_TIMESTAMP: {row.paper_start_timestamp.isoformat() if row.paper_start_timestamp else 'N/A'}")
+    print(f"PAPER_RUNTIME_DAYS: {runtime_days:.4f}" if runtime_days is not None else "PAPER_RUNTIME_DAYS: N/A")
+    print(f"CLOSED_TRADES: {int(metrics['closed_trades'])}")
+    print(f"WIN_RATE: {metric('win_rate', lambda value: f'{value * 100.0:.2f}%')}")
+    print(f"NET_PNL: {metric('net_profit', lambda value: f'{value:+.6f}')}")
+    print(f"NET_PF: {metric('profit_factor', lambda value: f'{value:.6f}')}")
+    print(f"NET_EXPECTANCY: {metric('expectancy', lambda value: f'{value:+.6f}')}")
+    print(f"SHARPE: {metric('sharpe', lambda value: f'{value:.6f}')}")
+    print(f"MAX_DRAWDOWN: {metric('max_drawdown', lambda value: f'{value:.6f}')}")
+    print("TOTAL_FEES: N/A")
+    print(f"EVIDENCE_STATUS: {'ACCUMULATING' if has_metrics else 'TOO_EARLY'}")
+    print(f"OPERATIONAL_ALERTS: {'WORKER_STOPPED' if is_stale else 'NONE'}")
+    return metrics
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Status do processo paper-live/supervisor.")
     parser.add_argument("--results-dir", default="optimization/results", help="Diretorio de resultados.")
@@ -391,8 +435,8 @@ def main() -> int:
         print("[ERRO] nenhum state file encontrado (paper_live_state__*.json)")
         return 2
 
-    has_explicit_context_filter = bool(args.strategy or args.symbol or args.timeframe)
-    campaign_id = str(args.campaign_id or "").strip() or ("" if has_explicit_context_filter else infer_current_campaign(rows))
+    has_explicit_context_filter = bool(args.strategy or args.symbol or args.timeframe or args.campaign_id)
+    campaign_id = str(args.campaign_id or "").strip()
     if campaign_id:
         rows = [r for r in rows if r.campaign_id == campaign_id]
     if args.strategy:
@@ -402,11 +446,14 @@ def main() -> int:
     if args.timeframe:
         rows = [r for r in rows if r.timeframe == str(args.timeframe)]
 
+    stale_limit_seconds = max(1.0, float(args.max_stale_min)) * 60.0
+    if not has_explicit_context_filter:
+        rows = [r for r in rows if r.lag_seconds is not None and r.lag_seconds <= stale_limit_seconds]
+
     if not rows:
         print("[ERRO] nenhum contexto encontrado para o filtro de campanha informado")
         return 2
 
-    stale_limit_seconds = max(1.0, float(args.max_stale_min)) * 60.0
     lags = [r.lag_seconds for r in rows if r.lag_seconds is not None]
 
     stale_rows = [r for r in rows if r.lag_seconds is None or r.lag_seconds > stale_limit_seconds]
@@ -442,7 +489,9 @@ def main() -> int:
         evidence = "TOO_EARLY" if not metrics_available else "ACCUMULATING"
         print(f"WORKER_STATUS: {'STOPPED' if is_stale else 'RUNNING'}")
         print(f"LATEST_CANDLE: {row.latest_candle.isoformat() if row.latest_candle else 'N/A'}")
-        print(f"CURRENT_REGIME: N/A")
+        print(f"CURRENT_REGIME: {row.latest_regime or 'N/A'}")
+        print(f"LAST_STRATEGY_EVALUATION: {row.last_strategy_evaluation.isoformat() if row.last_strategy_evaluation else 'N/A'}")
+        print(f"LAST_PROCESSED_CANDLE: {row.last_processed_candle.isoformat() if row.last_processed_candle else 'N/A'}")
         print(f"CURRENT_POSITION: {'OPEN' if row.open_trade_qty > 0 else 'NONE'}")
         print(f"PAPER_START_TIMESTAMP: {row.paper_start_timestamp.isoformat() if row.paper_start_timestamp else 'N/A'}")
         print(f"PAPER_RUNTIME_DAYS: {runtime_days:.4f}" if runtime_days is not None else "PAPER_RUNTIME_DAYS: N/A")
@@ -457,6 +506,25 @@ def main() -> int:
         print(f"EVIDENCE_STATUS: {evidence}")
         print(f"OPERATIONAL_ALERTS: {', '.join(alert for alert in alerts if alert) or 'NONE'}")
         return 0
+    total_closed_trades = 0
+    papers_with_position = 0
+    operational_alerts: list[str] = []
+    for index, row in enumerate(sorted(rows, key=lambda item: (item.strategy_name, item.symbol, item.timeframe)), start=1):
+        metrics = print_paper_block(index, row, stale_limit_seconds)
+        total_closed_trades += int(metrics["closed_trades"])
+        papers_with_position += int(row.open_trade_qty > 0)
+        if row.lag_seconds is None or row.lag_seconds > stale_limit_seconds:
+            operational_alerts.append(f"{row.strategy_name}:WORKER_STOPPED")
+
+    running_count = sum(1 for row in rows if row.lag_seconds is not None and row.lag_seconds <= stale_limit_seconds)
+    print("=" * 50)
+    print(f"ACTIVE_PAPERS: {len(rows)}")
+    print(f"RUNNING: {running_count}")
+    print(f"WITH_POSITION: {papers_with_position}")
+    print(f"TOTAL_CLOSED_TRADES: {total_closed_trades}")
+    print(f"OPERATIONAL_ALERTS: {', '.join(operational_alerts) if operational_alerts else 'NONE'}")
+    return 0
+
     database_trade_metrics, db_latest_trade_time, db_latest_entry_time, db_latest_exit_time = fetch_database_trade_metrics(
         strategy_names, strategy_versions
     )

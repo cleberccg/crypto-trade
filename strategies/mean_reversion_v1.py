@@ -194,3 +194,77 @@ class MeanReversionV1Strategy(MeanReversionStrategy):
     def _assert_initialized(self) -> None:
         if not all([self._ema_fast, self._ema_slow, self._rsi, self._bb, self._atr]):
             raise RuntimeError(f"{self.name} not initialized. Call initialize() first.")
+
+
+@register_strategy(
+    name="MaDeviationReversal",
+    version="v1",
+    family="mean_reversion",
+    description="Public moving-average deviation reversal: buy 5% below SMA50 and exit at SMA50.",
+    parameters=["ma_period", "entry_deviation", "exit_deviation"],
+    indicators=["SMA"],
+    categories=["contrarian", "mean_reversion", "spot"],
+    compatibility=[
+        "validation",
+        "research_lab",
+        "execution_manager",
+        "database",
+        "checkpoints",
+        "resume",
+        "recovery",
+    ],
+    aliases=["ma_deviation_reversal", "madeviationreversal", "moving_average_deviation_reversal"],
+)
+class MaDeviationReversalStrategy(MeanReversionStrategy):
+    def __init__(self, ma_period: int = 50, entry_deviation: float = -0.05, exit_deviation: float = 0.0) -> None:
+        self._ma_period = int(ma_period)
+        self._entry_deviation = float(entry_deviation)
+        self._exit_deviation = float(exit_deviation)
+
+    @property
+    def name(self) -> str:
+        return "MaDeviationReversal"
+
+    def initialize(self) -> None:
+        return None
+
+    def calculate(self, df: pd.DataFrame) -> pd.DataFrame:
+        out = df.copy()
+        out["ma"] = out["close"].rolling(self._ma_period).mean()
+        out["ma_deviation"] = (out["close"] / out["ma"]) - 1.0
+        return out
+
+    def entry_signal(self, df: pd.DataFrame) -> StrategySignal:
+        last = df.iloc[-1]
+        price = float(last["close"])
+        deviation = last.get("ma_deviation")
+        if deviation is not None and not pd.isna(deviation) and float(deviation) <= self._entry_deviation:
+            return StrategySignal(
+                signal=SignalType.BUY,
+                price=price,
+                timestamp=last.name.to_pydatetime(),  # type: ignore[union-attr]
+                score=self.score(df),
+                stop_loss=price * 0.01,
+                take_profit=price * 100.0,
+                trailing_stop_pct=0.99,
+                metadata={"entry_reason": "close_5pct_below_sma50"},
+            )
+        return StrategySignal(signal=SignalType.HOLD, price=price, timestamp=last.name.to_pydatetime(), score=0.0)  # type: ignore[union-attr]
+
+    def exit_signal(self, df: pd.DataFrame, entry_price: float) -> StrategySignal:
+        last = df.iloc[-1]
+        price = float(last["close"])
+        deviation = last.get("ma_deviation")
+        if deviation is not None and not pd.isna(deviation) and float(deviation) >= self._exit_deviation:
+            return StrategySignal(
+                signal=SignalType.SELL,
+                price=price,
+                timestamp=last.name.to_pydatetime(),  # type: ignore[union-attr]
+                score=self.score(df),
+                metadata={"exit_reason": "returned_to_sma50"},
+            )
+        return StrategySignal(signal=SignalType.HOLD, price=price, timestamp=last.name.to_pydatetime(), score=0.0)  # type: ignore[union-attr]
+
+    def score(self, df: pd.DataFrame) -> float:
+        deviation = float(df.iloc[-1].get("ma_deviation", 0.0))
+        return round(float(max(0.1, min(1.0, abs(min(0.0, deviation)) / max(abs(self._entry_deviation), 1e-9)))), 4)

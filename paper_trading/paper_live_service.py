@@ -525,6 +525,7 @@ class PaperLiveService:
         started = datetime.now(tz=timezone.utc)
         state_key = self._state_key(cfg.strategy_name, cfg.symbol, cfg.timeframe)
         state = self._load_state(state_key) if cfg.resume else {}
+        paper_start_timestamp = self._state_datetime(state.get("paper_start_timestamp")) or started
         effective_hypothesis = self._effective_hypothesis_payload(
             config_payload=cfg.hypothesis_config,
             state_payload=state.get("hypothesis_config") if isinstance(state, dict) else None,
@@ -602,6 +603,8 @@ class PaperLiveService:
                 f"No candles found for {cfg.symbol}/{cfg.timeframe}. Run download before paper-live."
             )
         frame = self._bound_frame(frame, cfg.max_frame_bars)
+        if state and not trader.export_runtime_state().get("last_strategy_evaluation"):
+            trader.refresh_telemetry(frame)
 
         last_open_time = self._state_datetime(state.get("last_open_time"))
         is_new_execution = not bool(state)
@@ -635,7 +638,7 @@ class PaperLiveService:
                     symbol=cfg.symbol,
                     start_index=process_start_index,
                     timeframe=cfg.timeframe,
-                    paper_start_timestamp=started,
+                    paper_start_timestamp=paper_start_timestamp,
                 )
                 stats["processed_bars"] = int(stats["processed_bars"]) + processed_in_cycle
 
@@ -665,7 +668,7 @@ class PaperLiveService:
                     state_key,
                     {
                         "execution_id": execution_id,
-                        "paper_start_timestamp": started.isoformat(),
+                        "paper_start_timestamp": paper_start_timestamp.isoformat(),
                         "symbol": cfg.symbol,
                         "timeframe": cfg.timeframe,
                         "strategy_name": cfg.strategy_name,
