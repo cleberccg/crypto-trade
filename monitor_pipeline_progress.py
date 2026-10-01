@@ -5,7 +5,7 @@ import time
 import sys
 
 def monitor_pipeline():
-    """Monitor pipeline progress"""
+    """Monitora o progresso do pipeline."""
     
     log_file = 'logs/research_pipeline_main.log'
     state_file = 'research_pipeline_state.json'
@@ -14,7 +14,7 @@ def monitor_pipeline():
         print("\n" + "="*70)
         print(f"Time: {time.strftime('%H:%M:%S')}")
         
-        # Check orchestrator process
+        # Verifica o processo do orquestrador
         try:
             os.system('tasklist /FI "ImageName eq python.exe" /FO CSV | findstr python > nul')
             print("✓ Orchestrator process running")
@@ -45,7 +45,7 @@ def monitor_pipeline():
             except Exception as e:
                 print(f"Error reading log: {e}")
         
-        # Check state file
+        # Verifica o arquivo de estado
         if os.path.exists(state_file):
             try:
                 state = json.load(open(state_file))
@@ -55,7 +55,7 @@ def monitor_pipeline():
             except:
                 pass
         
-        # Check discovery registry
+        # Verifica o registro de descoberta
         registry_file = 'autonomous_discovery_v2_registry.json'
         if os.path.exists(registry_file):
             try:

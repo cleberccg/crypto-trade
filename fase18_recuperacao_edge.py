@@ -58,7 +58,7 @@ class Hypothesis:
 
 
 # ETAPA 5 - hipoteses limitadas, ancoradas nas evidencias da FASE 13
-# (candle_body, candle_range e volume mostraram separacao; ADX/MACD nao).
+# (candle_body, candle_range e volume mostraram separação; ADX/MACD não).
 HYPOTHESES: tuple[Hypothesis, ...] = (
     Hypothesis(
         hid="H1",

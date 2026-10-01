@@ -1,12 +1,12 @@
 """
-Smoke test for ReversaoNextGenV1 strategy — Phase 5.5 ETAPA 4.
+Teste rápido da estratégia ReversaoNextGenV1 — Fase 5.5 ETAPA 4.
 
-Tests:
-1. Strategy imports successfully
-2. Registry discovers the strategy
-3. Factory can create instances
-4. Strategy methods are callable
-5. No regressions in existing strategies
+Testa:
+1. Se a estratégia pode ser importada com sucesso
+2. Se o registro descobre a estratégia
+3. Se a fábrica pode criar instâncias
+4. Se os métodos da estratégia podem ser chamados
+5. Se não há regressões nas estratégias existentes
 """
 
 import sys
@@ -15,7 +15,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 def test_import():
-    """Test that ReversaoNextGenV1 imports without error."""
+    """Verifica se ReversaoNextGenV1 é importada sem erros."""
     try:
         from strategies.reversao_nextgen_v1 import ReversaoNextGenV1Strategy
         print("[PASS] test_import: ReversaoNextGenV1Strategy imported")
@@ -26,7 +26,7 @@ def test_import():
 
 
 def test_registry():
-    """Test that registry discovers ReversaoNextGenV1."""
+    """Verifica se o registro descobre ReversaoNextGenV1."""
     try:
         from strategies.registry import discover_strategies, get_registration
         
@@ -49,7 +49,7 @@ def test_registry():
 
 
 def test_factory():
-    """Test that Factory can create ReversaoNextGenV1 instances."""
+    """Verifica se Factory consegue criar instâncias de ReversaoNextGenV1."""
     try:
         from strategies.factory import create_strategy
         
@@ -68,7 +68,7 @@ def test_factory():
 
 
 def test_lifecycle():
-    """Test strategy initialization and methods."""
+    """Verifica a inicialização da estratégia e seus métodos."""
     try:
         from strategies.reversao_nextgen_v1 import ReversaoNextGenV1Strategy
         import pandas as pd
@@ -78,7 +78,7 @@ def test_lifecycle():
         strategy.initialize()
         print(f"[PASS] test_lifecycle: Strategy initialized")
         
-        # Dummy data
+        # Dados fictícios
         dates = pd.date_range("2026-01-01", periods=100, freq="1h", tz="UTC")
         df = pd.DataFrame({
             "open": np.random.uniform(100, 110, 100),
@@ -103,7 +103,7 @@ def test_lifecycle():
 
 
 def test_no_regression():
-    """Ensure existing strategies still work."""
+    """Garante que as estratégias existentes continuem funcionando."""
     try:
         from strategies.factory import create_strategy
         

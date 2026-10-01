@@ -1,1 +1,1 @@
-"""Research lab package."""
+"""Pacote do laboratório de pesquisa."""

@@ -1,5 +1,5 @@
 ﻿"""
-Database Package - SQLAlchemy engine, session factory, bootstrap, and model registry.
+Pacote de banco de dados: mecanismo SQLAlchemy, fábrica de sessões, inicialização e registro de modelos.
 """
 from database.bootstrap import BootstrapResult, bootstrap_database
 from database.connection import DatabaseConnection, get_session

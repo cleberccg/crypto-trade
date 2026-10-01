@@ -1,1 +1,1 @@
-"""Job orchestration package."""
+"""Pacote de orquestração de tarefas."""

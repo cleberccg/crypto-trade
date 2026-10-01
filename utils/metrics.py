@@ -1,7 +1,7 @@
-"""Shared metric definitions used across the platform.
+"""Definições de métricas compartilhadas por toda a plataforma.
 
-The goal is to keep every lab and report aligned on the same formulas for
-trade-level performance metrics.
+O objetivo é manter todos os laboratórios e relatórios alinhados às mesmas
+fórmulas para métricas de desempenho por operação.
 """
 from __future__ import annotations
 

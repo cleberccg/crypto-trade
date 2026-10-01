@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-STOP PIPELINE BEFORE FEATURE_CACHE
-Conforme solicitado do usuario.
+Interromper o pipeline antes de FEATURE_CACHE
+Conforme solicitado pelo usuário.
 
-Atualiza research_pipeline_state.json para STOP status.
+Atualiza research_pipeline_state.json para o status STOP.
 """
 import json
 from pathlib import Path

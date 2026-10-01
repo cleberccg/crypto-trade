@@ -1,8 +1,8 @@
-"""Controlled Strategy Discovery Cycle 1.
+"""Ciclo controlado 1 de descoberta de estratégias.
 
-This module is intentionally isolated from the registered strategies and the
-official Paper Live campaign. It evaluates three simple, predeclared hypotheses
-on one common temporal dataset and writes only consolidated latest artifacts.
+Este módulo é intencionalmente isolado das estratégias registradas e da
+campanha oficial Paper Live. Ele avalia três hipóteses simples e predefinidas
+em um conjunto de dados temporal comum e grava somente os artefatos consolidados mais recentes.
 """
 from __future__ import annotations
 
@@ -49,7 +49,7 @@ ENTRY_MIN_EPISODES = 100
 ENTRY_MIN_EFFECT_BPS = 5.0
 ENTRY_MIN_T_STAT = 2.0
 
-# These hypotheses failed a frozen DEV -> Validation -> OOS entry-only audit.
+# Estas hipóteses falharam em uma auditoria congelada somente de entradas, em DEV -> Validation -> OOS.
 REJECTED_ENTRY_FAMILIES: dict[str, str] = {
     "CROSS_SECTIONAL_STRENGTH": "NO_GENERALIZABLE_ENTRY_EDGE",
     "IMPULSE_PULLBACK": "NO_GENERALIZABLE_ENTRY_EDGE",
@@ -159,8 +159,8 @@ elif CYCLE == "6":
         },
     }
 elif CYCLE == "continuous":
-    # Bounded search space: OHLCV order-flow proxies, distinct from prior
-    # price-breakout, mean-reversion, relative-strength and session hypotheses.
+    # Espaço de busca limitado: proxies de fluxo de ordens OHLCV, distintos das hipóteses anteriores de
+    # rompimento de preço, reversão à média, força relativa e sessão.
     FAMILY_NAMES = ("TAKER_FLOW_IMBALANCE",)
     HYPOTHESES = {
         "TAKER_FLOW_IMBALANCE": {
@@ -234,7 +234,7 @@ def _canonical_metrics(result: ConfigResult) -> tuple[Any, ...]:
 
 
 class DiscoveryHypothesisStrategy(BaseStrategy):
-    """Signal-only adapter; execution remains exclusively in BacktestEngine."""
+    """Adaptador somente de sinais; a execução permanece exclusivamente no BacktestEngine."""
 
     def __init__(self, family: str, parameters: dict[str, float | int], timeframe: str) -> None:
         self._family = family

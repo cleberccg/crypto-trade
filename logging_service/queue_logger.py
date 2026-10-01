@@ -7,7 +7,7 @@ from typing import Any
 
 
 class SafeQueueHandler(QueueHandler):
-    """Queue handler that never raises to callers when logging backend is saturated."""
+    """Handler de fila que nunca propaga exceções aos chamadores quando o backend de logs está saturado."""
 
     def __init__(self, queue: Any, overflow_counter: dict[str, int], metrics_counter: dict[str, int]) -> None:
         super().__init__(queue)

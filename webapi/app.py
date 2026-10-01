@@ -24,7 +24,7 @@ def create_app() -> FastAPI:
     )
 
     if _ALLOW_ALL_ORIGINS:
-        # Dev mode: accept any origin so CORS never blocks local frontends
+        # Modo de desenvolvimento: aceita qualquer origem para que o CORS nunca bloqueie os frontends locais
         app.add_middleware(
             CORSMiddleware,
             allow_origins=["*"],

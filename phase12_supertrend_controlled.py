@@ -1,4 +1,4 @@
-"""FASE 12 - Controlled implementation and quick scientific pipeline for SuperTrend."""
+"""FASE 12 - Implementação controlada e pipeline científico rápido para SuperTrend."""
 from __future__ import annotations
 
 import csv
@@ -217,7 +217,7 @@ class Phase12SuperTrendService:
         if not errors:
             try:
                 trader = PaperTrader(strategy=create_strategy("SuperTrendV1"), timeframe=cfg.timeframe)
-                trader._strategy.initialize()  # keep smoke light but deterministic
+                trader._strategy.initialize()  # Mantém o smoke test leve e determinístico
                 trader.run(smoke_df.tail(min(len(smoke_df), 300)), symbol=cfg.symbol, timeframe=cfg.timeframe)
                 paper_ok = True
             except Exception as exc:

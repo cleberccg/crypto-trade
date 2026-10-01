@@ -1,1 +1,1 @@
-"""Research comparisons package placeholder for next-phase activation."""
+"""Espaço reservado do pacote de comparações de pesquisa para ativação na próxima fase."""

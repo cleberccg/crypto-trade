@@ -8,10 +8,10 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-# Add project root to path
+# Adiciona a raiz do projeto ao caminho
 sys.path.insert(0, str(Path(__file__).parent))
 
-# Parameters: use the simplest combination from the grid
+# Parâmetros: usa a combinação mais simples da grade
 PARAMS = {
     "ema_fast": 15,
     "ema_slow": 45,

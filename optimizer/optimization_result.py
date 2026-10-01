@@ -1,4 +1,4 @@
-"""Optimization result model and serialization helpers."""
+"""Modelo de resultado da otimização e funções auxiliares de serialização."""
 from __future__ import annotations
 
 from dataclasses import dataclass, asdict
@@ -7,7 +7,7 @@ from typing import Any
 
 @dataclass
 class OptimizationResult:
-    """Single strategy configuration evaluation."""
+    """Avaliação de uma única configuração de estratégia."""
 
     rank: int | None
     parameters: dict[str, Any]

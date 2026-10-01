@@ -1,5 +1,5 @@
 ﻿"""
-Indicators Package.
+Pacote de indicadores.
 """
 from indicators.atr import ATR
 from indicators.base_indicator import BaseIndicator

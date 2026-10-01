@@ -1,4 +1,4 @@
-"""Registered Paper-Live exposure of the frozen SMA200 regime-gated strategy."""
+"""Exposição registrada para Paper-Live da estratégia congelada com filtro de regime SMA200."""
 from __future__ import annotations
 
 from research.external_strategy_replication_strategies import Sma200RegimeGatedStrategy

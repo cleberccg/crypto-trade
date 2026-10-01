@@ -265,7 +265,7 @@ class TradeOutcomeLearningLab:
         train, _, _ = temporal_split_frame(frame, cfg.train_ratio, cfg.validation_ratio)
         discovery_frame = train
         if len(discovery_frame) > cfg.discovery_max_rows:
-            # Deterministic downsample preserving temporal ordering for discovery speed.
+            # Redução determinística da amostra que preserva a ordem temporal para acelerar a descoberta.
             step = max(1, int(len(discovery_frame) / cfg.discovery_max_rows))
             discovery_frame = discovery_frame.iloc[::step].head(cfg.discovery_max_rows).copy()
 

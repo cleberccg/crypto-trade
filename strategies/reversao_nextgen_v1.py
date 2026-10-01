@@ -1,42 +1,42 @@
 """
-ReversaoNextGenV1 — Reversal Edge strategy from Cluster H27.
+ReversaoNextGenV1 — estratégia Reversal Edge do Cluster H27.
 
-Hypothesis: H27 / Cluster: reversao_2
-Confidence: 75% | Priority: 0.625 | Rank: #4
-Generated from Phase 5.4 engineering reversal.
+Hipótese: H27 / Cluster: reversao_2
+Confiança: 75% | Prioridade: 0.625 | Classificação: #4
+Gerada a partir da reversão de engenharia da fase 5.4.
 
-Logic overview
---------------
-Entry (SHORT/SELL) conditions (all must be true):
-1. Regime = reversao (trend reversal detected via EMA crossover/trend_score reversal)
-2. ATR bucket = high_atr (volatility level in upper tertile)
-3. RSI bucket = unknown (RSI neutral - no specific filter)
-4. Volume bucket = low_volume (below average relative volume)
-5. Bollinger position = inside_band (price within 2-std bands)
+Visão geral da lógica
+---------------------
+Condições de entrada (SHORT/SELL) (todas devem ser verdadeiras):
+1. Regime = reversao (reversão de tendência detectada por cruzamento de EMA/reversão de trend_score)
+2. Faixa de ATR = high_atr (nível de volatilidade no tercil superior)
+3. Faixa de RSI = unknown (RSI neutro — sem filtro específico)
+4. Faixa de volume = low_volume (volume relativo abaixo da média)
+5. Posição de Bollinger = inside_band (preço dentro das bandas de 2 desvios-padrão)
 
-Direction: SHORT (sell reversal)
+Direção: SHORT (venda na reversão)
 
-Exit conditions (any triggers exit):
-1. Exit when profit target is reached
-2. Exit when stop loss is hit
-3. Exit when reversal pattern fails (regime changes back to trend)
+Condições de saída (qualquer uma aciona a saída):
+1. Sair quando a meta de lucro for atingida
+2. Sair quando o stop loss for acionado
+3. Sair quando o padrão de reversão falhar (o regime voltar à tendência)
 
 Stop-loss / Take-profit
 -----------------------
-- Stop-loss: entry + (ATR × ATR_STOP_MULTIPLIER) [short position, so above entry]
-- Risk: stop_loss - entry
-- Reward: risk × RISK_REWARD_RATIO
-- Take-profit: entry - reward
+- Stop-loss: entrada + (ATR × ATR_STOP_MULTIPLIER) [posição vendida, portanto acima da entrada]
+- Risco: stop_loss - entrada
+- Retorno: risco × RISK_REWARD_RATIO
+- Take-profit: entrada - retorno
 
-This ensures that the realized RR = configured RISK_REWARD_RATIO.
+Isso garante que o RR realizado seja igual ao RISK_REWARD_RATIO configurado.
 
-Historical performance (from Phase 5.4):
-- Sample size: 1,933,669 trades
-- Win rate: 100.0%
+Desempenho histórico (da fase 5.4):
+- Tamanho da amostra: 1,933,669 operações
+- Taxa de acerto: 100.0%
 - Sharpe: 249.48
-- Expectancy: $25.00 per trade
+- Expectativa: $25.00 por operação
 - Drawdown: 0.0%
-- Risk/Reward: 3.18:1 (MFE/MAE)
+- Risco/retorno: 3.18:1 (MFE/MAE)
 """
 from __future__ import annotations
 
@@ -98,24 +98,24 @@ logger = get_logger(__name__)
 )
 class ReversaoNextGenV1Strategy(ReversalEdgeStrategy):
     """
-    Reversal Edge strategy from Phase 5.4 cluster H27.
+    Estratégia Reversal Edge do cluster H27 da fase 5.4.
 
-    Detects reversal patterns based on regime change, volatility (ATR), 
-    volume profile (low volume), and Bollinger Band positioning.
+    Detecta padrões de reversão com base na mudança de regime, volatilidade (ATR),
+    perfil de volume (volume baixo) e posicionamento das Bandas de Bollinger.
 
-    Direction: SHORT (sell at reversal points)
+    Direção: SHORT (venda nos pontos de reversão)
 
-    Args:
-        ema_fast: Fast EMA period for trend detection (default 20).
-        ema_slow: Slow EMA period for trend detection (default 50).
-        rsi_period: RSI period (default 14, unused in entry but available).
-        atr_period: ATR period for stop-loss calculation (default 14).
-        atr_stop_multiplier: Multiplier for ATR-based stop loss (default 2.0).
-        risk_reward_ratio: Target risk/reward ratio (default 3.18).
-        score_min: Minimum confidence score to trade (default 0.6).
-        volume_multiplier_min: Minimum relative volume (default 0.7).
-        atr_high_threshold: ATR percentile to classify as "high" (default 0.67).
-        volume_low_threshold: Volume percentile to classify as "low" (default 0.40).
+    Argumentos:
+        ema_fast: Período da EMA rápida para detectar tendências (padrão 20).
+        ema_slow: Período da EMA lenta para detectar tendências (padrão 50).
+        rsi_period: Período do RSI (padrão 14, não usado na entrada, mas disponível).
+        atr_period: Período do ATR para calcular o stop-loss (padrão 14).
+        atr_stop_multiplier: Multiplicador do stop loss baseado em ATR (padrão 2.0).
+        risk_reward_ratio: Relação risco/retorno desejada (padrão 3.18).
+        score_min: Pontuação mínima de confiança para operar (padrão 0.6).
+        volume_multiplier_min: Volume relativo mínimo (padrão 0.7).
+        atr_high_threshold: Percentil de ATR para classificar como "alto" (padrão 0.67).
+        volume_low_threshold: Percentil de volume para classificar como "baixo" (padrão 0.40).
     """
 
     def __init__(
@@ -142,13 +142,13 @@ class ReversaoNextGenV1Strategy(ReversalEdgeStrategy):
         self._atr_high_threshold = atr_high_threshold
         self._volume_low_threshold = volume_low_threshold
 
-        # Initialized in initialize()
+        # Inicializado em initialize()
         self._ema_fast: EMA | None = None
         self._ema_slow: EMA | None = None
         self._rsi: RSI | None = None
         self._bb: BollingerBands | None = None
         self._atr: ATR | None = None
-        # Pre-computed enriched DataFrame cache — avoids O(n²) in BacktestEngine
+        # Cache pré-calculado do DataFrame enriquecido — evita O(n²) em BacktestEngine
         self._enriched_cache: pd.DataFrame | None = None
 
     @property
@@ -156,48 +156,49 @@ class ReversaoNextGenV1Strategy(ReversalEdgeStrategy):
         return "ReversaoNextGenV1"
 
     # ------------------------------------------------------------------
-    # Lifecycle
+    # Ciclo de vida
     # ------------------------------------------------------------------
 
     def initialize(self) -> None:
-        """Instantiate all indicator objects."""
+        """Instancia todos os objetos de indicadores."""
         self._ema_fast = EMA(period=self._ema_fast_period)
         self._ema_slow = EMA(period=self._ema_slow_period)
         self._rsi = RSI(period=self._rsi_period)
         self._bb = BollingerBands()
         self._atr = ATR(period=self._atr_period)
-        self._enriched_cache = None  # Reset cache on re-initialise
+        self._enriched_cache = None  # Redefine o cache na reinicialização
         logger.info("%s — initialized.", self.name)
 
     # ------------------------------------------------------------------
-    # Calculation
+    # Cálculo
     # ------------------------------------------------------------------
 
     def calculate(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        Add all indicator columns to a copy of *df*.
+        Adiciona todas as colunas de indicadores a uma cópia de *df*.
 
-        Performance: uses an internal cache so that repeated calls with growing
-        prefix slices (as done by BacktestEngine bar-by-bar) are served in O(1).
-        The first call on a full dataset triggers one O(n) vectorised pass.
+        Desempenho: usa um cache interno para que chamadas repetidas com fatias
+        de prefixo crescentes (como ocorre no BacktestEngine barra a barra) sejam
+        atendidas em O(1). A primeira chamada com o conjunto de dados completo
+        executa uma única passagem vetorizada O(n).
 
-        Slow operations replaced:
+        Operações lentas substituídas:
         - pd.qcut per bar  -> expanding().rank(pct=True) + np.where  [O(n) vectorised]
         - apply(axis=1)    -> np.where on numpy arrays               [O(n) vectorised]
 
-        Columns added: ema_fast, ema_slow, rsi, bb_middle, bb_upper, bb_lower,
+        Colunas adicionadas: ema_fast, ema_slow, rsi, bb_middle, bb_upper, bb_lower,
         bb_percent_b, atr, trend_score, atr_bucket, volume_bucket,
         bollinger_position, regime_reversal.
         """
         self._assert_initialized()
         n = len(df)
 
-        # --- Cache hit: return pre-computed slice (O(1)) ---
+        # --- Cache encontrado: retorna o recorte pré-calculado (O(1)) ---
         if self._enriched_cache is not None and n <= len(self._enriched_cache):
             if n > 0 and df.index[-1] == self._enriched_cache.index[n - 1]:
                 return self._enriched_cache.iloc[:n]
 
-        # --- Full vectorised computation (O(n)) ---
+        # --- Cálculo vetorizado completo (O(n)) ---
         _t0 = time.perf_counter()
         logger.debug("%s — calculate: computing indicators for %d bars", self.name, n)
         result = df.copy()
@@ -222,7 +223,7 @@ class ReversaoNextGenV1Strategy(ReversalEdgeStrategy):
         result["bb_percent_b"] = bb_df["percent_b"]
         logger.debug("%s — Bollinger done (%.3fs)", self.name, time.perf_counter() - _t3)
 
-        # Trend score (EMA-based)
+        # Pontuação de tendência (baseada em EMA)
         ema_fast_col = self._ema_fast.name  # type: ignore[union-attr]
         ema_slow_col = self._ema_slow.name  # type: ignore[union-attr]
         result["trend_score"] = (
@@ -230,7 +231,7 @@ class ReversaoNextGenV1Strategy(ReversalEdgeStrategy):
         )
 
         _t4 = time.perf_counter()
-        # ATR tertiles: expanding-rank replaces pd.qcut (mathematically equivalent)
+        # Terços do ATR: expanding-rank substitui pd.qcut (matematicamente equivalente)
         _atr_rank = result["atr"].expanding(min_periods=3).rank(pct=True).to_numpy()
         result["atr_bucket"] = np.where(
             np.isnan(_atr_rank), "mid_atr",
@@ -239,7 +240,7 @@ class ReversaoNextGenV1Strategy(ReversalEdgeStrategy):
         )
         logger.debug("%s — ATR buckets done (%.3fs)", self.name, time.perf_counter() - _t4)
 
-        # Volume bucket: fixed thresholds, already O(n)
+        # Faixa de volume: limiares fixos, já em O(n)
         result["relative_volume"] = result["volume"] / result["volume"].rolling(20).mean()
         result["volume_bucket"] = pd.cut(
             result["relative_volume"],
@@ -249,7 +250,7 @@ class ReversaoNextGenV1Strategy(ReversalEdgeStrategy):
         ).astype(str)
 
         _t5 = time.perf_counter()
-        # Bollinger position: numpy.where replaces apply(axis=1)
+        # Posição de Bollinger: numpy.where substitui apply(axis=1)
         _close = result["close"].to_numpy()
         _bb_upper = result["bb_upper"].to_numpy()
         _bb_lower = result["bb_lower"].to_numpy()
@@ -259,20 +260,20 @@ class ReversaoNextGenV1Strategy(ReversalEdgeStrategy):
         )
         logger.debug("%s — Bollinger positions done (%.3fs)", self.name, time.perf_counter() - _t5)
 
-        # Regime: detect reversal (trend_score changing sign or crossing zero)
+        # Regime: detecta reversão (trend_score muda de sinal ou cruza zero)
         result["trend_score_prev"] = result["trend_score"].shift(1)
         result["regime_reversal"] = (
-            (result["trend_score"] * result["trend_score_prev"] < 0)  # Sign change
+            (result["trend_score"] * result["trend_score_prev"] < 0)  # Mudança de sinal
             | (
                 (result["trend_score"].abs() < 0.2)
                 & (result["trend_score_prev"].abs() > 0.2)
-            )  # Entering consolidation
+            )  # Entrada em consolidação
         )
 
         _total = time.perf_counter() - _t0
         logger.info("%s — indicators pre-computed: %d bars in %.2fs", self.name, n, _total)
 
-        # Cache for subsequent prefix-slice lookups by BacktestEngine
+        # Cache para consultas subsequentes de prefixos por BacktestEngine
         if self._enriched_cache is None or n > len(self._enriched_cache):
             self._enriched_cache = result
 
@@ -282,7 +283,7 @@ class ReversaoNextGenV1Strategy(ReversalEdgeStrategy):
     def _get_bollinger_position(
         close: float, bb_lower: float, bb_middle: float, bb_upper: float
     ) -> str:
-        """Determine Bollinger Band position."""
+        """Determina a posição nas Bandas de Bollinger."""
         if close > bb_upper:
             return "above_upper"
         elif close < bb_lower:
@@ -291,17 +292,17 @@ class ReversaoNextGenV1Strategy(ReversalEdgeStrategy):
             return "inside_band"
 
     # ------------------------------------------------------------------
-    # Signal Generation
+    # Geração de sinais
     # ------------------------------------------------------------------
 
     def entry_signal(self, df: pd.DataFrame) -> StrategySignal:
         """
-        Generate a BUY signal when a BULLISH reversal (H27) aligns.
+                Gera um sinal BUY quando há alinhamento com uma reversão de alta (H27).
 
-        Key difference from the original SHORT version:
-        - We require prev_trend_score < 0 (was in downtrend) so we enter
-          only on bearish-to-bullish reversals, not on bullish-to-bearish.
-        - Stop is placed BELOW entry; take-profit ABOVE.
+                Diferença principal em relação à versão SHORT original:
+                - Exigimos prev_trend_score < 0 (a tendência era de baixa), portanto entramos
+                    somente em reversões de baixa para alta, não de alta para baixa.
+                - O stop fica ABAIXO da entrada; o take-profit, ACIMA.
         """
         self._assert_initialized()
 
@@ -310,45 +311,45 @@ class ReversaoNextGenV1Strategy(ReversalEdgeStrategy):
         atr = float(last["atr"])
         timestamp = last.name.to_pydatetime()  # type: ignore[union-attr]
 
-        # --- Entry Conditions ---
-        # All 5 must be TRUE for a BUY signal
+        # --- Condições de entrada ---
+        # As 5 condições devem ser TRUE para um sinal BUY
 
-        # 1. Bullish regime reversal: trend was DOWN and is now reversing UP
+        # 1. Reversão de regime de alta: a tendência estava DOWN e agora está revertendo para UP
         regime_reversal = bool(last.get("regime_reversal", False))
         trend_score = float(last.get("trend_score", 0.0))
         prev_trend_score = float(last.get("trend_score_prev", 0.0))
 
-        # Bullish reversal: sign change from negative (downtrend) upward
+        # Reversão de alta: mudança de sinal de negativo (tendência de baixa) para cima
         bullish_reversal = regime_reversal and prev_trend_score < 0
 
-        # Softer entry: trend actively recovering from a significant downtrend.
-        # Requires:
-        #   1. previous bar was in a real downtrend (< -0.5, not just slightly negative)
-        #   2. trend is actively improving (trend_score > prev_trend_score)
-        #   3. now in weak/neutral zone (abs < 0.3)
+        # Entrada menos restritiva: tendência se recuperando ativamente de uma tendência de baixa significativa.
+        # Requisitos:
+        #   1. a barra anterior estava em uma tendência de baixa real (< -0.5, não apenas ligeiramente negativa)
+        #   2. a tendência está melhorando ativamente (trend_score > prev_trend_score)
+        #   3. agora está na zona fraca/neutra (abs < 0.3)
         bullish_consolidation = (
             prev_trend_score < -0.5
             and trend_score > prev_trend_score
             and abs(trend_score) < 0.3
         )
 
-        # 2. ATR bucket = high_atr (volatile reversal — real momentum)
+        # 2. Faixa ATR = high_atr (reversão volátil — momentum real)
         atr_bucket = str(last.get("atr_bucket", "unknown"))
         atr_is_high = atr_bucket == "high_atr"
 
-        # 3. RSI: no hard filter (H27 cluster had "unknown" RSI bucket)
+        # 3. RSI: sem filtro rígido (o agrupamento H27 tinha a faixa RSI "unknown")
         rsi_value = float(last.get("rsi", 50.0))
         rsi_ok = True
 
-        # 4. Volume bucket = low_volume (seller exhaustion before recovery)
+        # 4. Faixa de volume = low_volume (exaustão dos vendedores antes da recuperação)
         volume_bucket = str(last.get("volume_bucket", "unknown"))
         volume_is_low = volume_bucket == "low_volume"
 
-        # 5. Bollinger position = inside_band (not at extreme, reversal still forming)
+        # 5. Posição de Bollinger = inside_band (não está em um extremo; a reversão ainda está se formando)
         bollinger_pos = str(last.get("bollinger_position", "unknown"))
         bb_inside = bollinger_pos == "inside_band"
 
-        # Confidence score
+        # Pontuação de confiança
         confidence = 0.0
         if bullish_reversal:
             confidence += 0.3
@@ -367,13 +368,13 @@ class ReversaoNextGenV1Strategy(ReversalEdgeStrategy):
             if confidence >= self._score_min:
                 signal = SignalType.BUY
         elif bullish_consolidation and atr_is_high and volume_is_low and bb_inside:
-            # Softer path: entering consolidation from downtrend + volatile + low vol + BB inside
+            # Caminho menos restritivo: entrada em consolidação após tendência de baixa + volatilidade + volume baixo + BB dentro da banda
             if confidence >= self._score_min * 0.9:
                 signal = SignalType.BUY
 
-        # LONG: stop below entry, take-profit above entry
+        # LONG: stop abaixo da entrada; take-profit acima da entrada
         if signal == SignalType.BUY:
-            stop_loss = price - (self._atr_stop_multiplier * atr)  # Long: SL below
+            stop_loss = price - (self._atr_stop_multiplier * atr)  # Long: SL abaixo
             risk = price - stop_loss
             reward = risk * self._risk_reward_ratio
             take_profit = price + reward
@@ -407,11 +408,11 @@ class ReversaoNextGenV1Strategy(ReversalEdgeStrategy):
 
     def exit_signal(self, df: pd.DataFrame, entry_price: float) -> StrategySignal:
         """
-        Generate a SELL signal to close LONG when the bullish regime breaks.
+        Gera um sinal SELL para fechar a posição LONG quando o regime de alta se rompe.
 
-        Exits early when the trend turns clearly bearish again — i.e. when the
-        recovery that triggered the BUY has failed or reversed.
-        The engine also closes via stop-loss / take-profit independently.
+        Sai antecipadamente quando a tendência volta a ficar claramente baixista — isto é,
+        quando a recuperação que acionou o BUY falhou ou se reverteu.
+        O mecanismo também encerra a posição por stop-loss / take-profit de forma independente.
         """
         self._assert_initialized()
 
@@ -422,20 +423,20 @@ class ReversaoNextGenV1Strategy(ReversalEdgeStrategy):
         regime_reversal = bool(last.get("regime_reversal", False))
         trend_score = float(last.get("trend_score", 0.0))
 
-        # Exit LONG when the trend has turned clearly bearish again
-        exit_trend_bearish = trend_score < -0.3          # Strong downtrend re-established
-        regime_back_to_bearish = not regime_reversal and trend_score < -0.2  # Sustained bearish
+        # Sai de LONG quando a tendência voltar a ficar claramente de baixa
+        exit_trend_bearish = trend_score < -0.3          # Tendência de baixa forte restabelecida
+        regime_back_to_bearish = not regime_reversal and trend_score < -0.2  # Tendência de baixa persistente
 
         signal = SignalType.HOLD
         if exit_trend_bearish or regime_back_to_bearish:
-            signal = SignalType.SELL  # Close long = SELL signal
+            signal = SignalType.SELL  # Encerrar posição long = sinal SELL
 
         metadata = {
             "reason": "trend_bearish" if exit_trend_bearish else "regime_back_to_bearish",
             "trend_score": trend_score,
             "price": price,
             "entry_price": entry_price,
-            "pnl": price - entry_price,  # Positive for profitable long
+            "pnl": price - entry_price,  # Positivo para uma posição long lucrativa
         }
 
         return StrategySignal(
@@ -452,9 +453,9 @@ class ReversaoNextGenV1Strategy(ReversalEdgeStrategy):
 
     def score(self, df: pd.DataFrame) -> float:
         """
-        Calculate overall strategy confidence score.
+        Calcula a pontuação geral de confiança da estratégia.
 
-        Used by the framework to assess signal quality.
+        Usada pelo framework para avaliar a qualidade do sinal.
         """
         self._assert_initialized()
 
@@ -464,7 +465,7 @@ class ReversaoNextGenV1Strategy(ReversalEdgeStrategy):
         return signal.score
 
     # ------------------------------------------------------------------
-    # Helpers
+    # Funções auxiliares
     # ------------------------------------------------------------------
 
     @staticmethod
@@ -475,7 +476,7 @@ class ReversaoNextGenV1Strategy(ReversalEdgeStrategy):
         volume_is_low: bool,
         bb_inside: bool,
     ) -> str:
-        """Describe why entry signal was generated."""
+        """Descreve por que o sinal de entrada foi gerado."""
         if signal == SignalType.BUY:
             conditions = []
             if regime_reversal:
@@ -490,7 +491,7 @@ class ReversaoNextGenV1Strategy(ReversalEdgeStrategy):
         return "no_signal"
 
     def _assert_initialized(self) -> None:
-        """Check that all indicators are initialized."""
+        """Verifica se todos os indicadores foram inicializados."""
         if not all(
             [self._ema_fast, self._ema_slow, self._rsi, self._bb, self._atr]
         ):

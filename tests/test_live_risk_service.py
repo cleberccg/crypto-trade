@@ -115,7 +115,7 @@ def test_insufficient_balance_prevents_order_open() -> None:
 
 def test_live_sizing_matches_paper_when_portfolio_value_is_equal() -> None:
     settings.small_account_mode = False
-    # Same risk manager algorithm and same portfolio_value must produce identical sizing.
+    # O mesmo algoritmo do gerenciador de risco e o mesmo portfolio_value devem produzir dimensionamentos idênticos.
     portfolio_value = 10_000.0
     entry_price = 100.0
     stop_loss = 95.0

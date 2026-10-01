@@ -53,7 +53,7 @@ export function useObservabilitySocket(enabled: boolean) {
       try {
         setData(JSON.parse(event.data) as ObservabilityTick);
       } catch {
-        // Ignore malformed payloads.
+        // Ignora payloads malformados.
       }
     };
 

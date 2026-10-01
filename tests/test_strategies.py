@@ -1,5 +1,5 @@
 ﻿"""
-Unit tests for trading strategies.
+Testes unitários das estratégias de negociação.
 """
 from __future__ import annotations
 
@@ -53,7 +53,7 @@ class TestTrendV1Strategy:
         assert 0.0 <= score <= 1.0
 
     def test_uptrend_generates_buy_signal(self) -> None:
-        """A strong uptrend should eventually generate a BUY signal."""
+        """Uma forte tendência de alta deve gerar eventualmente um sinal BUY."""
         df = make_ohlcv(n=200, trend=0.004, seed=1)
         strategy = TrendV1Strategy()
         strategy.initialize()
@@ -70,7 +70,7 @@ class TestTrendV1Strategy:
         assert buy_found, "Expected at least one BUY signal in a strong uptrend."
 
     def test_entry_signal_includes_stop_and_tp_on_buy(self) -> None:
-        """A BUY signal must include stop_loss and take_profit."""
+        """Um sinal BUY deve incluir stop_loss e take_profit."""
         df = make_ohlcv(n=200, trend=0.004, seed=99)
         strategy = TrendV1Strategy()
         strategy.initialize()

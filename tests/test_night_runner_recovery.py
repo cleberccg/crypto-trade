@@ -26,7 +26,7 @@ def _seed_inconsistent_checkpoint(db: DatabaseConnection, execution_id: str) -> 
                 status="running",
             )
         )
-        # Checkpoint says 50 processed, but only 10 persisted results: must be rejected.
+        # O checkpoint informa 50 itens processados, mas há somente 10 resultados persistidos: deve ser rejeitado.
         session.add(
             ExecutionCheckpoint(
                 execution_id=execution_id,
@@ -123,7 +123,7 @@ def test_watchdog_sets_abort_and_blocked_state() -> None:
     runner._watchdog_stop.clear()
     runner._abort_execution.clear()
 
-    # Simulate the watchdog decision logic directly.
+    # Simula diretamente a lógica de decisão do watchdog.
     stalled = runner.progress.stalled_seconds()
     threshold_seconds = 15 * 60
     assert stalled >= threshold_seconds

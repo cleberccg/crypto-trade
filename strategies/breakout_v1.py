@@ -1,4 +1,4 @@
-"""BreakoutV1 - first breakout family implementation for phase 2 discovery."""
+"""BreakoutV1 — primeira implementação da família breakout para a descoberta da fase 2."""
 from __future__ import annotations
 
 import pandas as pd
@@ -54,7 +54,7 @@ logger = get_logger(__name__)
     },
 )
 class BreakoutV1Strategy(BreakoutStrategy):
-    """Long-only breakout strategy tuned for the phase 2 pilot."""
+    """Estratégia breakout somente comprada, ajustada para o piloto da fase 2."""
 
     def __init__(
         self,

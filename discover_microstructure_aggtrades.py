@@ -1,19 +1,19 @@
-"""Microstructure entry-edge Discovery on Binance Spot aggTrades (2025-01, BTC/ETH).
+"""Descoberta de edge de entrada por microestrutura em aggTrades da Binance Spot (2025-01, BTC/ETH).
 
-Genuinely new information vs OHLCV/extended klines: uses per-trade aggressor
-side (maker/taker), trade arrival sequence and trade size distribution to
-build features that cannot be reconstructed from bar aggregates alone
-(order-flow persistence, bursts, block-trade concentration).
+Informação realmente nova em relação a OHLCV/klines estendidos: usa o lado agressor
+de cada operação (maker/taker), a sequência de chegada das operações e a distribuição dos tamanhos
+para criar recursos que não podem ser reconstruídos apenas a partir dos agregados dos candles
+(persistência do fluxo de ordens, rajadas, concentração de operações em bloco).
 
-Reuses the existing entry-edge-first scientific protocol from
-strategy_discovery_cycle1.py: same gate constants, same statistical metrics
-(_entry_metrics), same market regime classifier (classify_market_regimes),
-same episode-dedup principle (a persistent signal counts once). Only the bar
-construction (aggTrades -> 1-minute bars with microstructure features) and
-the hypothesis definitions are new, because OHLCV cannot express them.
+Reutiliza o protocolo científico existente, que prioriza o edge de entrada, de
+strategy_discovery_cycle1.py: mesmas constantes de aprovação, mesmas métricas estatísticas
+(_entry_metrics), mesmo classificador de regime de mercado (classify_market_regimes),
+mesmo princípio de deduplicação de episódios (um sinal persistente conta uma vez). Somente a construção dos candles
+(aggTrades -> candles de 1 minuto com recursos de microestrutura) e as definições
+das hipóteses são novas, pois OHLCV não consegue expressá-las.
 
-Does not touch BacktestEngine, RiskManager, PositionSizer or Paper Live.
-Read/derive only; no strategy is registered or deployed from this script.
+Não altera BacktestEngine, RiskManager, PositionSizer nem Paper Live.
+Somente leitura/derivação; nenhuma estratégia é registrada ou implantada por este script.
 """
 from __future__ import annotations
 
@@ -44,20 +44,20 @@ BAR_CACHE_DIR = BASE_DIR / "data" / "cache_minute_bars"
 OUT_JSON = BASE_DIR / "discovery_microstructure_aggtrades_latest.json"
 OUT_MD = BASE_DIR / "discovery_microstructure_aggtrades_latest.md"
 
-# Independently verified via validate_aggtrades.py (2 reproducible runs,
-# streamed gzip with per-member CRC check). Cache is only trusted if its
-# recorded hash matches this value.
+# Verificado de forma independente por validate_aggtrades.py (2 execuções reproduzíveis,
+# gzip transmitido em fluxo com verificação de CRC por membro). O cache só é considerado confiável se o
+# hash registrado corresponder a este valor.
 DATASET_HASH = "92d692b65e17571e9248af3a51e9573f53884a39840bfc74996da73713ec73db"
 
 SYMBOLS = ("BTC/USDT", "ETH/USDT")
 BAR_FREQ = "1min"
-# Jan 2025 is a single ~31-day window; split by wall-clock time, not by
-# resampling/shuffling, to avoid leaking future information into DEV.
+# Janeiro de 2025 é uma única janela de aproximadamente 31 dias; divida-a pelo tempo de calendário, não por
+# reamostragem/embaralhamento, para evitar vazamento de informações futuras para DEV.
 DEV_END = pd.Timestamp("2025-01-19T00:00:00Z")        # ~60% (18/31 days)
 VALIDATION_END = pd.Timestamp("2025-01-26T00:00:00Z")  # ~23% (7/31 days)
 # OOS: 2025-01-26 -> 2025-02-01 (~19%, 6/31 days)
 
-MICROSTRUCTURE_MIN_EFFECT_BPS = ENTRY_MIN_EFFECT_BPS  # reuse the same gate, no relaxation
+MICROSTRUCTURE_MIN_EFFECT_BPS = ENTRY_MIN_EFFECT_BPS  # Reutiliza o mesmo critério, sem flexibilizá-lo
 
 
 def _log(message: str) -> None:
@@ -65,11 +65,11 @@ def _log(message: str) -> None:
 
 
 def build_minute_bars(symbol: str) -> pd.DataFrame:
-    """Stream aggTrades for one symbol and build 1-minute microstructure bars.
+    """Lê em fluxo os aggTrades de um símbolo e cria candles de microestrutura de 1 minuto.
 
-    Binance aggTrades field `m` = isBuyerMaker. m=True -> buyer is maker ->
-    seller is the aggressor (sell-side pressure). m=False -> buyer is the
-    aggressor (buy-side pressure).
+    O campo `m` de aggTrades da Binance corresponde a isBuyerMaker. m=True -> o comprador é maker ->
+    o vendedor é o agressor (pressão vendedora). m=False -> o comprador é o
+    agressor (pressão compradora).
     """
     rows: list[dict[str, Any]] = []
     bucket_ts: int | None = None
@@ -155,24 +155,23 @@ def add_microstructure_features(frame: pd.DataFrame, window: int = 30) -> pd.Dat
     df["imbalance_ratio"] = (df["signed_volume"] / total_vol).fillna(0.0)
     df["cvd"] = df["signed_volume"].cumsum()
 
-    # Block-flow: imbalance amplified only when average trade size this bar is
-    # unusually large vs its own trailing history (causal, no lookahead).
+    # Block-flow: o desequilíbrio só é amplificado quando o tamanho médio das negociações desta barra é
+    # excepcionalmente grande em relação ao próprio histórico anterior (causal, sem olhar para o futuro).
     rolling_avg_size = df["avg_trade_size"].rolling(window, min_periods=window).mean().shift(1)
     df["size_ratio"] = (df["avg_trade_size"] / rolling_avg_size).replace([np.inf, -np.inf], np.nan)
     df["block_flow_signal"] = df["imbalance_ratio"] * df["size_ratio"]
 
-    # Burst intensity: trades/min z-scored against trailing history, combined
-    # with the max same-side aggressor run observed inside the bar.
+    # Intensidade do pico: trades/min convertido em escore z em relação ao histórico anterior, combinado
+    # com a maior sequência de agressões do mesmo lado observada dentro da barra.
     rolling_mean_tc = df["trade_count"].rolling(window, min_periods=window).mean().shift(1)
     rolling_std_tc = df["trade_count"].rolling(window, min_periods=window).std().shift(1)
     df["intensity_z"] = ((df["trade_count"] - rolling_mean_tc) / rolling_std_tc).replace([np.inf, -np.inf], np.nan)
     df["burst_persistence_signal"] = df["intensity_z"] * np.sign(df["signed_volume"]) * (df["max_aggressor_run"] / df["trade_count"].replace(0, np.nan))
 
-    # CVD acceleration: delta_t (per-bar signed order flow) -> velocity (bar-
-    # over-bar change in delta_t) -> acceleration (bar-over-bar change in
-    # velocity), z-scored against trailing history. This targets a change in
-    # the *dynamics* of aggressor flow, not its level (already rejected as
-    # TAKER_FLOW_IMBALANCE) nor a smoothed slope.
+    # Aceleração do CVD: delta_t (fluxo de ordens com sinal por barra) -> velocidade (variação de delta_t
+    # entre barras) -> aceleração (variação da velocidade entre barras), convertida em escore z em relação ao histórico anterior. Isso busca uma mudança na
+    # *dinâmica* do fluxo agressor, não seu nível (já rejeitado como
+    # TAKER_FLOW_IMBALANCE) nem uma inclinação suavizada.
     delta_t = df["signed_volume"]
     velocity = delta_t.diff(1)
     acceleration_raw = velocity.diff(1)
@@ -181,13 +180,13 @@ def add_microstructure_features(frame: pd.DataFrame, window: int = 30) -> pd.Dat
     df["flow_velocity"] = velocity
     df["cvd_acceleration"] = ((acceleration_raw - rolling_mean_accel) / rolling_std_accel).replace([np.inf, -np.inf], np.nan)
 
-    # Flow absorption: heavy one-sided aggression (top of its own trailing
-    # distribution) that fails to move price proportionally (price move is
-    # BELOW its own trailing average). Signed by aggressor direction so
-    # "long_above" = large buy-side absorption, "long_below" = large
-    # sell-side absorption. Tests whether absorption precedes reversal or
-    # continuation -- OHLCV alone cannot separate "big volume, flat price"
-    # from "big volume, big price move" at this resolution.
+    # Absorção de fluxo: agressão intensa de um só lado (no topo da própria
+    # distribuição histórica) que não move o preço proporcionalmente (a variação do preço fica
+    # ABAIXO da própria média histórica). O sinal segue a direção do agressor, de modo que
+    # "long_above" = grande absorção do lado comprador e "long_below" = grande
+    # absorção do lado vendedor. Testa se a absorção precede uma reversão ou
+    # continuação — somente OHLCV não consegue distinguir "grande volume, preço estável"
+    # de "grande volume, grande variação de preço" nesta resolução.
     flow_magnitude = df["signed_volume"].abs()
     rolling_mean_flow = flow_magnitude.rolling(window, min_periods=window).mean().shift(1)
     rolling_std_flow = flow_magnitude.rolling(window, min_periods=window).std().shift(1)
@@ -198,7 +197,7 @@ def add_microstructure_features(frame: pd.DataFrame, window: int = 30) -> pd.Dat
     rolling_std_move = price_move.rolling(window, min_periods=window).std().shift(1)
     price_move_z = ((price_move - rolling_mean_move) / rolling_std_move).replace([np.inf, -np.inf], np.nan)
 
-    absorption_mask = price_move_z < 0.0  # price moved less than its own trailing average
+    absorption_mask = price_move_z < 0.0  # O preço variou menos que sua própria média histórica
     df["flow_absorption_signal"] = (flow_z * np.sign(df["signed_volume"])).where(absorption_mask)
     return df
 
@@ -212,13 +211,13 @@ class HypothesisConfig:
 
 
 HYPOTHESES = [
-    # FLOW_ABSORPTION: 1.5/2.0 sigma produced 0 cells with >=100 episodes
-    # (max 64-96 per cell) -- a sample-size problem, not an outcome-driven
-    # choice. Recalibrated to 1.0 sigma (already characterized: ~1517-1645
-    # total DEV episodes, ~84-91/day) per the same non-outcome-driven
-    # frequency-first rule used for BURST_PERSISTENCE. BURST_PERSISTENCE and
-    # CVD_ACCELERATION were already tested with adequate samples and
-    # rejected (see discovery_microstructure_aggtrades_latest.json history).
+    # FLOW_ABSORPTION: 1.5/2.0 sigma produziu 0 células com >=100 episódios
+    # (máximo de 64–96 por célula) — um problema de tamanho da amostra, não uma
+    # escolha orientada pelos resultados. Recalibrado para 1.0 sigma (já caracterizado: ~1517–1645
+    # episódios DEV no total, ~84–91/dia), seguindo a mesma regra não orientada pelos resultados
+    # e priorizada pela frequência usada para BURST_PERSISTENCE. BURST_PERSISTENCE e
+    # CVD_ACCELERATION já haviam sido testados com amostras adequadas e
+    # rejeitados (consulte o histórico de discovery_microstructure_aggtrades_latest.json).
     HypothesisConfig("FLOW_ABSORPTION", "flow_absorption_signal", 1.0, "long_above"),
     HypothesisConfig("FLOW_ABSORPTION", "flow_absorption_signal", -1.0, "long_below"),
     HypothesisConfig("FLOW_ABSORPTION", "flow_absorption_signal", 1.5, "long_above"),
@@ -347,9 +346,9 @@ def characterize_signal_frequency(
     thresholds: list[float],
     direction: str,
 ) -> list[dict[str, Any]]:
-    """Descriptive-only characterization (no returns/PF) of how often a raw
-    signal fires on the DEV split, used to pick ONE frozen threshold before
-    any outcome is examined (avoids choosing a threshold by its PF)."""
+    """Caracterização somente descritiva (sem retornos/PF) da frequência com que um sinal bruto
+    é acionado na partição DEV, usada para escolher UM limiar congelado antes
+    de examinar qualquer resultado (evita escolher um limiar com base em seu PF)."""
     rows: list[dict[str, Any]] = []
     for threshold in thresholds:
         total_signals = 0

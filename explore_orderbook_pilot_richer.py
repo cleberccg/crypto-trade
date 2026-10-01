@@ -1,30 +1,30 @@
-"""PILOT_EXPLORATORY_ONLY -- second, richer audit of the 7-day order-book pilot.
+"""PILOT_EXPLORATORY_ONLY -- segunda auditoria, mais abrangente, do piloto de order book de 7 dias.
 
-Uses ONLY data already collected by collect_orderbook_depth_bulk.py (no new
-collection here). Reuses existing infra instead of reinventing statistics:
-  - _entry_metrics / _passes_entry_gate / ENTRY_FORWARD_HORIZONS from
-    strategy_discovery_cycle1.py (same episode/PF/t-stat/MFE/MAE convention
-    used across every Discovery script in this repo).
-  - add_microstructure_features from discover_microstructure_aggtrades.py to
-    build the AGGTRADES_ONLY baseline features (imbalance_ratio,
-    flow_absorption_signal) from our own aggTrades Parquet cache, unmodified.
+Usa SOMENTE dados já coletados por collect_orderbook_depth_bulk.py (nenhuma nova
+coleta é feita aqui). Reutiliza a infraestrutura existente em vez de reinventar a estatística:
+    - _entry_metrics / _passes_entry_gate / ENTRY_FORWARD_HORIZONS de
+        strategy_discovery_cycle1.py (mesma convenção de episódio/PF/t-stat/MFE/MAE
+        usada em todos os scripts de descoberta deste repositório).
+    - add_microstructure_features de discover_microstructure_aggtrades.py para
+        criar os recursos de referência AGGTRADES_ONLY (imbalance_ratio,
+    flow_absorption_signal) do nosso cache Parquet de aggTrades, sem alterações.
 
-Methodological correction vs the first pilot check: bookDepth is FUTURES UM
-data, so the PRIMARY target here is a FUTURES price proxy derived from the
-pilot bookDepth itself (mid = notional/depth average of the +-0.2% cumulative
-bands, the narrowest available). SPOT (aggTrades) forward returns are only a
-SECONDARY analysis, run after the futures-native result is characterized.
+Correção metodológica em relação à primeira verificação do piloto: bookDepth são dados FUTURES UM,
+portanto o alvo PRIMÁRIO aqui é uma aproximação de preço FUTURES derivada do próprio
+bookDepth do piloto (mid = média notional/depth das faixas cumulativas de +-0.2%,
+as mais estreitas disponíveis). Os retornos futuros de SPOT (aggTrades) são apenas uma
+análise SECUNDÁRIA, executada depois de caracterizado o resultado nativo de futures.
 
-No look-ahead: every book/aggTrades feature at minute-bar T uses only data
-with timestamp <= end of bar T (native bookDepth cadence ~30s, aggregated
-with a right-closed/last-value resample). Entries execute at the OPEN of bar
-T+1, exactly the convention already used by _entry_rows_for_config /
-_entry_audit_once elsewhere in this repo. No snapshot is filled from the
-future; minutes with no snapshot are simply NaN and dropped.
+Sem look-ahead: cada recurso de book/aggTrades no candle de minuto T usa somente dados
+com timestamp <= fim do candle T (cadência nativa de bookDepth de ~30s, agregada
+com reamostragem de último valor e intervalo fechado à direita). As entradas são executadas na ABERTURA do candle
+T+1, exatamente a convenção já usada por _entry_rows_for_config /
+_entry_audit_once em outros pontos deste repositório. Nenhum snapshot é preenchido com dados futuros;
+minutos sem snapshot simplesmente recebem NaN e são descartados.
 
-Does not touch BacktestEngine, RiskManager, PositionSizer,
-ClassicDonchianBreakout, Paper Live or FINAL_HOLDOUT. Read-only over the
-pilot Parquet files already on disk. No new data is downloaded.
+Não altera BacktestEngine, RiskManager, PositionSizer,
+ClassicDonchianBreakout, Paper Live nem FINAL_HOLDOUT. Opera somente em leitura sobre os
+arquivos Parquet do piloto já existentes no disco. Nenhum dado novo é baixado.
 """
 from __future__ import annotations
 
@@ -50,14 +50,14 @@ OUT_JSON = BASE_DIR / "explore_orderbook_pilot_richer_latest.json"
 OUT_MD = BASE_DIR / "explore_orderbook_pilot_richer_latest.md"
 
 SYMBOLS = ("BTCUSDT", "ETHUSDT")
-# Only days with BOTH bookDepth (futures) and aggTrades (spot) already
-# collected and VALIDATED=YES (2026-08-24 aggTrades is NOT_AVAILABLE yet).
+# Somente dias em que bookDepth (futuros) e aggTrades (spot) já foram
+# coletados e estão VALIDATED=YES (o aggTrades de 2026-08-24 ainda está NOT_AVAILABLE).
 PILOT_DAYS = [f"2026-08-{d:02d}" for d in range(17, 24)]
 NEAR_BANDS = (-1.0, -0.2, 0.2, 1.0)
 FAR_BANDS = (-5.0, -4.0, -3.0, -2.0, 2.0, 3.0, 4.0, 5.0)
 QUANTILE_HIGH = 0.90
 QUANTILE_LOW = 0.10
-MIN_DAYS_WITH_SIGNAL = 4  # >=4/7 pilot days must contribute episodes for "consistent across days"
+MIN_DAYS_WITH_SIGNAL = 4  # Pelo menos 4 dos 7 dias-piloto devem contribuir com episódios para serem considerados "consistentes entre dias"
 
 
 def _log(message: str) -> None:
@@ -65,7 +65,7 @@ def _log(message: str) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Loading pilot data already on disk (no new collection)
+# Carrega dados-piloto já existentes no disco (sem nova coleta)
 # ---------------------------------------------------------------------------
 
 def _load_bookdepth(symbol: str) -> pd.DataFrame:
@@ -95,7 +95,7 @@ def _load_aggtrades(symbol: str) -> pd.DataFrame:
 
 
 # ---------------------------------------------------------------------------
-# FUTURES side: bands -> mid-price proxy, OHLC bars, and book features
+# Lado FUTURES: faixas -> proxy do preço médio, barras OHLC e características do livro
 # ---------------------------------------------------------------------------
 
 def _pivot_bands(bd: pd.DataFrame) -> pd.DataFrame:
@@ -105,10 +105,10 @@ def _pivot_bands(bd: pd.DataFrame) -> pd.DataFrame:
 
 
 def _mid_price_proxy(wide: pd.DataFrame) -> pd.Series:
-    """Average price of the narrowest cumulative bands (+-0.2%) as a mid proxy.
-    Depth-weighted average of the two nearest-to-mid cumulative slices; this
-    is a derivation from data already collected (notional/depth per band),
-    not a new data source."""
+    """Preço médio das faixas cumulativas mais estreitas (+-0.2%) usado como aproximação do mid.
+    Média ponderada pela profundidade das duas faixas cumulativas mais próximas do mid; isso
+    é uma derivação dos dados já coletados (notional/depth por faixa),
+    não uma nova fonte de dados."""
     avg_neg = wide["notional_-0.2"] / wide["depth_-0.2"]
     avg_pos = wide["notional_0.2"] / wide["depth_0.2"]
     weight_neg = wide["depth_-0.2"]
@@ -122,8 +122,8 @@ def _col(metric: str, pct: float) -> str:
 
 
 def _futures_ohlc_1m(mid: pd.Series) -> pd.DataFrame:
-    """Pseudo-OHLC per minute built only from the ~2 native 30s snapshots that
-    fall inside each minute (no interpolation, no forward fill)."""
+    """Pseudo-OHLC por minuto, criado somente a partir dos ~2 snapshots nativos de 30s que
+    ocorrem em cada minuto (sem interpolação nem preenchimento para frente)."""
     g = mid.resample("1min", label="left", closed="left")
     ohlc = pd.DataFrame({"open": g.first(), "high": g.max(), "low": g.min(), "close": g.last(), "n_snapshots": g.count()})
     return ohlc.dropna(subset=["close"])
@@ -136,26 +136,26 @@ def _book_features_30s(wide: pd.DataFrame) -> pd.DataFrame:
     df["bid_notional"] = wide[bid_notional_cols].sum(axis=1)
     df["ask_notional"] = wide[ask_notional_cols].sum(axis=1)
 
-    # 1) BOOK_PRESSURE: notional imbalance weighted 1/|pct| (near bands count more).
+    # 1) BOOK_PRESSURE: desequilíbrio de notional ponderado por 1/|pct| (faixas próximas têm maior peso).
     weighted_bid = sum(wide[_col("notional", p)] / abs(p) for p in (-5.0, -4.0, -3.0, -2.0, -1.0, -0.2))
     weighted_ask = sum(wide[_col("notional", p)] / abs(p) for p in (0.2, 1.0, 2.0, 3.0, 4.0, 5.0))
     df["book_pressure"] = (weighted_bid - weighted_ask) / (weighted_bid + weighted_ask)
 
-    # 2) BOOK_PRESSURE_CHANGE / 3) BOOK_PRESSURE_ACCELERATION (snapshot-to-snapshot, causal).
+    # 2) BOOK_PRESSURE_CHANGE / 3) BOOK_PRESSURE_ACCELERATION (entre snapshots, de forma causal).
     df["book_pressure_change"] = df["book_pressure"].diff()
     df["book_pressure_acceleration"] = df["book_pressure_change"].diff()
 
-    # 4) LIQUIDITY_REMOVAL: abrupt one-sided depth drop (positive = bid drained more than ask).
+    # 4) LIQUIDITY_REMOVAL: queda abrupta de profundidade em um dos lados (positivo = mais liquidez removida do bid que do ask).
     bid_drop = (-df["bid_notional"].pct_change()).clip(lower=0.0)
     ask_drop = (-df["ask_notional"].pct_change()).clip(lower=0.0)
     df["liquidity_removal"] = bid_drop - ask_drop
 
-    # 5) LIQUIDITY_REFILL: pressure rebound conditioned on a removal spike in the prior snapshot.
+    # 5) LIQUIDITY_REFILL: recuperação da pressão condicionada a um pico de remoção no snapshot anterior.
     removal_hi = df["liquidity_removal"].abs().quantile(QUANTILE_HIGH)
     prior_removal_spike = df["liquidity_removal"].shift(1).abs() >= removal_hi
     df["liquidity_refill"] = df["book_pressure_change"].where(prior_removal_spike)
 
-    # 6) NEAR_VS_FAR_LIQUIDITY: near-touch (0.2-1%) vs far (2-5%) concentration, per side, then side asymmetry.
+    # 6) NEAR_VS_FAR_LIQUIDITY: concentração próxima ao preço (0.2–1%) versus distante (2–5%), por lado, seguida da assimetria entre os lados.
     near_bid = wide[_col("notional", -0.2)] + wide[_col("notional", -1.0)]
     far_bid = wide[_col("notional", -4.0)] + wide[_col("notional", -5.0)]
     near_ask = wide[_col("notional", 0.2)] + wide[_col("notional", 1.0)]
@@ -164,7 +164,7 @@ def _book_features_30s(wide: pd.DataFrame) -> pd.DataFrame:
     ratio_ask = near_ask / far_ask.replace(0.0, np.nan)
     df["near_vs_far_liquidity"] = np.log(ratio_bid.replace(0, np.nan)) - np.log(ratio_ask.replace(0, np.nan))
 
-    # 7) DEPTH_SLOPE_ASYMMETRY: slope of cumulative notional vs |pct| per side, bid slope - ask slope.
+    # 7) DEPTH_SLOPE_ASYMMETRY: inclinação do notional cumulativo em relação a |pct| por lado: inclinação do bid menos inclinação do ask.
     bid_pcts = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
     ask_pcts = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
     bid_vals = np.column_stack([wide[_col("notional", -p)].to_numpy() for p in bid_pcts])
@@ -178,12 +178,12 @@ def _book_features_30s(wide: pd.DataFrame) -> pd.DataFrame:
 
 
 def _resample_causal_1m(df_30s: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
-    """Value at minute bar T = last snapshot observed inside [T, T+1min)."""
+    """Valor no candle de minuto T = último snapshot observado em [T, T+1min)."""
     return df_30s[columns].resample("1min", label="left", closed="left").last()
 
 
 # ---------------------------------------------------------------------------
-# SPOT side: aggTrades -> 1-min OHLC + microstructure features (reused as-is)
+# Lado SPOT: aggTrades -> OHLC de 1 minuto + características de microestrutura (reutilizadas sem alterações)
 # ---------------------------------------------------------------------------
 
 def _aggtrades_minute_bars(agg: pd.DataFrame) -> pd.DataFrame:
@@ -209,7 +209,7 @@ def _aggtrades_minute_bars(agg: pd.DataFrame) -> pd.DataFrame:
     bars["buy_volume"] = bars["buy_volume"].fillna(0.0)
     bars["sell_volume"] = bars["sell_volume"].fillna(0.0)
     bars["avg_trade_size"] = bars["volume"] / bars["trade_count"].replace(0, np.nan)
-    # max_aggressor_run per bar (used by add_microstructure_features's burst signal, not core to this audit).
+    # max_aggressor_run por barra (usado pelo sinal de pico de add_microstructure_features; não é central para esta auditoria).
     def _max_run(sub: pd.DataFrame) -> int:
         side = sub["buy"].to_numpy()
         if side.size == 0:
@@ -226,7 +226,7 @@ def _aggtrades_minute_bars(agg: pd.DataFrame) -> pd.DataFrame:
 
 
 # ---------------------------------------------------------------------------
-# Episode/entry-metrics evaluation (reusing _entry_metrics unmodified)
+# Avaliação de episódios/métricas de entrada (reutiliza _entry_metrics sem alterações)
 # ---------------------------------------------------------------------------
 
 def _episode_rows(
@@ -235,8 +235,8 @@ def _episode_rows(
     direction: str,
     threshold: float,
 ) -> pd.DataFrame:
-    """Same convention as _entry_rows_for_config: signal at bar close ->
-    entry at OPEN of the next bar -> exit at close of entry+horizon-1."""
+    """Mesma convenção de _entry_rows_for_config: sinal no fechamento do candle ->
+    entrada na ABERTURA do candle seguinte -> saída no fechamento de entry+horizon-1."""
     aligned = ohlc.join(feature.rename("feature"), how="inner").dropna(subset=["feature"])
     if len(aligned) <= max(ENTRY_FORWARD_HORIZONS) + 5:
         return pd.DataFrame()
@@ -369,7 +369,7 @@ def main() -> int:
         spot_features[symbol] = add_microstructure_features(bars)
         _log(f"STATUS: RUNNING CURRENT_STAGE=FEATURES_BUILT SYMBOL={symbol} FUTURES_BARS={len(futures_ohlc[symbol])} SPOT_BARS={len(spot_ohlc[symbol])}")
 
-    # Combined features requiring both sides, aligned on the minute index.
+    # Características combinadas que exigem os dois lados, alinhadas pelo índice de minutos.
     combined_1m: dict[str, pd.DataFrame] = {}
     for symbol in SYMBOLS:
         joined = book_1m[symbol].join(spot_features[symbol][["imbalance_ratio", "flow_absorption_signal"]], how="inner")
@@ -404,7 +404,7 @@ def main() -> int:
                 best = result["best"]
                 if best is None:
                     continue
-                # rebuild the winning episode rows for daily/magnitude breakdown
+                # Reconstrói as linhas dos episódios vencedores para a análise diária/de magnitude
                 sym_rows = []
                 for symbol in SYMBOLS:
                     rows = _episode_rows(ohlc_source[symbol], per_symbol_feature[symbol], best["direction"], best["threshold"])

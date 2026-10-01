@@ -79,10 +79,10 @@ def _context_score(row: dict[str, Any]) -> float:
 
 
 def classify_market_regimes(candles: pd.DataFrame) -> pd.DataFrame:
-    """Classify bars in trend and volatility regimes.
+    """Classifica candles em regimes de tendência e volatilidade.
 
-    The classifier is deterministic and can be safely cached for re-use in
-    future campaigns.
+    O classificador é determinístico e pode ser armazenado em cache com
+    segurança para reutilização em campanhas futuras.
     """
     if candles.empty:
         return candles.copy()
@@ -799,7 +799,7 @@ class MarketRegimeRouterService:
         if not selected:
             return pd.DataFrame()
 
-        # Keep single active position semantics in router simulation.
+        # Mantém a semântica de uma única posição ativa na simulação do roteador.
         accepted: list[dict[str, Any]] = []
         active_until = None
         for row in sorted(selected, key=lambda x: pd.Timestamp(x["entry_time"])):

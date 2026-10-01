@@ -1,9 +1,9 @@
 ﻿"""
-Position sizing calculations.
+Cálculos do dimensionamento de posições.
 
-Design decision: Separating position sizing from the risk manager keeps each
-class focused on a single responsibility.  All sizing methods are pure
-functions with no side effects.
+Decisão de projeto: separar o dimensionamento de posições do gerenciador de risco
+mantém cada classe focada em uma única responsabilidade. Todos os métodos de
+dimensionamento são funções puras, sem efeitos colaterais.
 """
 from __future__ import annotations
 
@@ -15,12 +15,12 @@ logger = get_logger(__name__)
 
 class PositionSizer:
     """
-    Calculates the position size for a trade.
+     Calcula o tamanho da posição de uma operação.
 
-    Supports two sizing methods:
-    1. **Fixed fractional**: stake a fixed percentage of total portfolio.
-    2. **Risk-based**: determine size so that the stop-loss hit equals a fixed
-       percentage of total portfolio (Kelly/fixed-risk approach).
+     Oferece suporte a dois métodos de dimensionamento:
+     1. **Fração fixa**: aloca uma porcentagem fixa da carteira total.
+     2. **Baseado em risco**: determina o tamanho para que o acionamento do stop-loss
+         corresponda a uma porcentagem fixa da carteira total (abordagem Kelly/risco fixo).
     """
 
     def fixed_fractional(
@@ -30,15 +30,15 @@ class PositionSizer:
         price: float,
     ) -> float:
         """
-        Size a position as a fixed fraction of the portfolio.
+        Dimensiona uma posição como fração fixa da carteira.
 
-        Args:
-            portfolio_value: Total portfolio value in quote currency.
-            stake_pct: Fraction to stake per trade (e.g. 0.02 for 2%).
-            price: Current asset price.
+        Argumentos:
+            portfolio_value: Valor total da carteira na moeda de cotação.
+            stake_pct: Fração a alocar por operação (por exemplo, 0.02 para 2%).
+            price: Preço atual do ativo.
 
-        Returns:
-            Quantity to buy in base currency.
+        Retorna:
+            Quantidade a comprar na moeda-base.
         """
         portfolio_value = validate_positive_float(portfolio_value, "portfolio_value")
         stake_pct = validate_percentage(stake_pct, "stake_pct")
@@ -66,22 +66,22 @@ class PositionSizer:
         stop_loss_price: float,
     ) -> float:
         """
-        Size a position so a stop-loss hit loses exactly *risk_pct* of the
-        portfolio.
+        Dimensiona uma posição para que o acionamento do stop-loss cause uma perda
+        exatamente igual a *risk_pct* da carteira.
 
-        Formula: qty = (portfolio * risk_pct) / (entry - stop_loss)
+        Fórmula: qty = (portfolio * risk_pct) / (entry - stop_loss)
 
-        Args:
-            portfolio_value: Total portfolio value in quote currency.
-            risk_pct: Maximum loss fraction per trade (e.g. 0.01 for 1%).
-            entry_price: Planned entry price.
-            stop_loss_price: Planned stop-loss price.
+        Argumentos:
+            portfolio_value: Valor total da carteira na moeda de cotação.
+            risk_pct: Fração máxima de perda por operação (por exemplo, 0.01 para 1%).
+            entry_price: Preço planejado de entrada.
+            stop_loss_price: Preço planejado do stop-loss.
 
-        Returns:
-            Quantity to buy in base currency.
+        Retorna:
+            Quantidade a comprar na moeda-base.
 
-        Raises:
-            ValueError: If stop_loss_price >= entry_price (no room for loss).
+        Exceções:
+            ValueError: Se stop_loss_price >= entry_price (não há margem para perda).
         """
         portfolio_value = validate_positive_float(portfolio_value, "portfolio_value")
         risk_pct = validate_percentage(risk_pct, "risk_pct")

@@ -1,6 +1,4 @@
-﻿"""
-Unit tests for risk management components.
-"""
+﻿"""Testes unitários dos componentes de gerenciamento de risco."""
 from __future__ import annotations
 
 import pytest

@@ -1,4 +1,4 @@
-﻿"""Daily operational report generator for paper trading."""
+﻿"""Gerador de relatórios operacionais diários para paper trading."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -21,7 +21,7 @@ class PaperDailyReportConfig:
 
 
 class PaperDailyReportService:
-    """Builds a daily operational report from persisted paper trading data."""
+    """Gera um relatório operacional diário a partir de dados persistidos de paper trading."""
 
     def __init__(self, session: Session, base_dir: Path) -> None:
         self._session = session

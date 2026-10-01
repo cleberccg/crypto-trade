@@ -1,5 +1,5 @@
 ﻿"""
-Backtesting result reporter - generates human-readable summaries and charts.
+Gerador de relatórios de backtesting: produz resumos legíveis e gráficos.
 """
 from __future__ import annotations
 
@@ -18,10 +18,10 @@ _RESULTS_DIR = Path(__file__).parent / "results"
 
 class BacktestReporter:
     """
-    Generates text summaries and equity curve charts for backtest results.
+    Gera resumos textuais e gráficos da curva de patrimônio para resultados de backtest.
 
-    Args:
-        output_dir: Directory where reports and images are saved.
+    Argumentos:
+        output_dir: Diretório onde relatórios e imagens são salvos.
     """
 
     def __init__(self, output_dir: Path | None = None) -> None:
@@ -29,20 +29,20 @@ class BacktestReporter:
         self._output_dir.mkdir(parents=True, exist_ok=True)
 
     def print_summary(self, result: BacktestResult) -> None:
-        """Print a formatted performance summary to stdout."""
+        """Exibe um resumo formatado do desempenho em stdout."""
         print(f"\nStrategy : {result.strategy_name}")
         print(f"Symbol   : {result.symbol}")
         print(result.metrics)
 
     def save_equity_chart(self, result: BacktestResult) -> Path:
         """
-        Save an equity curve chart as a PNG file.
+        Salva um gráfico da curva de patrimônio como arquivo PNG.
 
-        Args:
-            result: Completed BacktestResult.
+        Argumentos:
+            result: BacktestResult concluído.
 
-        Returns:
-            Path to the saved image file.
+        Retorno:
+            Caminho do arquivo de imagem salvo.
         """
         fig, axes = plt.subplots(2, 1, figsize=(14, 8), sharex=True)
         fig.suptitle(
@@ -52,7 +52,7 @@ class BacktestReporter:
             fontsize=13,
         )
 
-        # Equity curve
+        # Curva de patrimônio
         ax1 = axes[0]
         result.equity_curve.plot(ax=ax1, color="steelblue", linewidth=1.5)
         ax1.axhline(
@@ -91,10 +91,10 @@ class BacktestReporter:
 
     def save_trade_log(self, result: BacktestResult) -> Path:
         """
-        Save a CSV log of all trades.
+        Salva um registro CSV de todas as operações.
 
-        Returns:
-            Path to the saved CSV file.
+        Retorno:
+            Caminho do arquivo CSV salvo.
         """
         if not result.trades:
             logger.warning("No trades to save.")

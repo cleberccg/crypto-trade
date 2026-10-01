@@ -1,16 +1,16 @@
-"""Single continuous research pipeline: COLLECTION -> VALIDATION -> FEATURE
-CACHE -> AUTONOMOUS DISCOVERY, chained automatically in one process.
+"""Pipeline contínuo único de pesquisa: COLLECTION -> VALIDATION -> FEATURE
+CACHE -> AUTONOMOUS DISCOVERY, encadeado automaticamente em um processo.
 
-Reuses (does not duplicate):
-- collect_aggtrades_bulk.py (partitioned Binance bulk collector, lock/manifest)
-- discover_microstructure_aggtrades.py's bar-construction/feature conventions
-- strategy_discovery_cycle1.py gate constants and statistics
-- run_autonomous_strategy_discovery.py's hypothesis funnel (imported and
-  pointed at the new dataset via module-level monkeypatch of its data
-  loading, not reimplemented)
+Reutiliza (sem duplicar):
+- collect_aggtrades_bulk.py (coletor em lote da Binance particionado, lock/manifest)
+- convenções de construção de candles/recursos de discover_microstructure_aggtrades.py
+- constantes de gate e estatísticas de strategy_discovery_cycle1.py
+- funil de hipóteses de run_autonomous_strategy_discovery.py (importado e
+    direcionado ao novo conjunto de dados por monkeypatch em nível de módulo do carregamento
+    de dados, sem reimplementação)
 
-If a stage fails, only that stage's pipeline stops; the failure and its
-exact cause are logged, no speculative fixes are attempted.
+Se uma etapa falhar, somente o pipeline dessa etapa é interrompido; a falha e sua
+causa exata são registradas, sem tentativas especulativas de correção.
 """
 from __future__ import annotations
 
@@ -35,11 +35,11 @@ CACHE_ROOT = BASE_DIR / "data" / "cache_minute_bars_v2"
 TIMEFRAMES = ("1m", "5m", "15m")
 FEATURE_VERSION = "v2"
 
-# Temporal protection: FINAL_HOLDOUT is never touched by Discovery.
+# Proteção temporal: Discovery nunca acessa FINAL_HOLDOUT.
 DEV_END = pd.Timestamp("2025-09-01T00:00:00Z")
 VALIDATION_END = pd.Timestamp("2026-02-01T00:00:00Z")
 OOS_END = pd.Timestamp("2026-06-01T00:00:00Z")
-# [OOS_END, FINAL_HOLDOUT_END) is FINAL_HOLDOUT -- locked, not readable by Discovery.
+# [OOS_END, FINAL_HOLDOUT_END) corresponde a FINAL_HOLDOUT — bloqueado e não legível por Discovery.
 
 
 def _log(message: str) -> None:
@@ -81,7 +81,7 @@ def _free_disk_gb(path: Path) -> float:
 
 
 def stage_collection() -> bool:
-    """Waits for an already-running bulk collector, or runs it in-process."""
+    """Aguarda um coletor em lote já em execução ou o executa no próprio processo."""
     _log("PIPELINE_STAGE: COLLECTION")
     while bulk.LOCK_PATH.exists():
         _log("PIPELINE_STAGE: COLLECTION STATUS=WAITING_FOR_RUNNING_COLLECTOR")
@@ -152,9 +152,9 @@ def stage_global_validation() -> dict[str, Any] | None:
 
 
 def _build_1m_bars(symbol: str) -> pd.DataFrame:
-    """Streams every validated partition parquet for one symbol (already
-    columnar/compressed; no need to touch the raw Binance zips again) and
-    aggregates into 1-minute microstructure bars."""
+    """Percorre em fluxo cada arquivo Parquet de partição validada de um símbolo (já
+    colunar/compactado; não é necessário acessar novamente os arquivos ZIP brutos da Binance) e
+    agrega os dados em candles de microestrutura de 1 minuto."""
     manifest = bulk._load_manifest()
     parts = sorted(
         (v for v in manifest["partitions"].values() if v.get("SYMBOL") == symbol and v.get("VALIDATED") == "YES"),
@@ -271,7 +271,7 @@ def stage_feature_cache(dataset_manifest_hash: str) -> Path:
 def stage_discovery(cache_dir: Path, dataset_manifest_hash: str) -> None:
     _log("PIPELINE_STAGE: DISCOVERY")
     import run_autonomous_strategy_research_v3 as discovery_v3
-    # v3 self-loads the validated cache/hash context and remains restart-safe.
+    # A v3 carrega por conta própria o contexto validado de cache/hash e permanece segura para reinicializações.
     discovery_v3.run()
 
 

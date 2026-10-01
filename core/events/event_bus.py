@@ -1,4 +1,4 @@
-"""In-process event bus with optional asynchronous listener dispatch."""
+"""Barramento de eventos em processo com despacho assíncrono opcional para listeners."""
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor, wait
@@ -13,7 +13,7 @@ logger = get_logger(__name__)
 
 
 class EventBus:
-    """Simple observer dispatcher for optimizer events."""
+    """Despachante simples de observadores para eventos do otimizador."""
 
     def __init__(self, listeners: Iterable[EventListener] | None = None, async_dispatch: bool = False) -> None:
         self._listeners: list[EventListener] = list(listeners or [])

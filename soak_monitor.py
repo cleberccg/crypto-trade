@@ -89,7 +89,7 @@ def file_growth_bytes(results_dir: Path, hours: int) -> int:
 def count_log_errors(log_path: Path, hours: int) -> int:
     if not log_path.exists():
         return 0
-    # Heuristic read: keep it simple and fast for hourly cadence.
+    # Leitura heurística: mantém o processo simples e rápido para a cadência horária.
     raw = log_path.read_text(encoding="utf-8", errors="ignore")
     lines = raw.splitlines()
     if not lines:

@@ -369,7 +369,7 @@ class TradeManagementResearchLab:
             idx = min(default_exit_idx, max(0, int(config.time_stop_bars) - 1))
             return _finish(idx, float(ret_close[idx]))
 
-        # Scenario G: momentum loss with fast/slow EMA cross and protective stop.
+        # Cenário G: perda de momentum com cruzamento de EMA rápida/lenta e stop de proteção.
         prices = (ret_close + 1.0) * path["entry_price"]
         ema_fast = pd.Series(prices).ewm(span=max(2, int(config.momentum_fast)), adjust=False).mean().to_numpy()
         ema_slow = pd.Series(prices).ewm(span=max(3, int(config.momentum_slow)), adjust=False).mean().to_numpy()

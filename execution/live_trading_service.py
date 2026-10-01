@@ -1,4 +1,4 @@
-"""Official live trading service for Binance Spot using risk-managed sizing."""
+"""Serviço oficial de negociação ao vivo na Binance Spot com dimensionamento gerenciado por risco."""
 from __future__ import annotations
 
 import json
@@ -32,12 +32,12 @@ logger = get_logger(__name__)
 
 
 # ---------------------------------------------------------------------------
-# Position state
+# Estado da posição
 # ---------------------------------------------------------------------------
 
 @dataclass
 class LivePositionState:
-    """Tracks an open live position for restart recovery."""
+    """Acompanha uma posição ao vivo aberta para recuperação após reinicialização."""
 
     trade_id: int
     symbol: str
@@ -50,6 +50,13 @@ class LivePositionState:
     take_profit: float
     opened_at: str           # ISO-8601 UTC
     exchange_order_id: str
+    original_quantity: float = 0.0
+    entry_fee_usdt: float | None = None
+    entry_fee_allocated_usdt: float = 0.0
+    realized_gross_pnl: float = 0.0
+    realized_exit_fees_usdt: float = 0.0
+    realized_net_pnl: float | None = None
+    fee_accounting_complete: bool = False
 
     @property
     def context_key(self) -> tuple[str, str, str]:
@@ -57,13 +64,13 @@ class LivePositionState:
 
 
 class _LivePositionStore:
-    """Persists open positions to a JSON file for crash/restart recovery."""
+    """Persiste posições abertas em um arquivo JSON para recuperação após falha/reinicialização."""
 
     def __init__(self, path: Path) -> None:
         self._path = path
 
     def save(self, state: LivePositionState) -> None:
-        # Backward-compatible single-state save.
+        # Salvamento de estado único compatível com versões anteriores.
         self.save_all([state])
 
     def save_all(self, states: list[LivePositionState]) -> None:
@@ -76,7 +83,7 @@ class _LivePositionStore:
             logger.warning("LivePositionStore: failed to save state: %s", exc)
 
     def load(self) -> LivePositionState | None:
-        # Backward-compatible single-state load.
+        # Carregamento de estado único compatível com versões anteriores.
         states = self.load_all()
         return states[0] if states else None
 
@@ -100,7 +107,7 @@ class _LivePositionStore:
                 return []
         try:
             if isinstance(data, dict):
-                # Legacy single-position format.
+                # Formato legado de posição única.
                 state = LivePositionState(
                     trade_id=int(data["trade_id"]),
                     symbol=str(data["symbol"]),
@@ -113,6 +120,13 @@ class _LivePositionStore:
                     take_profit=float(data["take_profit"]),
                     opened_at=str(data.get("opened_at") or data.get("entry_ts") or ""),
                     exchange_order_id=str(data.get("exchange_order_id", "")),
+                    original_quantity=float(data.get("original_quantity", data.get("quantity", 0.0)) or 0.0),
+                    entry_fee_usdt=(float(data["entry_fee_usdt"]) if data.get("entry_fee_usdt") is not None else None),
+                    entry_fee_allocated_usdt=float(data.get("entry_fee_allocated_usdt", 0.0) or 0.0),
+                    realized_gross_pnl=float(data.get("realized_gross_pnl", 0.0) or 0.0),
+                    realized_exit_fees_usdt=float(data.get("realized_exit_fees_usdt", 0.0) or 0.0),
+                    realized_net_pnl=(float(data["realized_net_pnl"]) if data.get("realized_net_pnl") is not None else None),
+                    fee_accounting_complete=bool(data.get("fee_accounting_complete", False)),
                 )
                 logger.info("LivePositionStore.load_all -> loaded legacy single state")
                 return [state]
@@ -135,6 +149,13 @@ class _LivePositionStore:
                             take_profit=float(item.get("take_profit", 0.0)),
                             opened_at=str(item.get("opened_at", "")),
                             exchange_order_id=str(item.get("exchange_order_id", "")),
+                            original_quantity=float(item.get("original_quantity", item.get("quantity", item.get("qty", 0.0))) or 0.0),
+                            entry_fee_usdt=(float(item["entry_fee_usdt"]) if item.get("entry_fee_usdt") is not None else None),
+                            entry_fee_allocated_usdt=float(item.get("entry_fee_allocated_usdt", 0.0) or 0.0),
+                            realized_gross_pnl=float(item.get("realized_gross_pnl", 0.0) or 0.0),
+                            realized_exit_fees_usdt=float(item.get("realized_exit_fees_usdt", 0.0) or 0.0),
+                            realized_net_pnl=(float(item["realized_net_pnl"]) if item.get("realized_net_pnl") is not None else None),
+                            fee_accounting_complete=bool(item.get("fee_accounting_complete", False)),
                         )
                     )
             logger.info("LivePositionStore.load_all -> loaded %d position(s)", len(states))
@@ -157,7 +178,7 @@ class _LivePositionStore:
 
 
 class _TradeStub:
-    """Minimal Trade-like object carrying only the persisted ID."""
+    """Objeto mínimo semelhante a Trade que contém somente o ID persistido."""
 
     __slots__ = ("id",)
 
@@ -166,7 +187,7 @@ class _TradeStub:
 
 
 # ---------------------------------------------------------------------------
-# Config
+# Configuração
 # ---------------------------------------------------------------------------
 
 @dataclass(frozen=True)
@@ -188,11 +209,11 @@ class LiveTradingConfig:
 
 
 # ---------------------------------------------------------------------------
-# Service
+# Serviço
 # ---------------------------------------------------------------------------
 
 class LiveTradingService:
-    """Runs live market monitoring with full entry/exit cycle and restart recovery."""
+    """Monitora o mercado ao vivo com ciclo completo de entrada/saída e recuperação após reinicialização."""
 
     def __init__(
         self,
@@ -219,7 +240,7 @@ class LiveTradingService:
         self._db_ops: dict[str, Callable] = db_ops or {}
 
     # ------------------------------------------------------------------
-    # Public entry point
+    # Ponto de entrada público
     # ------------------------------------------------------------------
 
     def run(self, cfg: LiveTradingConfig) -> dict[str, Any]:
@@ -250,7 +271,7 @@ class LiveTradingService:
             }
             primary_ctx = (target_symbols[0], cfg.strategy_name, cfg.timeframe)
 
-            # Build multi-position state store
+            # Cria o armazenamento de estado para múltiplas posições
             state_dir = cfg.state_dir or (self._base_dir / "optimization" / "results")
             store = self._position_store_factory(
                 Path(state_dir) / "live_positions.json"
@@ -264,7 +285,7 @@ class LiveTradingService:
                     store=store,
                 )
 
-            # Reconcile any existing open positions on restart
+            # Reconcilia quaisquer posições abertas existentes ao reiniciar
             open_positions = self._reconcile_on_startup(
                 cfg=cfg,
                 exchange=exchange,
@@ -322,6 +343,7 @@ class LiveTradingService:
                             symbol, timeframe, exc,
                         )
                         continue
+                    latest = self._closed_only(latest, timeframe)
 
                     if frame is None:
                         try:
@@ -334,7 +356,15 @@ class LiveTradingService:
                                 exc,
                             )
                             continue
-                        frame = bootstrap if bootstrap is not None else pd.DataFrame()
+                        frame = self._closed_only(bootstrap, timeframe) if bootstrap is not None else pd.DataFrame()
+
+                    if latest is not None and not latest.empty and frame is not None and not frame.empty:
+                        latest = latest.loc[latest.index > frame.index[-1]]
+
+                    if latest is None or latest.empty:
+                        last_signals[context_key] = "HOLD"
+                        cycle_logs.append((context_key, "HOLD"))
+                        continue
 
                     if latest is not None and not latest.empty:
                         latest_ts = latest.index[-1]
@@ -385,7 +415,7 @@ class LiveTradingService:
                         )
                         strategy_cache[context_key] = strategy_obj
 
-                    # Existing position: evaluate independent exits per context.
+                        # Posição existente: avalia saídas independentes por contexto.
                     if context_key in open_positions:
                         position = open_positions[context_key]
                         should_exit, exit_reason = self._check_exit_conditions(
@@ -412,6 +442,7 @@ class LiveTradingService:
                                 last_signals[context_key] = "SELL"
                                 cycle_logs.append((context_key, "SELL"))
                             else:
+                                self._store_save_positions(store=store, positions=open_positions)
                                 last_signals[context_key] = "HOLD"
                                 cycle_logs.append((context_key, "HOLD"))
                         else:
@@ -474,6 +505,15 @@ class LiveTradingService:
                             logger.info("Context already has an open position. Skipping BUY.")
                             last_signals[context_key] = "HOLD"
                             cycle_logs.append((context_key, "HOLD"))
+                        elif self._has_untracked_asset_balance(exchange, symbol):
+                            # Um BUY anterior pode ter sido executado apesar de timeout/erro; nunca compra duas vezes.
+                            logger.error(
+                                "BUY bloqueado: saldo %s nao rastreado na Binance acima do minNotional. "
+                                "Reconciliar manualmente antes de nova entrada.",
+                                symbol,
+                            )
+                            last_signals[context_key] = "HOLD"
+                            cycle_logs.append((context_key, "HOLD"))
                         else:
                             local_cfg = LiveTradingConfig(
                                 symbol=symbol,
@@ -517,7 +557,7 @@ class LiveTradingService:
                         last_signals[context_key] = "HOLD"
                         cycle_logs.append((context_key, "HOLD"))
 
-                # Cycle logs by symbol/context
+                # Registra os logs de cada ciclo por símbolo/contexto
                 for context_key in sorted(target_contexts, key=lambda item: item[0]):
                     action = last_signals.get(context_key, "HOLD")
                     logger.info("%s -> %s", context_key[0], action)
@@ -575,6 +615,105 @@ class LiveTradingService:
         except Exception:
             logger.exception("LIVE service failed during initialization or execution.")
             raise
+        finally:
+            exchange.disconnect()
+
+    def emergency_exit(
+        self,
+        *,
+        strategy_name: str,
+        symbol: str,
+        enable_real_orders: bool = False,
+        state_dir: Path | None = None,
+    ) -> dict[str, Any]:
+        """Pré-visualiza ou fecha explicitamente somente a posição de BNB persistida e pertencente ao bot."""
+        if symbol != "BNB/USDT":
+            raise ValueError("Emergency exit is restricted to BNB/USDT.")
+
+        exchange = self._exchange_factory()
+        try:
+            exchange.connect()
+            resolved_state_dir = state_dir or (self._base_dir / "optimization" / "results")
+            store = self._position_store_factory(Path(resolved_state_dir) / "live_positions.json")
+            positions = self._store_load_positions(store)
+            matching = [
+                state for state in positions.values()
+                if state.symbol == symbol and state.strategy == strategy_name
+            ]
+
+            ticker = exchange.fetch_ticker(symbol)
+            current_price = float(ticker.get("last") or 0.0)
+            if current_price <= 0.0:
+                raise RuntimeError("Emergency exit blocked: Binance returned no usable BNB price.")
+
+            if len(matching) > 1:
+                raise RuntimeError("Emergency exit blocked: multiple matching persisted bot positions.")
+            position = matching[0] if matching else None
+            if position is None:
+                return {
+                    "bot_position_quantity": 0.0,
+                    "current_price": current_price,
+                    "estimated_notional": 0.0,
+                    "would_sell": False,
+                    "real_order_sent": False,
+                    "dry_run": not enable_real_orders,
+                }
+
+            cfg = LiveTradingConfig(
+                symbol=symbol,
+                timeframe=position.timeframe,
+                strategy_name=strategy_name,
+                strategy_version="v1",
+                max_cycles=1,
+                poll_seconds=0.0,
+                state_dir=Path(resolved_state_dir),
+            )
+            db_states = self._db_load_all_open_trade_states_with_retry(cfg=cfg)
+            db_position = db_states.get(position.trade_id)
+            if (
+                db_position is None
+                or db_position.symbol != position.symbol
+                or db_position.strategy != position.strategy
+                or abs(float(db_position.quantity) - float(position.quantity))
+                > max(1e-10, float(position.quantity) * 1e-6)
+            ):
+                raise RuntimeError(
+                    "Emergency exit blocked: persisted state and OPEN database trade "
+                    "do not establish matching ownership."
+                )
+
+            free_qty = self._fetch_free_asset_quantity(exchange, symbol)
+            if free_qty + max(1e-10, position.quantity * 1e-6) < position.quantity:
+                raise RuntimeError(
+                    "Emergency exit blocked: Binance free BNB is below bot-owned quantity; "
+                    "no residual balance will be substituted."
+                )
+
+            result = {
+                "bot_position_quantity": float(position.quantity),
+                "current_price": current_price,
+                "estimated_notional": float(position.quantity) * current_price,
+                "would_sell": True,
+                "real_order_sent": False,
+                "dry_run": not enable_real_orders,
+            }
+            if not enable_real_orders:
+                return result
+
+            order_executor = self._order_executor_factory(exchange) if self._order_executor_factory else OrderExecutor(exchange)
+            closed = self._try_close_position(
+                position=position,
+                close_price=current_price,
+                reason="emergency_exit",
+                order_executor=order_executor,
+            )
+            if closed:
+                positions.pop(position.context_key, None)
+            self._store_save_positions(store=store, positions=positions)
+            result["real_order_sent"] = True
+            result["dry_run"] = False
+            result["closed"] = bool(closed)
+            return result
         finally:
             exchange.disconnect()
 
@@ -640,7 +779,7 @@ class LiveTradingService:
                 self._sleep_fn(wait_seconds)
 
     # ------------------------------------------------------------------
-    # Startup reconciliation
+    # Reconciliação na inicialização
     # ------------------------------------------------------------------
 
     def _reconcile_on_startup(
@@ -650,7 +789,7 @@ class LiveTradingService:
         store: Any,
         target_contexts: set[tuple[str, str, str]],
     ) -> dict[tuple[str, str, str], LivePositionState]:
-        """Restore open positions after crash/restart with DB/Binance checks."""
+        """Restaura posições abertas após falha/reinicialização, verificando o banco e a Binance."""
         restored: dict[tuple[str, str, str], LivePositionState] = {}
         target_symbols = {ctx[0] for ctx in target_contexts}
 
@@ -669,12 +808,19 @@ class LiveTradingService:
                 take_profit=state.take_profit,
                 opened_at=state.opened_at,
                 exchange_order_id=state.exchange_order_id,
+                original_quantity=state.original_quantity or state.quantity,
+                entry_fee_usdt=state.entry_fee_usdt,
+                entry_fee_allocated_usdt=state.entry_fee_allocated_usdt,
+                realized_gross_pnl=state.realized_gross_pnl,
+                realized_exit_fees_usdt=state.realized_exit_fees_usdt,
+                realized_net_pnl=state.realized_net_pnl,
+                fee_accounting_complete=state.fee_accounting_complete,
             )
 
         saved_positions = self._store_load_positions(store)
         db_positions_by_trade = self._db_load_all_open_trade_states_with_retry(cfg=cfg)
 
-        # Reconcile each saved position against DB and Binance.
+        # Reconcilia cada posição salva com o banco de dados e a Binance.
         for saved in saved_positions.values():
             saved = _normalize_context(saved)
             if saved.context_key not in target_contexts:
@@ -693,6 +839,13 @@ class LiveTradingService:
                     take_profit=db_state.take_profit,
                     opened_at=db_state.opened_at,
                     exchange_order_id=db_state.exchange_order_id,
+                    original_quantity=db_state.original_quantity or db_state.quantity,
+                    entry_fee_usdt=db_state.entry_fee_usdt,
+                    entry_fee_allocated_usdt=db_state.entry_fee_allocated_usdt,
+                    realized_gross_pnl=db_state.realized_gross_pnl,
+                    realized_exit_fees_usdt=db_state.realized_exit_fees_usdt,
+                    realized_net_pnl=db_state.realized_net_pnl,
+                    fee_accounting_complete=db_state.fee_accounting_complete,
                 )
                 logger.warning(
                     "Reconciliacao: trade_id=%d com timeframe vazio no DB; usando timeframe salvo=%s.",
@@ -701,31 +854,43 @@ class LiveTradingService:
                 )
             if db_state is not None:
                 db_state = _normalize_context(db_state)
-            binance_exists = self._binance_has_position(
+            expected_quantity = db_state.quantity if db_state is not None else saved.quantity
+            if expected_quantity <= 0.0:
+                raise RuntimeError(
+                    "LIVE recovery blocked: persisted open trade has no confirmed filled quantity "
+                    f"(trade_id={saved.trade_id}); no order was sent."
+                )
+            exchange_position_exists = self._binance_has_position(
                 exchange=exchange,
                 symbol=saved.symbol,
-                quantity_hint=saved.quantity,
+                quantity_hint=expected_quantity,
             )
 
-            if db_state is None and not binance_exists:
-                logger.warning(
-                    "Reconciliacao: removendo posicao orfa trade_id=%d (DB/Binance ausentes).",
-                    saved.trade_id,
+            if not exchange_position_exists:
+                raise RuntimeError(
+                    "LIVE recovery blocked: database/state position is not covered by "
+                    f"the Binance balance (trade_id={saved.trade_id}, symbol={saved.symbol}, "
+                    f"expected={expected_quantity:.12f}). "
+                    "Reconcile manually; no order was sent."
                 )
-                continue
 
-            if db_state is not None and not binance_exists:
-                restored[db_state.context_key] = db_state
-                continue
+            if db_state is not None and abs(float(db_state.quantity) - float(saved.quantity)) > max(1e-10, float(saved.quantity) * 1e-6):
+                logger.warning(
+                    "Recovery JSON stale after persisted fill: trade_id=%d state_qty=%.12f "
+                    "database_qty=%.12f; database accounting will be restored.",
+                    saved.trade_id,
+                    saved.quantity,
+                    db_state.quantity,
+                )
 
-            if db_state is None and binance_exists:
+            if db_state is None:
                 restored[saved.context_key] = saved
                 continue
 
             if db_state is not None:
                 restored[db_state.context_key] = db_state
 
-        # Include DB OPEN trades that were not in saved file.
+        # Inclui negociações OPEN do banco de dados que não estavam no arquivo salvo.
         for db_state in db_positions_by_trade.values():
             db_state = _normalize_context(db_state)
             if db_state.symbol not in target_symbols:
@@ -734,16 +899,29 @@ class LiveTradingService:
                 continue
             if db_state.context_key not in target_contexts:
                 continue
+            if db_state.quantity <= 0.0 or not self._binance_has_position(
+                exchange=exchange,
+                symbol=db_state.symbol,
+                quantity_hint=db_state.quantity,
+            ):
+                raise RuntimeError(
+                    "LIVE recovery blocked: database OPEN trade is not covered by "
+                    f"the Binance balance (trade_id={db_state.trade_id}, "
+                    f"symbol={db_state.symbol}, quantity={db_state.quantity:.12f}). "
+                    "Reconcile manually; no order was sent."
+                )
             restored.setdefault(db_state.context_key, db_state)
 
-        # Keep only one position per context (latest trade_id wins).
+        # Mantém somente uma posição por contexto (vence o trade_id mais recente).
         deduped: dict[tuple[str, str, str], LivePositionState] = {}
         for state in restored.values():
             existing = deduped.get(state.context_key)
             if existing is None or state.trade_id > existing.trade_id:
                 deduped[state.context_key] = state
 
-        # Fallback: recover Binance-held assets not tracked in DB/store.
+        # Nunca declare o saldo da exchange como pertencente ao bot: os saldos são fungíveis e
+        # podem incluir ativos preexistentes ou mantidos manualmente. Saldos não rastreados permanecem
+        # intactos; a proteção de entrada bloqueia compras até que sejam reconciliados.
         for symbol, strategy_name, timeframe in sorted(target_contexts):
             context_key = (symbol, strategy_name, timeframe)
             if context_key in deduped:
@@ -752,82 +930,34 @@ class LiveTradingService:
             asset_qty = self._fetch_total_asset_quantity(exchange, symbol)
             if asset_qty <= 0.0:
                 continue
-
+            # Mesma tolerância baseada em minNotional de _has_untracked_asset_balance, para que este
+            # log reflita a decisão efetiva da proteção de entrada (poeira versus saldo material).
             try:
-                ticker = exchange.fetch_ticker(symbol)
-                market_price = float(ticker.get("last") or 0.0)
-            except Exception as exc:
-                logger.warning(
-                    "Reconciliacao Binance orphan: falha ao obter ticker %s: %s",
-                    symbol,
-                    exc,
-                )
-                continue
-
-            if market_price <= 0.0:
-                continue
-
-            notional = asset_qty * market_price
+                price = float(exchange.fetch_ticker(symbol).get("last") or 0.0)
+            except Exception:
+                price = 0.0
+            notional = asset_qty * price
             min_notional = self._resolve_min_notional(exchange, symbol)
             if notional < min_notional:
                 logger.warning(
-                    "Reconciliacao Binance orphan: ignorando saldo poeira %s qty=%.8f notional=%.4f min_notional=%.4f",
-                    symbol,
-                    asset_qty,
-                    notional,
-                    min_notional,
+                    "Saldo Binance nao rastreado preservado sem ownership: symbol=%s qty=%.12f "
+                    "notional=%.4f (< min_notional=%.4f -> residuo tolerado, nao bloqueia BUY). "
+                    "Nenhuma venda sera inferida.",
+                    symbol, asset_qty, notional, min_notional,
                 )
-                continue
-
-            stop_loss = market_price * 0.99
-            take_profit = market_price * 1.02
-            recovered_trade_id = self._db_create_trade(
-                symbol=symbol,
-                strategy_name=strategy_name,
-                timeframe=timeframe,
-                side="BUY",
-                entry_price=market_price,
-                quantity=asset_qty,
-                stake_amount=notional,
-                stop_loss=stop_loss,
-                take_profit=take_profit,
-                entry_time=datetime.now(tz=timezone.utc),
-            )
-            if recovered_trade_id is None:
+            else:
                 logger.warning(
-                    "Reconciliacao Binance orphan: falha ao criar trade OPEN sintetico para %s",
-                    symbol,
+                    "Saldo Binance nao rastreado preservado sem ownership: symbol=%s qty=%.12f "
+                    "notional=%.4f (>= min_notional=%.4f -> material). "
+                    "Novas entradas serao bloqueadas; nenhuma venda sera inferida.",
+                    symbol, asset_qty, notional, min_notional,
                 )
-                continue
-
-            recovered_state = LivePositionState(
-                trade_id=recovered_trade_id,
-                symbol=symbol,
-                timeframe=timeframe,
-                strategy=strategy_name,
-                quantity=asset_qty,
-                stake_amount=notional,
-                entry_price=market_price,
-                stop_loss=stop_loss,
-                take_profit=take_profit,
-                opened_at=datetime.now(tz=timezone.utc).isoformat(),
-                exchange_order_id="",
-            )
-            deduped[context_key] = recovered_state
-            logger.warning(
-                "Reconciliacao Binance orphan: posicao recuperada symbol=%s qty=%.8f "
-                "price=%.6f trade_id=%d",
-                symbol,
-                asset_qty,
-                market_price,
-                recovered_trade_id,
-            )
 
         logger.info("Reconciliacao: %d posicao(oes) restaurada(s).", len(deduped))
         return deduped
 
     # ------------------------------------------------------------------
-    # Position entry
+    # Entrada na posição
     # ------------------------------------------------------------------
 
     def _try_open_position(
@@ -839,7 +969,7 @@ class LiveTradingService:
         exchange: BaseExchange,
         available_capital: float,
     ) -> LivePositionState | None:
-        """Create Trade and send BUY order with available-capital constraints."""
+        """Cria Trade e envia uma ordem BUY respeitando o capital disponível."""
         entry_price = float(signal.price)
         stop_loss = (
             float(signal.stop_loss) if signal.stop_loss is not None
@@ -873,7 +1003,7 @@ class LiveTradingService:
             logger.info("Capital reserve reached. Skipping BUY.")
             return None
 
-        # Idempotency: abort if Binance already has open orders for this symbol
+        # Idempotência: interrompe se a Binance já tiver ordens abertas para este símbolo
         try:
             open_orders = exchange.fetch_open_orders(cfg.symbol)
             if open_orders:
@@ -886,10 +1016,11 @@ class LiveTradingService:
         except Exception as exc:
             logger.warning(
                 "Nao foi possivel verificar ordens abertas na Binance (%s). "
-                "Prosseguindo com entrada.", exc,
+                "BUY bloqueado por seguranca.", exc,
             )
+            return None
 
-        # Persist Trade BEFORE sending order (Order FK requires trade.id)
+        # Persiste Trade ANTES de enviar a ordem (a chave estrangeira de Order exige trade.id)
         trade_id = self._db_create_trade(
             symbol=cfg.symbol,
             strategy_name=cfg.strategy_name,
@@ -962,18 +1093,31 @@ class LiveTradingService:
                 live_risk_service._portfolio_value_provider = original_provider
 
         fill_price = float(result.order.price or entry_price)
-        fill_qty = float(
-            result.order.filled_quantity
-            if result.order.filled_quantity
-            else result.risk_params.quantity
-        )
+        fill_qty = max(0.0, float(result.order.filled_quantity or 0.0))
+        if fill_qty <= 0.0:
+            logger.error(
+                "Ordem BUY sem quantidade executada (status=%s). Trade id=%d cancelado.",
+                getattr(result.order, "status", "?"), trade_id,
+            )
+            self._db_cancel_trade(trade_id)
+            return None
+        base_fee_qty = max(0.0, float(result.order.base_fee_quantity or 0.0))
+        position_qty = max(0.0, fill_qty - base_fee_qty)
+        if position_qty <= 0.0:
+            logger.error("BUY fill totalmente consumido por fee na moeda base; trade_id=%d bloqueado.", trade_id)
+            self._db_cancel_trade(trade_id)
+            return None
         stake = float(result.risk_params.stake_amount)
+        entry_fee_usdt = result.order.fee_usdt
+        fee_complete = entry_fee_usdt is not None and result.order.fee_source not in {"MISSING", "UNCONVERTED"}
 
         self._db_update_trade_after_buy(
             trade_id=trade_id,
             fill_price=fill_price,
-            fill_qty=fill_qty,
+            fill_qty=position_qty,
             stake_amount=stake,
+            entry_fee_usdt=entry_fee_usdt,
+            fee_accounting_complete=fee_complete,
         )
 
         state = LivePositionState(
@@ -981,13 +1125,20 @@ class LiveTradingService:
             symbol=cfg.symbol,
             timeframe=cfg.timeframe,
             strategy=cfg.strategy_name,
-            quantity=fill_qty,
+            quantity=position_qty,
             stake_amount=stake,
             entry_price=fill_price,
             stop_loss=stop_loss,
             take_profit=take_profit,
             opened_at=datetime.now(tz=timezone.utc).isoformat(),
             exchange_order_id=str(result.order.exchange_order_id or ""),
+            original_quantity=position_qty,
+            entry_fee_usdt=entry_fee_usdt,
+            entry_fee_allocated_usdt=0.0,
+            realized_gross_pnl=0.0,
+            realized_exit_fees_usdt=0.0,
+            realized_net_pnl=0.0 if fee_complete else None,
+            fee_accounting_complete=fee_complete,
         )
 
         logger.info(
@@ -998,7 +1149,7 @@ class LiveTradingService:
         return state
 
     # ------------------------------------------------------------------
-    # Exit conditions
+    # Condições de saída
     # ------------------------------------------------------------------
 
     def _check_exit_conditions(
@@ -1007,7 +1158,7 @@ class LiveTradingService:
         frame: pd.DataFrame,
         strategy: Any,
     ) -> tuple[bool, str]:
-        """Return (should_exit, reason): SL, TP, or strategy exit signal."""
+        """Retorna (should_exit, reason): SL, TP ou sinal de saída da estratégia."""
         if frame.empty:
             return False, ""
 
@@ -1046,7 +1197,7 @@ class LiveTradingService:
         return False, ""
 
     # ------------------------------------------------------------------
-    # Position close
+    # Fechamento da posição
     # ------------------------------------------------------------------
 
     def _try_close_position(
@@ -1056,7 +1207,7 @@ class LiveTradingService:
         reason: str,
         order_executor: OrderExecutor,
     ) -> bool:
-        """Send SELL order and update DB. Returns True on success, False to retry."""
+        """Envia uma ordem SELL e atualiza o banco. Retorna True em caso de sucesso e False para tentar novamente."""
         trade_stub = _TradeStub(position.trade_id)
         sell_quantity = float(position.quantity)
         try:
@@ -1073,39 +1224,13 @@ class LiveTradingService:
             )
             return False
         except ccxt.InsufficientFunds as exc:
-            exchange = getattr(order_executor, "exchange", None)
-            available_qty = self._fetch_free_asset_quantity(exchange, position.symbol)
-            min_retry_qty = max(0.0, sell_quantity * 0.5)
-            if available_qty > 0.0 and available_qty < sell_quantity and available_qty >= min_retry_qty:
-                logger.warning(
-                    "Saldo insuficiente ao fechar posicao: %s. "
-                    "Tentando novamente com saldo livre real %.8f em vez de %.8f.",
-                    exc,
-                    available_qty,
-                    sell_quantity,
-                )
-                try:
-                    order = order_executor.execute_market_sell(
-                        trade=trade_stub,
-                        symbol=position.symbol,
-                        quantity=available_qty,
-                        price=close_price,
-                    )
-                except Exception as retry_exc:
-                    logger.warning(
-                        "Retry de fechamento com saldo livre real falhou: %s. "
-                        "Mantendo posicao aberta.",
-                        retry_exc,
-                    )
-                    return False
-            else:
-                logger.warning(
-                    "Saldo insuficiente ao fechar posicao: %s. "
-                    "Saldo livre atual %.8f insuficiente para retry. Mantendo posicao aberta.",
-                    exc,
-                    available_qty,
-                )
-                return False
+            logger.warning(
+                "Saldo insuficiente para vender somente a quantidade do bot %.12f: %s. "
+                "Nenhum retry com saldo total sera feito; posicao preservada.",
+                sell_quantity,
+                exc,
+            )
+            return False
         except (ccxt.InvalidOrder, ccxt.BadRequest) as exc:
             if self._is_notional_filter_error(exc):
                 exchange = getattr(order_executor, "exchange", None)
@@ -1115,29 +1240,15 @@ class LiveTradingService:
                 min_notional = self._resolve_min_notional(exchange, position.symbol)
 
                 if estimated_notional < min_notional:
-                    pnl = (float(close_price) - position.entry_price) * close_qty
-                    pnl_pct = (
-                        pnl / (position.entry_price * close_qty) * 100.0
-                        if position.entry_price > 0 and close_qty > 0
-                        else 0.0
-                    )
-                    self._db_close_trade(
-                        trade_id=position.trade_id,
-                        exit_price=float(close_price),
-                        pnl=pnl,
-                        pnl_pct=pnl_pct,
-                        exit_reason=f"{reason}_dust_notional",
-                        exit_time=datetime.now(tz=timezone.utc),
-                    )
                     logger.warning(
                         "Fechamento local por NOTIONAL minimo: symbol=%s qty=%.8f notional=%.4f min_notional=%.4f. "
-                        "Posicao removida para evitar loop de retry.",
+                        "Trade permanece OPEN; nenhum fechamento sem fill real sera contabilizado.",
                         position.symbol,
                         close_qty,
                         estimated_notional,
                         min_notional,
                     )
-                    return True
+                    return False
 
                 logger.warning(
                     "Falha NOTIONAL ao fechar posicao: %s. notional_estimado=%.4f min_notional=%.4f. "
@@ -1161,33 +1272,94 @@ class LiveTradingService:
             return False
 
         fill_price = float(order.price or close_price)
-        fill_qty = float(order.filled_quantity or position.quantity)
-        pnl = (fill_price - position.entry_price) * fill_qty
+        fill_qty = min(sell_quantity, max(0.0, float(order.filled_quantity or 0.0)))
+        if fill_qty <= 0.0:
+            logger.error(
+                "SELL sem fill confirmado para trade_id=%d; mantendo quantidade %.12f aberta.",
+                position.trade_id,
+                sell_quantity,
+            )
+            return False
+        base_fee_qty = max(0.0, float(getattr(order, "base_fee_quantity", 0.0) or 0.0))
+        remaining_qty = max(0.0, sell_quantity - fill_qty - base_fee_qty)
+        original_quantity = position.original_quantity or sell_quantity
+        gross_delta = (fill_price - position.entry_price) * fill_qty
+        entry_fee_allocated = position.entry_fee_allocated_usdt
+        entry_fee_usdt = position.entry_fee_usdt
+        if entry_fee_usdt is not None and original_quantity > 0.0:
+            allocation_quantity = fill_qty + base_fee_qty
+            entry_fee_allocated += min(
+                max(0.0, entry_fee_usdt - entry_fee_allocated),
+                entry_fee_usdt * allocation_quantity / original_quantity,
+            )
+        exit_fee_usdt = getattr(order, "fee_usdt", None)
+        exit_fees = position.realized_exit_fees_usdt
+        if exit_fee_usdt is not None:
+            exit_fees += max(0.0, float(exit_fee_usdt))
+        gross_pnl = position.realized_gross_pnl + gross_delta
+        fee_complete = (
+            position.fee_accounting_complete
+            and entry_fee_usdt is not None
+            and exit_fee_usdt is not None
+        )
+        net_pnl = gross_pnl - entry_fee_allocated - exit_fees if fee_complete else None
+        total_fees = float(entry_fee_usdt) + exit_fees if fee_complete else None
+        fully_closed = remaining_qty <= max(1e-10, sell_quantity * 1e-8)
+        position.quantity = 0.0 if fully_closed else remaining_qty
+        position.entry_fee_allocated_usdt = entry_fee_allocated
+        position.realized_gross_pnl = gross_pnl
+        position.realized_exit_fees_usdt = exit_fees
+        position.realized_net_pnl = net_pnl
+        position.fee_accounting_complete = fee_complete
         pnl_pct = (
-            pnl / (position.entry_price * fill_qty) * 100.0
-            if position.entry_price > 0 else 0.0
+            net_pnl / (position.entry_price * original_quantity) * 100.0
+            if net_pnl is not None and position.entry_price > 0 and original_quantity > 0
+            else None
         )
 
-        self._db_close_trade(
+        self._db_record_live_exit(
             trade_id=position.trade_id,
+            remaining_quantity=position.quantity,
             exit_price=fill_price,
-            pnl=pnl,
+            gross_pnl=gross_pnl,
+            pnl=net_pnl,
             pnl_pct=pnl_pct,
+            total_fees_usdt=total_fees,
+            entry_fee_allocated_usdt=entry_fee_allocated,
+            exit_fee_usdt=exit_fees,
+            fee_accounting_complete=fee_complete,
             exit_reason=reason,
             exit_time=datetime.now(tz=timezone.utc),
+            fully_closed=fully_closed,
         )
 
+        if not fully_closed:
+            logger.warning(
+                "SELL parcial: trade_id=%d executed=%.12f base_fee=%.12f remaining=%.12f "
+                "gross_realized=%.8f net_realized=%s",
+                position.trade_id,
+                fill_qty,
+                base_fee_qty,
+                remaining_qty,
+                gross_pnl,
+                f"{net_pnl:.8f}" if net_pnl is not None else "UNKNOWN_FEES",
+            )
+            return False
+
         logger.info(
-            "Posicao fechada - trade_id=%d symbol=%s reason=%s "
-            "exit=%.4f pnl=%.4f (%.2f%%)",
+            "Posicao fechada - trade_id=%d symbol=%s reason=%s exit=%.4f "
+            "gross_pnl=%.8f fees_usdt=%s net_pnl=%s",
             position.trade_id, position.symbol, reason,
-            fill_price, pnl, pnl_pct,
+            fill_price,
+            gross_pnl,
+            f"{total_fees:.8f}" if total_fees is not None else "UNKNOWN",
+            f"{net_pnl:.8f}" if net_pnl is not None else "UNKNOWN",
         )
         return True
 
     # ------------------------------------------------------------------
-    # DB helpers (raw SQL — avoids ORM schema mismatch)
-    # Each method checks self._db_ops first so tests can inject fakes.
+    # Auxiliares de banco de dados (SQL direto — evita incompatibilidade com o esquema do ORM)
+    # Cada método verifica primeiro self._db_ops para que os testes possam injetar objetos simulados.
     # ------------------------------------------------------------------
 
     def _db_create_trade(
@@ -1233,11 +1405,15 @@ class LiveTradingService:
     def _db_update_trade_after_buy(
         self, *, trade_id: int, fill_price: float,
         fill_qty: float, stake_amount: float,
+        entry_fee_usdt: float | None,
+        fee_accounting_complete: bool,
     ) -> None:
         override = self._db_ops.get("update_after_buy")
         if override:
             override(trade_id=trade_id, fill_price=fill_price,
-                     fill_qty=fill_qty, stake_amount=stake_amount)
+                     fill_qty=fill_qty, stake_amount=stake_amount,
+                     entry_fee_usdt=entry_fee_usdt,
+                     fee_accounting_complete=fee_accounting_complete)
             return
         from sqlalchemy import text
         try:
@@ -1246,10 +1422,22 @@ class LiveTradingService:
                     text(
                         "UPDATE trades SET entry_price=:entry_price, "
                         "quantity=:quantity, stake_amount=:stake_amount, "
-                        "updated_at=NOW() WHERE id=:trade_id"
+                        "original_quantity=:original_quantity, "
+                        "entry_fee_usdt=:entry_fee_usdt, entry_fee_allocated_usdt=0.0, "
+                        "exit_fee_usdt=0.0, gross_pnl=0.0, "
+                        "fee=:fee_total, total_fees_usdt=:total_fees_usdt, "
+                        "fee_accounting_complete=:fee_complete, "
+                        "pnl=:initial_net_pnl, "
+                        "updated_at=CURRENT_TIMESTAMP WHERE id=:trade_id"
                     ),
                     {"entry_price": fill_price, "quantity": fill_qty,
-                     "stake_amount": stake_amount, "trade_id": trade_id},
+                     "stake_amount": stake_amount, "original_quantity": fill_qty,
+                     "entry_fee_usdt": entry_fee_usdt,
+                     "fee_total": float(entry_fee_usdt or 0.0) if fee_accounting_complete else 0.0,
+                     "total_fees_usdt": float(entry_fee_usdt) if fee_accounting_complete and entry_fee_usdt is not None else None,
+                     "fee_complete": fee_accounting_complete,
+                     "initial_net_pnl": 0.0 if fee_accounting_complete else None,
+                     "trade_id": trade_id},
                 )
         except Exception as exc:
             logger.error("_db_update_trade_after_buy failed: %s", exc)
@@ -1300,6 +1488,96 @@ class LiveTradingService:
         except Exception as exc:
             logger.error("_db_close_trade failed: %s", exc)
 
+    def _db_record_live_exit(
+        self,
+        *,
+        trade_id: int,
+        remaining_quantity: float,
+        exit_price: float,
+        gross_pnl: float,
+        pnl: float | None,
+        pnl_pct: float | None,
+        total_fees_usdt: float | None,
+        entry_fee_allocated_usdt: float,
+        exit_fee_usdt: float,
+        fee_accounting_complete: bool,
+        exit_reason: str,
+        exit_time: datetime,
+        fully_closed: bool,
+    ) -> None:
+        override = self._db_ops.get("record_live_exit")
+        if override:
+            override(
+                trade_id=trade_id,
+                remaining_quantity=remaining_quantity,
+                exit_price=exit_price,
+                gross_pnl=gross_pnl,
+                pnl=pnl,
+                pnl_pct=pnl_pct,
+                total_fees_usdt=total_fees_usdt,
+                entry_fee_allocated_usdt=entry_fee_allocated_usdt,
+                exit_fee_usdt=exit_fee_usdt,
+                fee_accounting_complete=fee_accounting_complete,
+                exit_reason=exit_reason,
+                exit_time=exit_time,
+                fully_closed=fully_closed,
+            )
+            return
+        from sqlalchemy import text
+        try:
+            with get_session() as session:
+                session.execute(
+                    text(
+                        "UPDATE trades SET quantity=:remaining_quantity, "
+                        "gross_pnl=:gross_pnl, pnl=:pnl, pnl_pct=:pnl_pct, "
+                        "fee=:fee_compat, total_fees_usdt=:total_fees_usdt, "
+                        "exit_fee_usdt=:exit_fee_usdt, "
+                        "entry_fee_allocated_usdt=:entry_fee_allocated_usdt, "
+                        "fee_accounting_complete=:fee_accounting_complete, "
+                        "status=CASE WHEN :fully_closed THEN 'CLOSED' ELSE status END, "
+                        "exit_price=CASE WHEN :fully_closed THEN :exit_price ELSE exit_price END, "
+                        "exit_reason=CASE WHEN :fully_closed THEN :exit_reason ELSE exit_reason END, "
+                        "exit_time=CASE WHEN :fully_closed THEN :exit_time ELSE exit_time END, "
+                        "updated_at=CURRENT_TIMESTAMP WHERE id=:trade_id AND status='OPEN'"
+                    ),
+                    {
+                        "remaining_quantity": remaining_quantity,
+                        "gross_pnl": gross_pnl,
+                        "pnl": pnl,
+                        "pnl_pct": pnl_pct,
+                        "fee_compat": total_fees_usdt if total_fees_usdt is not None else 0.0,
+                        "total_fees_usdt": total_fees_usdt,
+                        "exit_fee_usdt": exit_fee_usdt,
+                        "entry_fee_allocated_usdt": entry_fee_allocated_usdt,
+                        "fee_accounting_complete": fee_accounting_complete,
+                        "fully_closed": fully_closed,
+                        "exit_price": exit_price,
+                        "exit_reason": exit_reason,
+                        "exit_time": exit_time,
+                        "trade_id": trade_id,
+                    },
+                )
+        except Exception as exc:
+            logger.error("_db_record_live_exit failed: %s", exc)
+
+    def _db_update_open_trade_quantity(self, *, trade_id: int, quantity: float) -> None:
+        override = self._db_ops.get("update_open_quantity")
+        if override:
+            override(trade_id=trade_id, quantity=quantity)
+            return
+        from sqlalchemy import text
+        try:
+            with get_session() as session:
+                session.execute(
+                    text(
+                        "UPDATE trades SET quantity=:quantity, updated_at=NOW() "
+                        "WHERE id=:trade_id AND status='OPEN'"
+                    ),
+                    {"quantity": quantity, "trade_id": trade_id},
+                )
+        except Exception as exc:
+            logger.error("_db_update_open_trade_quantity failed: %s", exc)
+
     def _db_is_trade_open(self, trade_id: int) -> bool:
         override = self._db_ops.get("is_trade_open")
         if override:
@@ -1337,7 +1615,9 @@ class LiveTradingService:
             row = session.execute(
                 text(
                     "SELECT id, symbol, timeframe, strategy_name, quantity, entry_price, "
-                    "stake_amount, stop_loss, take_profit, entry_time FROM trades "
+                    "stake_amount, stop_loss, take_profit, entry_time, original_quantity, "
+                    "entry_fee_usdt, entry_fee_allocated_usdt, gross_pnl, exit_fee_usdt, "
+                    "fee_accounting_complete, pnl FROM trades "
                     "WHERE id=:trade_id AND status='OPEN'"
                 ),
                 {"trade_id": trade_id},
@@ -1359,6 +1639,13 @@ class LiveTradingService:
                     if hasattr(row[9], "isoformat") else row[9]
                 ),
                 exchange_order_id="",
+                original_quantity=float(row[10] or row[4] or 0.0),
+                entry_fee_usdt=float(row[11]) if row[11] is not None else None,
+                entry_fee_allocated_usdt=float(row[12] or 0.0),
+                realized_gross_pnl=float(row[13] or 0.0),
+                realized_exit_fees_usdt=float(row[14] or 0.0),
+                fee_accounting_complete=bool(row[15]),
+                realized_net_pnl=float(row[16]) if row[16] is not None else None,
             )
 
     def _db_load_all_open_trade_states(self) -> dict[int, LivePositionState]:
@@ -1374,7 +1661,9 @@ class LiveTradingService:
             rows = session.execute(
                 text(
                     "SELECT id, symbol, timeframe, strategy_name, quantity, entry_price, "
-                    "stake_amount, stop_loss, take_profit, entry_time "
+                    "stake_amount, stop_loss, take_profit, entry_time, original_quantity, "
+                    "entry_fee_usdt, entry_fee_allocated_usdt, gross_pnl, exit_fee_usdt, "
+                    "fee_accounting_complete, pnl "
                     "FROM trades WHERE status='OPEN'"
                 )
             ).fetchall()
@@ -1392,6 +1681,13 @@ class LiveTradingService:
                     take_profit=float(row[8] or 0.0),
                     opened_at=str(row[9].isoformat() if hasattr(row[9], "isoformat") else row[9]),
                     exchange_order_id="",
+                    original_quantity=float(row[10] or row[4] or 0.0),
+                    entry_fee_usdt=float(row[11]) if row[11] is not None else None,
+                    entry_fee_allocated_usdt=float(row[12] or 0.0),
+                    realized_gross_pnl=float(row[13] or 0.0),
+                    realized_exit_fees_usdt=float(row[14] or 0.0),
+                    fee_accounting_complete=bool(row[15]),
+                    realized_net_pnl=float(row[16]) if row[16] is not None else None,
                 )
                 states[trade_id] = state
         return states
@@ -1423,7 +1719,7 @@ class LiveTradingService:
         if hasattr(store, "save_all") and callable(store.save_all):
             store.save_all(states)
             return
-        # Backward-compatible single-state store for tests.
+        # Armazenamento de estado único compatível com versões anteriores, usado em testes.
         if len(states) == 0:
             if hasattr(store, "clear") and callable(store.clear):
                 store.clear()
@@ -1461,6 +1757,13 @@ class LiveTradingService:
                 take_profit=float(raw.get("take_profit", 0.0)),
                 opened_at=str(raw.get("opened_at") or raw.get("entry_ts") or ""),
                 exchange_order_id=str(raw.get("exchange_order_id", "")),
+                original_quantity=float(raw.get("original_quantity", raw.get("quantity", 0.0)) or 0.0),
+                entry_fee_usdt=(float(raw["entry_fee_usdt"]) if raw.get("entry_fee_usdt") is not None else None),
+                entry_fee_allocated_usdt=float(raw.get("entry_fee_allocated_usdt", 0.0) or 0.0),
+                realized_gross_pnl=float(raw.get("realized_gross_pnl", 0.0) or 0.0),
+                realized_exit_fees_usdt=float(raw.get("realized_exit_fees_usdt", 0.0) or 0.0),
+                realized_net_pnl=(float(raw["realized_net_pnl"]) if raw.get("realized_net_pnl") is not None else None),
+                fee_accounting_complete=bool(raw.get("fee_accounting_complete", False)),
             )
             new_positions[migrated.context_key] = migrated
             self._store_save_positions(store=store, positions=new_positions)
@@ -1592,33 +1895,38 @@ class LiveTradingService:
     ) -> bool:
         try:
             balance = exchange.fetch_balance()
-        except Exception:
-            return False
+        except Exception as exc:
+            raise RuntimeError(
+                f"LIVE recovery blocked: Binance balance unavailable for {symbol}; "
+                "no order was sent."
+            ) from exc
 
         if not isinstance(balance, dict):
-            return False
+            raise RuntimeError(
+                f"LIVE recovery blocked: invalid Binance balance for {symbol}; no order was sent."
+            )
 
         base_asset = str(symbol).split("/")[0].upper()
-        qty_threshold = max(0.0, float(quantity_hint) * 0.25)
 
         by_asset = balance.get(base_asset)
         if isinstance(by_asset, dict):
             free_qty = float(by_asset.get("free", 0.0) or 0.0)
             used_qty = float(by_asset.get("used", 0.0) or 0.0)
-            if (free_qty + used_qty) > qty_threshold:
-                return True
+            actual_qty = free_qty + used_qty
+            return actual_qty + max(1e-10, float(quantity_hint) * 1e-6) >= float(quantity_hint)
 
         free_bucket = balance.get("free")
         used_bucket = balance.get("used")
         if isinstance(free_bucket, dict) or isinstance(used_bucket, dict):
             free_qty = float((free_bucket or {}).get(base_asset, 0.0) or 0.0)
             used_qty = float((used_bucket or {}).get(base_asset, 0.0) or 0.0)
-            return (free_qty + used_qty) > qty_threshold
+            actual_qty = free_qty + used_qty
+            return actual_qty + max(1e-10, float(quantity_hint) * 1e-6) >= float(quantity_hint)
 
         return False
 
     # ------------------------------------------------------------------
-    # Initialization
+    # Inicialização
     # ------------------------------------------------------------------
 
     def _initialize_runtime(self, cfg: LiveTradingConfig, exchange: BaseExchange) -> dict[str, Any]:
@@ -1652,6 +1960,7 @@ class LiveTradingService:
         frame = exchange.fetch_ohlcv(
             cfg.symbol, cfg.timeframe, limit=max(100, int(cfg.bootstrap_bars))
         )
+        frame = self._closed_only(frame, cfg.timeframe)
         if frame is None or frame.empty:
             raise RuntimeError(
                 f"Sem candles para bootstrap LIVE em {cfg.symbol}/{cfg.timeframe}."
@@ -1724,6 +2033,46 @@ class LiveTradingService:
             return frame
         return frame.tail(cap).copy()
 
+    @staticmethod
+    def _closed_only(frame: pd.DataFrame | None, timeframe: str) -> pd.DataFrame | None:
+        if frame is None or frame.empty or not isinstance(frame.index, pd.DatetimeIndex):
+            return frame
+        from paper_trading.paper_live_service import PaperLiveService
+
+        normalized = frame.copy()
+        if normalized.index.tz is None:
+            normalized.index = normalized.index.tz_localize("UTC")
+        else:
+            normalized.index = normalized.index.tz_convert("UTC")
+        normalized = normalized.sort_index()
+        normalized = normalized[~normalized.index.duplicated(keep="last")]
+        return PaperLiveService._closed_candles(normalized, timeframe)
+
+    def _has_untracked_asset_balance(self, exchange: BaseExchange, symbol: str) -> bool:
+        try:
+            balance = exchange.fetch_balance()
+        except Exception:
+            logger.error("BUY blocked: unable to verify %s balance ownership.", symbol)
+            return True
+        if not isinstance(balance, dict):
+            logger.error("BUY blocked: invalid balance response while verifying %s.", symbol)
+            return True
+        base_asset = str(symbol).split("/")[0].upper()
+        by_asset = balance.get(base_asset)
+        if isinstance(by_asset, dict):
+            qty = float(by_asset.get("free", 0.0) or 0.0) + float(by_asset.get("used", 0.0) or 0.0)
+        else:
+            free_bucket = balance.get("free") or {}
+            used_bucket = balance.get("used") or {}
+            qty = float(free_bucket.get(base_asset, 0.0) or 0.0) + float(used_bucket.get(base_asset, 0.0) or 0.0)
+        if qty <= 0.0:
+            return False
+        try:
+            price = float(exchange.fetch_ticker(symbol).get("last") or 0.0)
+        except Exception:
+            return True
+        return qty * price >= self._resolve_min_notional(exchange, symbol)
+
     def _db_load_all_open_trade_states_with_retry(
         self,
         *,
@@ -1756,7 +2105,7 @@ class LiveTradingService:
         ) from last_exc
 
     # ------------------------------------------------------------------
-    # Signal helpers
+    # Auxiliares de sinais
     # ------------------------------------------------------------------
 
     def _recalculate_indicators(

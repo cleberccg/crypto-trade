@@ -1,11 +1,11 @@
 """
-Trade Lifecycle Audit — FASE 9.3.
+Auditoria do ciclo de vida das operações — FASE 9.3.
 
-Audits the complete position lifecycle to diagnose where performance is being
-lost: entry quality, scoring, risk management, position duration, or exit
-management.
+Audita o ciclo de vida completo da posição para diagnosticar onde há perda de
+desempenho: qualidade da entrada, pontuação, gerenciamento de risco, duração da posição ou
+gerenciamento da saída.
 
-Usage::
+Uso::
 
     python main.py trade-lifecycle-audit
 
@@ -87,31 +87,31 @@ def _as_utc_dt(value: datetime) -> datetime:
 
 @dataclass(frozen=True)
 class TradeLifecycleAuditConfig:
-    """Configuration for the trade lifecycle audit."""
+    """Configuração da auditoria do ciclo de vida das operações."""
 
     strategy_name: str | None = None
-    """Filter by strategy name (None = all strategies)."""
+    """Filtra pelo nome da estratégia (None = todas as estratégias)."""
 
     strategy_version: str | None = None
-    """Filter by version suffix (None = all versions)."""
+    """Filtra pelo sufixo da versão (None = todas as versões)."""
 
     symbol: str | None = None
-    """Filter by symbol, e.g. 'BTC/USDT' (None = all symbols)."""
+    """Filtra pelo símbolo, por exemplo, 'BTC/USDT' (None = todos os símbolos)."""
 
     timeframe: str | None = None
-    """Filter by timeframe, e.g. '5m' (None = auto-detect from trades)."""
+    """Filtra pelo timeframe, por exemplo, '5m' (None = detecção automática com base nas operações)."""
 
     execution_id: str | None = None
-    """Filter by execution id (None = latest available)."""
+    """Filtra pelo ID de execução (None = o mais recente disponível)."""
 
     window_days: int = 30
-    """Look-back window in days when no execution_id is specified."""
+    """Janela retrospectiva em dias quando execution_id não é especificado."""
 
     output_prefix: str = "trade_lifecycle_audit"
-    """Prefix for generated artifact filenames."""
+    """Prefixo dos nomes dos arquivos de artefato gerados."""
 
     persist_to_db: bool = True
-    """Whether to persist summary to execution_checkpoints."""
+    """Indica se o resumo deve ser persistido em execution_checkpoints."""
 
 
 @dataclass
@@ -154,16 +154,16 @@ class _TradeRecord:
 
 class TradeLifecycleAuditService:
     """
-    Audits the full trade lifecycle for position management bottlenecks.
+    Audita todo o ciclo de vida das operações para identificar gargalos no gerenciamento das posições.
 
-    Runs 7 stages:
-    1. Position duration statistics
-    2. Exit reason breakdown
-    3. Blocked time analysis
-    4. Exit quality (MFE/MAE efficiency)
-    5. Ideal-time simulations
-    6. Operational capacity
-    7. Bottleneck diagnosis + recommendation
+    Executa 7 etapas:
+    1. Estatísticas da duração das posições
+    2. Detalhamento dos motivos de saída
+    3. Análise do tempo bloqueado
+    4. Qualidade da saída (eficiência MFE/MAE)
+    5. Simulações de tempo ideal
+    6. Capacidade operacional
+    7. Diagnóstico de gargalos e recomendação
     """
 
     def __init__(self, base_dir: Path) -> None:
@@ -173,7 +173,7 @@ class TradeLifecycleAuditService:
         self._simulated_signals: list[dict[str, Any]] = []
 
     # ------------------------------------------------------------------
-    # Public API
+    # API pública
     # ------------------------------------------------------------------
 
     def run(self, cfg: TradeLifecycleAuditConfig) -> dict[str, Any]:
@@ -194,7 +194,7 @@ class TradeLifecycleAuditService:
 
         signals = self._load_signals(cfg, trades)
 
-        # Resolve dominant timeframe
+        # Determina o timeframe predominante
         tf_counter: Counter[str] = Counter(t.timeframe for t in trades)
         dominant_tf = tf_counter.most_common(1)[0][0] if tf_counter else (cfg.timeframe or "5m")
         tf_min = _tf_minutes(dominant_tf)
@@ -303,7 +303,7 @@ class TradeLifecycleAuditService:
         return {"summary": summary, "report": report, "outputs": outputs}
 
     # ------------------------------------------------------------------
-    # Data loading
+    # Carregamento dos dados
     # ------------------------------------------------------------------
 
     def _load_trades(self, cfg: TradeLifecycleAuditConfig) -> list[_TradeRecord]:
@@ -579,7 +579,7 @@ class TradeLifecycleAuditService:
         if not trades:
             return pd.DataFrame()
 
-        # Collect all unique symbol/timeframe combos and their time ranges
+        # Reúne todas as combinações exclusivas de símbolo/timeframe e seus intervalos de tempo
         groups: dict[tuple[str, str], tuple[datetime, datetime]] = {}
         for t in trades:
             if not t.is_closed:
@@ -625,7 +625,7 @@ class TradeLifecycleAuditService:
         return merged
 
     # ------------------------------------------------------------------
-    # Stage 1 — Duration Statistics
+    # Etapa 1 — Estatísticas de duração
     # ------------------------------------------------------------------
 
     def _stage1_duration(
@@ -659,7 +659,7 @@ class TradeLifecycleAuditService:
         }
 
     # ------------------------------------------------------------------
-    # Stage 2 — Exit Reasons
+    # Etapa 2 — Motivos de saída
     # ------------------------------------------------------------------
 
     def _stage2_exit_reasons(self, trades: list[_TradeRecord]) -> dict[str, Any]:
@@ -682,7 +682,7 @@ class TradeLifecycleAuditService:
         return {"total_closed": total, "breakdown": breakdown}
 
     # ------------------------------------------------------------------
-    # Stage 3 — Blocked Time
+    # Etapa 3 — Tempo bloqueado
     # ------------------------------------------------------------------
 
     def _stage3_blocked_time(
@@ -691,8 +691,8 @@ class TradeLifecycleAuditService:
         signals: list[dict[str, Any]],
         tf_min: int,
     ) -> dict[str, Any]:
-        # Count signals that were blocked by an open position (rejection_reason contains
-        # common patterns: "posicao_existente", "already_open", "position_open", etc.)
+        # Conta os sinais bloqueados por uma posição aberta (rejection_reason contém
+        # padrões comuns: "posicao_existente", "already_open", "position_open" etc.)
         _blocked_keywords = ("posicao_existente", "already_open", "position_open", "ja existe")
         buy_signals = [s for s in signals if str(s.get("signal", "")).upper() == "BUY"]
         blocked_by_position = [
@@ -710,10 +710,10 @@ class TradeLifecycleAuditService:
         n_blocked = len(blocked_by_position)
         n_trades = len(trades)
 
-        # Blocked duration in candles
+        # Duração do bloqueio em candles
         total_blocked_candles = sum(t.duration_candles(tf_min) for t in trades)
 
-        # Time window of the whole dataset
+        # Janela temporal de todo o conjunto de dados
         if trades:
             first_entry = min(t.entry_time for t in trades)
             last_exit = max(
@@ -732,8 +732,8 @@ class TradeLifecycleAuditService:
 
         avg_setups_blocked_per_trade = n_blocked / max(1, n_trades) if n_blocked > 0 else 0.0
 
-        # Also compute using signal timestamps: for each trade, count buy signals
-        # that arrived during the position window
+        # Também calcula usando os timestamps dos sinais: para cada negociação, conta os sinais de compra
+        # que chegaram durante a janela da posição
         setups_per_trade: list[int] = []
         for t in trades:
             if not t.is_closed:
@@ -770,7 +770,7 @@ class TradeLifecycleAuditService:
         }
 
     # ------------------------------------------------------------------
-    # Stage 4 — Exit Quality (MFE / MAE)
+    # Etapa 4 — Qualidade das saídas (MFE / MAE)
     # ------------------------------------------------------------------
 
     def _stage4_exit_quality(
@@ -801,7 +801,7 @@ class TradeLifecycleAuditService:
                     mae = float((t.entry_price - window["low"].min()) / t.entry_price)
 
             realized = _safe(t.pnl_pct)
-            # Exit efficiency: what fraction of MFE was captured
+            # Eficiência da saída: qual fração do MFE foi capturada
             efficiency = realized / mfe if mfe > 1e-10 else (1.0 if realized >= 0 else 0.0)
             efficiency = max(-2.0, min(2.0, efficiency))
 
@@ -839,7 +839,7 @@ class TradeLifecycleAuditService:
         eff_mean = sum(efficiencies) / len(efficiencies)
         eff_median = _percentile(efficiencies, 50)
 
-        # Diagnosis: are we exiting too early or too late?
+        # Diagnóstico: estamos saindo cedo ou tarde demais?
         early_exits = sum(1 for e in efficiencies if e < 0.5)
         late_exits = sum(1 for e in efficiencies if e > 1.2)
         optimal = len(efficiencies) - early_exits - late_exits
@@ -873,7 +873,7 @@ class TradeLifecycleAuditService:
         }
 
     # ------------------------------------------------------------------
-    # Stage 5 — Ideal Time Simulations
+    # Etapa 5 — Simulações de tempo ideal
     # ------------------------------------------------------------------
 
     def _stage5_ideal_time(
@@ -901,7 +901,7 @@ class TradeLifecycleAuditService:
             if baseline_pnl > 0:
                 scenarios["baseline"]["wins"] = int(scenarios["baseline"]["wins"]) + 1
 
-            # Load this trade's candle window
+            # Carrega a janela de candles desta negociação
             trade_candles = pd.DataFrame()
             if not candle_df.empty:
                 entry_dt = _as_utc_dt(t.entry_time)
@@ -915,27 +915,27 @@ class TradeLifecycleAuditService:
 
             total_candles = max(1, len(trade_candles))
 
-            # Scenario: 25% earlier — exit at 75% of original duration
+            # Cenário: 25% mais cedo — saída em 75% da duração original
             idx_25pct = max(1, round(total_candles * 0.75))
             pnl_25 = self._simulate_exit_at_candle(t, trade_candles, idx_25pct - 1)
             scenarios["exit_25pct_earlier"]["pnls"].append(pnl_25)
             if pnl_25 > 0:
                 scenarios["exit_25pct_earlier"]["wins"] = int(scenarios["exit_25pct_earlier"]["wins"]) + 1
 
-            # Scenario: 50% earlier — exit at 50% of original duration
+            # Cenário: 50% mais cedo — saída em 50% da duração original
             idx_50pct = max(1, round(total_candles * 0.50))
             pnl_50 = self._simulate_exit_at_candle(t, trade_candles, idx_50pct - 1)
             scenarios["exit_50pct_earlier"]["pnls"].append(pnl_50)
             if pnl_50 > 0:
                 scenarios["exit_50pct_earlier"]["wins"] = int(scenarios["exit_50pct_earlier"]["wins"]) + 1
 
-            # Scenario: time stop at fixed candle count
+            # Cenário: encerramento por tempo após uma quantidade fixa de candles
             pnl_time = self._simulate_exit_at_candle(t, trade_candles, time_stop_candles - 1)
             scenarios["time_stop_4h"]["pnls"].append(pnl_time)
             if pnl_time > 0:
                 scenarios["time_stop_4h"]["wins"] = int(scenarios["time_stop_4h"]["wins"]) + 1
 
-            # Scenario: exit at peak (MFE candle)
+            # Cenário: saída no pico (candle de MFE)
             pnl_mfe = self._simulate_mfe_exit(t, trade_candles)
             scenarios["reversal_exit"]["pnls"].append(pnl_mfe)
             if pnl_mfe > 0:
@@ -972,7 +972,7 @@ class TradeLifecycleAuditService:
         candles: pd.DataFrame,
         candle_idx: int,
     ) -> float:
-        """Return pnl_pct at a given candle index, falling back to actual exit."""
+        """Retorna pnl_pct em um determinado índice de candle, recorrendo à saída real como alternativa."""
         if candles.empty or candle_idx >= len(candles):
             return _safe(trade.pnl_pct)
         exit_price = float(candles.iloc[candle_idx]["close"])
@@ -983,14 +983,14 @@ class TradeLifecycleAuditService:
         trade: _TradeRecord,
         candles: pd.DataFrame,
     ) -> float:
-        """Return pnl_pct if we had exited at the maximum high (best possible)."""
+        """Retorna pnl_pct caso a saída tivesse ocorrido na máxima (melhor cenário possível)."""
         if candles.empty:
             return _safe(trade.pnl_pct)
         best_high = float(candles["high"].max())
         return (best_high - trade.entry_price) / trade.entry_price
 
     # ------------------------------------------------------------------
-    # Stage 6 — Operational Capacity
+    # Etapa 6 — Capacidade operacional
     # ------------------------------------------------------------------
 
     def _stage6_operational_capacity(
@@ -1009,7 +1009,7 @@ class TradeLifecycleAuditService:
                 "interpretation": "Sem dados suficientes.",
             }
 
-        # Total time span
+        # Intervalo de tempo total
         first_entry = min(t.entry_time for t in trades)
         last_exit_candidates = [t.exit_time for t in trades if t.exit_time]
         last_exit = max(last_exit_candidates) if last_exit_candidates else first_entry
@@ -1017,11 +1017,11 @@ class TradeLifecycleAuditService:
 
         freq_per_day = n_trades / total_days
 
-        # Average duration
+        # Duração média
         avg_dur_min = sum(t.duration_min for t in trades) / max(1, n_trades)
         avg_dur_candles = avg_dur_min / max(1, tf_min)
 
-        # Rejected buy signals (excluding position blocks)
+        # Sinais de compra rejeitados (excluindo bloqueios por posição)
         buy_signals = [s for s in signals if str(s.get("signal", "")).upper() == "BUY"]
         _blocked_keywords = ("posicao_existente", "already_open", "position_open", "ja existe")
         blocked = [
@@ -1031,22 +1031,22 @@ class TradeLifecycleAuditService:
         ]
         n_blocked = len(blocked)
 
-        # Estimate additional trades if we shorten duration by different fractions
+        # Estima negociações adicionais caso a duração seja reduzida em diferentes proporções
         scenarios_out: list[dict[str, Any]] = []
         for fraction, label in [(0.25, "25% mais cedo"), (0.50, "50% mais cedo"), (1.0, "time_stop_4h")]:
             if fraction == 1.0:
-                # 4 hours in minutes
+                # 4 horas em minutos
                 new_avg_dur = min(avg_dur_min, 240.0)
             else:
                 new_avg_dur = avg_dur_min * (1.0 - fraction)
-            new_avg_dur = max(tf_min, new_avg_dur)  # at least 1 candle
+            new_avg_dur = max(tf_min, new_avg_dur)  # Pelo menos 1 candle
 
-            # Time freed: each trade is shorter by (avg_dur_min - new_avg_dur)
+            # Tempo liberado: cada negociação é encurtada em (avg_dur_min - new_avg_dur)
             freed_minutes_per_trade = avg_dur_min - new_avg_dur
             total_freed_minutes = freed_minutes_per_trade * n_trades
             additional_trades = total_freed_minutes / max(1.0, avg_dur_min)
 
-            # Additional setups that could be captured = min(blocked, additional_trades)
+            # Configurações adicionais que poderiam ser capturadas = min(blocked, additional_trades)
             captured = min(n_blocked, additional_trades)
             new_freq_per_day = (n_trades + captured) / total_days
 
@@ -1077,7 +1077,7 @@ class TradeLifecycleAuditService:
         }
 
     # ------------------------------------------------------------------
-    # Stage 7 — Bottleneck Diagnosis
+    # Etapa 7 — Diagnóstico de gargalos
     # ------------------------------------------------------------------
 
     def _stage7_diagnosis(
@@ -1100,7 +1100,7 @@ class TradeLifecycleAuditService:
             "gestao_saida": 0.0,
         }
 
-        # Evidence: blocked time
+        # Evidência: tempo bloqueado
         blocked_pct = _safe(stage3.get("blocked_pct_total"))
         if blocked_pct > 50:
             evidence.append(f"Estratégia ficou bloqueada {blocked_pct:.1f}% do tempo total.")
@@ -1113,7 +1113,7 @@ class TradeLifecycleAuditService:
         elif avg_setups_blocked > 2:
             scores["gestao_posicao"] += 15.0
 
-        # Evidence: exit quality
+        # Evidência: qualidade das saídas
         eff_mean = _safe(stage4.get("exit_efficiency_mean"))
         diag_label = stage4.get("diagnosis_label", "")
         if diag_label == "saindo_cedo_demais":
@@ -1126,14 +1126,14 @@ class TradeLifecycleAuditService:
             evidence.append(f"Eficiência de saída baixa: {eff_mean * 100:.1f}%.")
             scores["gestao_saida"] += 25.0
 
-        # Evidence: duration
+        # Evidência: duração
         avg_dur_h = _safe(stage1.get("hours", {}).get("mean"))
         p90_h = _safe(stage1.get("hours", {}).get("p90"))
         if avg_dur_h > 8:
             evidence.append(f"Duração média das posições é alta: {avg_dur_h:.1f}h (P90={p90_h:.1f}h).")
             scores["gestao_posicao"] += 20.0
 
-        # Evidence: signal acceptance
+        # Evidência: aceitação dos sinais
         total_buy = int(stage3.get("total_buy_signals", 0))
         accepted = int(stage3.get("accepted_entries", 0))
         total_trades = len(trades)
@@ -1142,7 +1142,7 @@ class TradeLifecycleAuditService:
             scores["score"] += 10.0
             scores["risk_manager"] += 10.0
 
-        # Simulation comparison
+        # Comparação das simulações
         scenarios = stage5.get("scenarios", [])
         baseline_pnl = next((s["total_pnl_pct"] for s in scenarios if s["scenario"] == "baseline"), 0.0)
         mfe_pnl = next((s["total_pnl_pct"] for s in scenarios if s["scenario"] == "reversal_exit"), 0.0)
@@ -1152,12 +1152,12 @@ class TradeLifecycleAuditService:
             )
             scores["gestao_saida"] += 20.0
 
-        # Determine main bottleneck
+        # Determina o principal gargalo
         main_bottleneck = max(scores, key=lambda k: scores[k]) if scores else "gestao_posicao"
         if scores[main_bottleneck] == 0:
             main_bottleneck = "gestao_posicao"
 
-        # Recommendations
+        # Recomendações
         recommendation: list[str] = []
         if main_bottleneck in ("gestao_posicao", "gestao_saida"):
             if avg_dur_h > 4:
@@ -1200,7 +1200,7 @@ class TradeLifecycleAuditService:
         }
 
     # ------------------------------------------------------------------
-    # Artifact persistence
+    # Persistência de artefatos
     # ------------------------------------------------------------------
 
     def _persist_artifacts(
@@ -1222,7 +1222,7 @@ class TradeLifecycleAuditService:
         )
         outputs["json"] = str(json_path)
 
-        # CSV — trade-level MFE/MAE details
+        # CSV — detalhes de MFE/MAE por negociação
         trade_details = report.get("stage4_exit_quality", {}).get("trade_details", [])
         if trade_details:
             csv_path = self._results_dir / f"{prefix}_{ts}_trades.csv"
@@ -1232,7 +1232,7 @@ class TradeLifecycleAuditService:
                 writer.writerows(trade_details)
             outputs["csv_trades"] = str(csv_path)
 
-        # CSV — simulation scenarios
+        # CSV — cenários de simulação
         scenarios = report.get("stage5_ideal_time", {}).get("scenarios", [])
         if scenarios:
             sim_csv_path = self._results_dir / f"{prefix}_{ts}_simulations.csv"
@@ -1242,7 +1242,7 @@ class TradeLifecycleAuditService:
                 writer.writerows(scenarios)
             outputs["csv_simulations"] = str(sim_csv_path)
 
-        # Markdown report
+        # Relatório Markdown
         md_path = self._results_dir / f"{prefix}_{ts}.md"
         md_path.write_text(
             self._build_markdown(report),

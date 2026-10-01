@@ -1,24 +1,24 @@
-"""DIAGNOSTIC AUDIT of the OOS failure pattern observed across the 5 external
-strategy replications (external_strategy_replication_latest.json): DEV/VAL
-positive, OOS negative, on every single strategy.
+"""AUDITORIA DIAGNÓSTICA do padrão de falha OOS observado nas 5 replicações
+de estratégias externas (external_strategy_replication_latest.json): DEV/VAL
+positivos, OOS negativo em todas as estratégias.
 
-Read-only diagnostic. Does NOT modify any strategy, does NOT optimize any
-parameter, does NOT touch FINAL_HOLDOUT (>= 2026-06-01, never loaded here,
-same structural lock as research/external_strategy_replication_strategies.py),
-does NOT touch Paper Live.
+Diagnóstico somente de leitura. NÃO modifica nenhuma estratégia, NÃO otimiza
+nenhum parâmetro, NÃO acessa FINAL_HOLDOUT (>= 2026-06-01, nunca carregado aqui,
+com o mesmo bloqueio estrutural de research/external_strategy_replication_strategies.py),
+NÃO altera o Paper Live.
 
-Reuses, unmodified:
-- research/external_strategy_replication_strategies.py (strategy classes,
-  data loaders, splits, cost constants) -- the exact same frozen rules already
-  tested.
+Reutiliza, sem alterações:
+- research/external_strategy_replication_strategies.py (classes de estratégia,
+    carregadores de dados, partições, constantes de custos) -- exatamente as mesmas regras congeladas já
+    testadas.
 - run_external_strategy_replication.py (_run_once / _gross_metrics /
-  _stress_metrics) -- the exact same cost/stress methodology already used.
-- backtesting/engine.py, backtesting/metrics.py -- unmodified.
+    _stress_metrics) -- exatamente a mesma metodologia de custos/estresse já utilizada.
+- backtesting/engine.py, backtesting/metrics.py -- sem alterações.
 
-New code here is diagnostic-only (regime characterization, trade-level
-breakdown, walk-forward loop, ADX) -- there is no existing script in this
-repo that already does this, so a new read-only analysis script is the
-minimal necessary addition (no new production/backtest infrastructure).
+O novo código deste arquivo é exclusivamente diagnóstico (caracterização de regime, detalhamento
+por operação, ciclo walk-forward, ADX) -- não há script existente neste
+repositório que já faça isso; portanto, um novo script de análise somente leitura é a
+adição mínima necessária (sem nova infraestrutura de produção/backtest).
 """
 from __future__ import annotations
 
@@ -55,7 +55,7 @@ def _log(message: str) -> None:
 
 
 # ---------------------------------------------------------------------------
-# ADX / regime helpers (diagnostic-only, not a new production indicator)
+# Auxiliares de ADX/regime (somente para diagnóstico; não são um novo indicador de produção)
 # ---------------------------------------------------------------------------
 
 def directional_efficiency(close: pd.Series) -> float:
@@ -117,7 +117,7 @@ def characterize_regime(daily: pd.DataFrame, label: str) -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
-# ETAPA 1 -- splits
+# ETAPA 1 -- divisões temporais
 # ---------------------------------------------------------------------------
 
 def report_splits(frame: pd.DataFrame, label: str) -> dict[str, Any]:
@@ -140,7 +140,7 @@ def report_splits(frame: pd.DataFrame, label: str) -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
-# ETAPA 3/4/5 -- gross/net, trade-by-trade, monthly, per split
+# ETAPA 3/4/5 -- bruto/líquido, análise negociação a negociação e mensal por divisão
 # ---------------------------------------------------------------------------
 
 def full_split_diagnostics(strategy_factory, frame: pd.DataFrame, warmup_bars: int, btc_price_for_market_return: pd.DataFrame | None) -> dict[str, Any]:
@@ -225,7 +225,7 @@ def full_split_diagnostics(strategy_factory, frame: pd.DataFrame, warmup_bars: i
 
 
 # ---------------------------------------------------------------------------
-# ETAPA 6/7 -- walk-forward diagnostic + buy&hold baseline (no optimization)
+# ETAPA 6/7 -- diagnóstico walk-forward + referência buy&hold (sem otimização)
 # ---------------------------------------------------------------------------
 
 def walk_forward(strategy_factory, frame: pd.DataFrame, warmup_bars: int, window_bars: int, step_bars: int) -> list[dict[str, Any]]:

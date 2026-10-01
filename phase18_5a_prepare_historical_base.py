@@ -389,7 +389,7 @@ def main() -> None:
     eligibility_rows: list[dict[str, Any]] = []
     consolidated_rows: list[dict[str, Any]] = []
 
-    # Build context integrity and eligibility.
+    # Constrói a integridade e a elegibilidade do contexto.
     for row in after_cov:
         symbol = str(row["symbol"])
         timeframe = str(row["timeframe"])
@@ -447,7 +447,7 @@ def main() -> None:
         if int(corrupted) > 0:
             reasons.append(f"corrupted_rows:{int(corrupted)}")
 
-        # Relevant gap rule inside scientific horizon (>= min_start).
+        # Regra de lacuna relevante dentro do horizonte científico (>= min_start).
         tf_minutes = TIMEFRAME_MINUTES[timeframe]
         critical_gap_minutes = tf_minutes * 24 * 3
         if float(gap_info_since_start["max_gap_minutes"]) > float(critical_gap_minutes):
@@ -474,7 +474,7 @@ def main() -> None:
             }
         )
 
-    # Matrix-level consistency and full eligibility.
+    # Consistência no nível da matriz e elegibilidade completa.
     valid_ranges = [r for r in after_cov if r["min_open_time"] is not None and r["max_open_time"] is not None]
     if valid_ranges:
         matrix_start = max(r["min_open_time"] for r in valid_ranges)
@@ -500,7 +500,7 @@ def main() -> None:
             "A matriz completa ainda nao atende todos os requisitos para a campanha oficial da FASE 18.5."
         )
 
-    # Consistency diagnostics between assets/timeframes.
+    # Diagnósticos de consistência entre ativos e timeframes.
     starts = [r["min_open_time"] for r in after_cov if r["min_open_time"] is not None]
     ends = [r["max_open_time"] for r in after_cov if r["max_open_time"] is not None]
     counts = [int(r["candles_count"]) for r in after_cov]

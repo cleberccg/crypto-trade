@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-ETAPA 5: Pilot Campaign Execution - ReversaoNextGenV1 Strategy
+ETAPA 5: Execução da campanha piloto - Estratégia ReversaoNextGenV1
 
-Runs a focused optimization campaign to test ReversaoNextGenV1 strategy
-across a small grid of parameters on BTC/USDT 5m timeframe.
+Executa uma campanha de otimização direcionada para testar a estratégia ReversaoNextGenV1
+em uma pequena grade de parâmetros no timeframe de 5m de BTC/USDT.
 
-Phase 5.5 - Implementation Phase
-User: implementação de ReversaoNextGenV1 na plataforma
+Fase 5.5 - Fase de implementação
+Usuário: implementação de ReversaoNextGenV1 na plataforma
 """
 
 import argparse
@@ -16,7 +16,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-# Add project root to path
+# Adiciona a raiz do projeto ao caminho
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
@@ -28,7 +28,7 @@ from optimizer.optimizer import OptimizerRunConfig, StrategyOptimizer
 
 
 def main():
-    """Execute pilot optimization campaign for ReversaoNextGenV1."""
+    """Executa a campanha piloto de otimização para ReversaoNextGenV1."""
     
     print("=" * 70)
     print("ETAPA 5: PILOT CAMPAIGN - ReversaoNextGenV1")
@@ -42,7 +42,7 @@ def main():
     end_date = datetime(2024, 12, 31, tzinfo=timezone.utc)
     
     capital = 10_000
-    workers = 16  # Use available workers
+    workers = 16  # Usa os workers disponíveis
     max_combinations = 500  # Small grid: 3×3×1×1×3×3×3×2×2×2 = 648 total, sample 500
     top_n = 10
     
@@ -82,7 +82,7 @@ def main():
     print("-" * 70)
     
     try:
-        # Run optimization
+        # Executa a otimização
         summary = optimizer.run(
             OptimizerRunConfig(
                 symbol=symbol,

@@ -11,7 +11,7 @@ def check_status():
     
     lines = open(log_file).readlines()
     
-    # Find latest stage
+    # Encontra a etapa mais recente
     stage_lines = [l for l in lines if 'PIPELINE_STAGE:' in l]
     if not stage_lines:
         return "NO_STAGE"
@@ -36,7 +36,7 @@ def check_status():
     
     return "UNKNOWN"
 
-# Run forever until major transition
+# Executa continuamente até ocorrer uma transição importante
 start_time = time.time()
 last_status = None
 

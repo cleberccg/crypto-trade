@@ -9,7 +9,7 @@ from execution_manager.manager import ExecutionManager
 def test_execution_manager_smoke_run(tmp_path: Path) -> None:
     manager = ExecutionManager(tmp_path)
 
-    # Keep smoke test deterministic and fast: avoid real download/optimizer work.
+    # Mantém o smoke test determinístico e rápido: evita downloads reais e trabalho do otimizador.
     def _jobs(_execution_id: str) -> list[ExecutionJob]:
         return [
             ExecutionJob(

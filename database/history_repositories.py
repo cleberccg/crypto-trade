@@ -1,4 +1,4 @@
-"""Repositories for execution history and analytics persistence."""
+"""Repositórios para persistência do histórico de execução e de dados analíticos."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -99,7 +99,7 @@ class OptimizationResultRepository(HistoryRepositoryBase):
         return value if math.isfinite(value) else None
 
     def save(self, result: OptimizationResultRecord) -> OptimizationResultRecord:
-        # MySQL rejects inf/-inf/NaN values; normalize unstable metrics to NULL.
+        # O MySQL rejeita valores inf/-inf/NaN; normaliza as métricas instáveis para NULL.
         result.win_rate = self._sanitize_float(result.win_rate)
         result.profit_factor = self._sanitize_float(result.profit_factor)
         result.net_profit = self._sanitize_float(result.net_profit)

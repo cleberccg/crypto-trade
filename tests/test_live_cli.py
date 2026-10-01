@@ -61,6 +61,67 @@ def test_live_parser_rejects_missing_required(monkeypatch: pytest.MonkeyPatch) -
         main._parse_args()
 
 
+def test_live_command_requires_explicit_real_order_flag(monkeypatch: pytest.MonkeyPatch) -> None:
+    started: list[bool] = []
+    monkeypatch.setattr("execution.live_trading_service.LiveTradingService", lambda **_: started.append(True))
+    monkeypatch.setattr("exchange.binance_client.arm_real_orders", lambda: pytest.fail("must not arm"))
+    args = argparse.Namespace(
+        strategy_name="Sma200RegimeGated",
+        strategy_version="v1",
+        symbol="BNB/USDT",
+        symbols="",
+        timeframe="4h",
+        enable_real_orders=False,
+    )
+
+    with pytest.raises(SystemExit, match="requires --enable-real-orders"):
+        main.cmd_live(args)
+
+    assert started == []
+
+
+def test_emergency_close_parser_defaults_to_dry_run(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "sys.argv",
+        ["main.py", "emergency-close", "--strategy-name", "Sma200RegimeGated", "--symbol", "BNB/USDT"],
+    )
+
+    args = main._parse_args()
+
+    assert args.command == "emergency-close"
+    assert args.enable_real_orders is False
+
+
+def test_emergency_close_command_without_flag_does_not_arm_orders(monkeypatch: pytest.MonkeyPatch) -> None:
+    captured: dict[str, object] = {}
+
+    class _FakeService:
+        def __init__(self, base_dir):
+            captured["base_dir"] = base_dir
+
+        def emergency_exit(self, **kwargs):
+            captured["kwargs"] = kwargs
+            return {
+                "bot_position_quantity": 0.0,
+                "current_price": 700.0,
+                "estimated_notional": 0.0,
+                "would_sell": False,
+                "real_order_sent": False,
+            }
+
+    monkeypatch.setattr("execution.live_trading_service.LiveTradingService", _FakeService)
+    monkeypatch.setattr("exchange.binance_client.arm_real_orders", lambda: pytest.fail("must not arm"))
+    args = argparse.Namespace(strategy_name="Sma200RegimeGated", symbol="BNB/USDT", enable_real_orders=False)
+
+    main.cmd_emergency_close(args)
+
+    assert captured["kwargs"] == {
+        "strategy_name": "Sma200RegimeGated",
+        "symbol": "BNB/USDT",
+        "enable_real_orders": False,
+    }
+
+
 def test_live_parser_rejects_capital_argument(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         "sys.argv",
@@ -95,6 +156,7 @@ def test_cmd_live_creates_service_and_runs(monkeypatch: pytest.MonkeyPatch, tmp_
             return {"status": "completed", "mode": "live"}
 
     monkeypatch.setattr("execution.live_trading_service.LiveTradingService", _FakeService)
+    monkeypatch.setattr("exchange.binance_client.arm_real_orders", lambda: None)
 
     args = argparse.Namespace(
         strategy_name="ClassicDonchianBreakout",
@@ -108,6 +170,7 @@ def test_cmd_live_creates_service_and_runs(monkeypatch: pytest.MonkeyPatch, tmp_
         max_cycles=1,
         output_prefix="live",
         no_resume=False,
+        enable_real_orders=True,
     )
 
     main.cmd_live(args)
@@ -132,6 +195,7 @@ def test_cmd_live_accepts_multi_symbols(monkeypatch: pytest.MonkeyPatch) -> None
             return {"status": "completed", "mode": "live"}
 
     monkeypatch.setattr("execution.live_trading_service.LiveTradingService", _FakeService)
+    monkeypatch.setattr("exchange.binance_client.arm_real_orders", lambda: None)
 
     args = argparse.Namespace(
         strategy_name="ClassicDonchianBreakout",
@@ -145,6 +209,7 @@ def test_cmd_live_accepts_multi_symbols(monkeypatch: pytest.MonkeyPatch) -> None
         max_cycles=1,
         output_prefix="live",
         no_resume=False,
+        enable_real_orders=True,
     )
 
     main.cmd_live(args)

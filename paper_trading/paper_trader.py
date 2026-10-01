@@ -1,8 +1,8 @@
 ﻿"""
-Paper Trader - orchestrates strategy signals and paper execution.
+Paper Trader: orquestra sinais de estratégia e execução simulada.
 
-Design decision: operation persistence is based on history tables
-(trade_history/signal_snapshots), which are stable in production schema.
+Decisão de projeto: a persistência das operações usa as tabelas de histórico
+(trade_history/signal_snapshots), estáveis no esquema de produção.
 """
 from __future__ import annotations
 
@@ -42,10 +42,11 @@ class OpenPosition:
     score: float | None
     entry_time: datetime
     scientific_snapshot_id: int | None = None
+    entry_fee: float = 0.0
 
 
 class PaperTrader:
-    """Runs a strategy in paper trading mode."""
+    """Executa uma estratégia em modo paper trading."""
 
     def __init__(
         self,
@@ -88,7 +89,7 @@ class PaperTrader:
         return self._versioned_strategy_name
 
     def restore_open_trade(self, symbol: str) -> bool:
-        """Deprecated DB restore path. Runtime state restore is used in paper-live."""
+        """Caminho obsoleto de restauração do banco. Em paper-live, usa-se a restauração do estado de execução."""
         logger.info("PaperTrader restore_open_trade skipped for symbol=%s (state-file resume mode)", symbol)
         return False
 
@@ -116,6 +117,7 @@ class PaperTrader:
                 "score": self._open_trade.score,
                 "entry_time": self._open_trade.entry_time.isoformat(),
                 "scientific_snapshot_id": self._open_trade.scientific_snapshot_id,
+                "entry_fee": self._open_trade.entry_fee,
             },
             "highest_price_since_entry": self._highest_price_since_entry,
             "lowest_price_since_entry": self._lowest_price_since_entry,
@@ -155,20 +157,16 @@ class PaperTrader:
             score=float(open_trade.get("score")) if open_trade.get("score") is not None else None,
             entry_time=entry_time,
             scientific_snapshot_id=int(open_trade.get("scientific_snapshot_id")) if open_trade.get("scientific_snapshot_id") is not None else None,
+            entry_fee=(
+                float(open_trade.get("entry_fee"))
+                if open_trade.get("entry_fee") is not None
+                else float(open_trade.get("entry_price")) * float(open_trade.get("quantity")) * self._broker.fee_pct
+            ),
         )
         self._highest_price_since_entry = float(state.get("highest_price_since_entry") or self._open_trade.entry_price)
         self._lowest_price_since_entry = float(state.get("lowest_price_since_entry") or self._open_trade.entry_price)
 
-    @staticmethod
-    def _parse_datetime(value: Any) -> datetime | None:
-        if not value:
-            return None
-        try:
-            return datetime.fromisoformat(str(value).replace("Z", "+00:00"))
-        except ValueError:
-            return None
-
-        # Guard against stale or partial state where open_trade exists but broker has no base asset.
+        # Protege contra um estado obsoleto ou parcial em que open_trade existe, mas o broker não tem o ativo-base.
         available = self._broker.get_position_quantity(self._open_trade.symbol)
         if available + 1e-12 < float(self._open_trade.quantity):
             logger.error(
@@ -181,6 +179,15 @@ class PaperTrader:
             self._stats["cancelled_orders"] = int(self._stats["cancelled_orders"]) + 1
             self._open_trade = None
             self._highest_price_since_entry = 0.0
+
+    @staticmethod
+    def _parse_datetime(value: Any) -> datetime | None:
+        if not value:
+            return None
+        try:
+            return datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        except ValueError:
+            return None
 
     def run(self, df: pd.DataFrame, symbol: str, timeframe: str | None = None) -> dict[str, float | int]:
         logger.info(
@@ -293,7 +300,7 @@ class PaperTrader:
             logger.warning("Trade rejected by risk manager: %s", exc)
             return
 
-        self._broker.create_market_buy(symbol, risk_params.quantity, price)
+        buy_order = self._broker.create_market_buy(symbol, risk_params.quantity, price)
 
         self._open_trade = OpenPosition(
             symbol=symbol,
@@ -313,6 +320,7 @@ class PaperTrader:
             risk_reward=risk_params.risk_reward_ratio,
             score=float(signal.score or 0.0),
             entry_time=timestamp,
+            entry_fee=float(buy_order.fee),
         )
 
         scientific_snapshot_id = self._save_entry_signal(
@@ -336,9 +344,9 @@ class PaperTrader:
             return
 
         try:
-            self._broker.create_market_sell(symbol, self._open_trade.quantity, price)
+            sell_order = self._broker.create_market_sell(symbol, self._open_trade.quantity, price)
         except ValueError as exc:
-            # Keep process alive in long campaigns when persisted state is inconsistent.
+            # Mantém o processo ativo em campanhas longas quando o estado persistido é inconsistente.
             logger.error(
                 "PaperTrader close desync: symbol=%s qty=%.6f reason=%s error=%s",
                 symbol,
@@ -351,7 +359,8 @@ class PaperTrader:
             self._highest_price_since_entry = 0.0
             return
 
-        pnl = (price - self._open_trade.entry_price) * self._open_trade.quantity
+        gross_pnl = (price - self._open_trade.entry_price) * self._open_trade.quantity
+        pnl = gross_pnl - float(self._open_trade.entry_fee) - float(sell_order.fee)
         pnl_pct = pnl / self._open_trade.stake_amount
         duration_minutes = max(0.0, (timestamp - self._open_trade.entry_time).total_seconds() / 60.0)
 

@@ -1,4 +1,4 @@
-"""Event contracts for optimizer and backtest orchestration."""
+"""Contratos de eventos para a orquestração do otimizador e dos backtests."""
 from __future__ import annotations
 
 from dataclasses import dataclass, field

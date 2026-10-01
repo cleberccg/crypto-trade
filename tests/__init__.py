@@ -1,3 +1,3 @@
 ﻿"""
-Tests Package.
+Pacote de testes.
 """

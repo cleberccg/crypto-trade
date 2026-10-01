@@ -401,7 +401,7 @@ async def ws_monitor(websocket: WebSocket) -> None:
 
 @router.websocket("/ws/observability")
 async def ws_observability(websocket: WebSocket) -> None:
-    # Compatibility websocket channel expected by some frontend screens.
+    # Canal websocket de compatibilidade esperado por algumas telas do frontend.
     await ws_monitor(websocket)
 
 

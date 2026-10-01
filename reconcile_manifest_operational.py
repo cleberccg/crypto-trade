@@ -56,7 +56,7 @@ def reconcile_manifest() -> tuple[dict[str, Any], str]:
         manifest["known_gaps"] = []
         print(f"  Created known_gaps section")
     
-    # Add BTCUSDT|2026-02 as known gap
+    # Adiciona BTCUSDT|2026-02 como lacuna conhecida
     known_gap_entry = {
         "symbol": "BTCUSDT",
         "period": "2026-02",
@@ -82,7 +82,7 @@ def reconcile_manifest() -> tuple[dict[str, Any], str]:
     print(f"    Issues: duplicate IDs, unsorted agg_trade_id, unsorted timestamp")
     print(f"    Bounded by: 2026-01 (valid) -> GAP -> 2026-03 (valid)")
     
-    # TAREFA: Verify 2026-08-24 is NOT_AVAILABLE (should not remove - it's correct)
+    # TAREFA: Verifica se 2026-08-24 está NOT_AVAILABLE (não deve remover — está correto)
     print(f"\nTAREFA 3: VERIFY AUG 24 ENTRIES (NOT_AVAILABLE is CORRECT)")
     for symbol in ["BTCUSDT", "ETHUSDT"]:
         key = f"{symbol}|2026-08-24"
@@ -95,7 +95,7 @@ def reconcile_manifest() -> tuple[dict[str, Any], str]:
             else:
                 print(f"    WARNING: expected NOT_AVAILABLE, got {status}")
     
-    # TAREFA: August 2026 is canonical as individual daily files (already correct in manifest)
+    # TAREFA: Agosto de 2026 usa como modelo canônico arquivos diários individuais (já está correto no manifesto)
     print(f"\nTAREFA 4: AUGUST 2026 CANONICAL MODEL = DAILY FILES")
     btc_aug_daily = sum(1 for k in manifest['partitions'].keys() if k.startswith('BTCUSDT|2026-08-'))
     eth_aug_daily = sum(1 for k in manifest['partitions'].keys() if k.startswith('ETHUSDT|2026-08-'))
@@ -106,7 +106,7 @@ def reconcile_manifest() -> tuple[dict[str, Any], str]:
     # TAREFA: Recalculate DATASET_MANIFEST_HASH
     print(f"\nTAREFA 5: RECALCULATE DATASET_MANIFEST_HASH")
     
-    # Collect all VALIDATED=YES partitions for hash
+    # Reúne todas as partições VALIDATED=YES para calcular o hash
     validated_partitions = []
     for key in sorted(manifest['partitions'].keys()):
         entry = manifest['partitions'][key]
@@ -119,7 +119,7 @@ def reconcile_manifest() -> tuple[dict[str, Any], str]:
     
     print(f"  Total validated partitions: {len(validated_partitions)}")
     
-    # Hash concatenation: SHA256(sorted validated hashes)
+    # Concatenação para o hash: SHA256 dos hashes validados e ordenados
     hash_input = ""
     for part in validated_partitions:
         hash_input += f"{part['key']}:{part['hash']}:"
@@ -147,12 +147,12 @@ def reconcile_manifest() -> tuple[dict[str, Any], str]:
 
 
 def main() -> int:
-    """Execute reconciliation."""
+    """Executa a reconciliação."""
     
     try:
         manifest, new_hash = reconcile_manifest()
         
-        # Verify before saving
+        # Verifica antes de salvar
         print(f"\n{'='*80}")
         print("VERIFICATION BEFORE SAVING")
         print(f"{'='*80}")
@@ -185,7 +185,7 @@ def main() -> int:
             shutil.copy(MANIFEST_PATH, backup_path)
             print(f"\nBACKUP: {backup_path}")
         
-        # Save
+        # Salva
         MANIFEST_PATH.write_text(json.dumps(manifest, indent=2, default=str), encoding='utf-8')
         print(f"\nSAVED: {MANIFEST_PATH}")
         print(f"NEW DATASET_MANIFEST_HASH: {new_hash}")

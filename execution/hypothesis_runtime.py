@@ -73,7 +73,7 @@ def hypothesis_gate_config_from_payload(payload: dict[str, Any] | None) -> Hypot
 
 
 class HypothesisGatedStrategy(BaseStrategy):
-    """External gate that enforces hypothesis rules before strategy entry."""
+    """Gate externo que aplica as regras da hipótese antes da entrada da estratégia."""
 
     def __init__(
         self,

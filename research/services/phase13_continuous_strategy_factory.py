@@ -68,7 +68,7 @@ class Phase13ContinuousFactoryConfig:
 
 
 class ContinuousStrategyFactoryService:
-    """FASE 13 experimental orchestrator that reuses existing scientific modules."""
+    """Orquestrador experimental da FASE 13 que reutiliza módulos científicos existentes."""
 
     def __init__(self, base_dir: Path) -> None:
         self._base_dir = base_dir
@@ -87,7 +87,7 @@ class ContinuousStrategyFactoryService:
         campaign_t0 = perf_counter()
         state = self._load_state()
 
-        # Campaign must run until next configured hour (default 09:00 local time).
+        # A campanha deve continuar até a próxima hora configurada (padrão: 09:00, horário local).
         local_now = datetime.now()
         deadline_local = local_now.replace(hour=int(cfg.campaign_end_hour), minute=0, second=0, microsecond=0)
         if local_now >= deadline_local:
@@ -109,11 +109,11 @@ class ContinuousStrategyFactoryService:
 
         start_dt, end_dt = self._resolve_window(cfg.window_days)
         
-        # Priority logic: separate IMPLEMENTATION_PENDING/INCOMPLETE from others
+        # Lógica de prioridade: separa IMPLEMENTATION_PENDING/INCOMPLETE dos demais
         pending_items = [b for b in backlog if self._is_queue_eligible(b) and b.get("state") in ["IMPLEMENTATION_PENDING", "IMPLEMENTATION_INCOMPLETE"]]
         other_items = [b for b in backlog if self._is_queue_eligible(b) and b.get("state") not in ["IMPLEMENTATION_PENDING", "IMPLEMENTATION_INCOMPLETE"]]
         
-        # Priority queue: process pending first, then others
+        # Fila prioritária: processa primeiro os pendentes e, depois, os demais
         eligible = pending_items + other_items
         queue = deque(eligible)
 
@@ -129,8 +129,8 @@ class ContinuousStrategyFactoryService:
             "paper_qualification_reached": 0,
         }
 
-        # For the initial checkpoint, processed = backlog items not in queue (terminal states).
-        # This satisfies: processed + pending == total (len(backlog)).
+        # No checkpoint inicial, processed = itens do backlog que não estão na fila (estados terminais).
+        # Isso satisfaz: processed + pending == total (len(backlog)).
         _initial_non_queue = len(backlog) - len(queue)
         self._persist_checkpoint(
             run_id,
@@ -149,7 +149,7 @@ class ContinuousStrategyFactoryService:
             cfg=cfg,
         )
         
-        # Track rejection knowledge for learning
+        # Acompanha informações de rejeições para aprendizado
         rejection_knowledge = {
             "family": {},
             "indicators": {},
@@ -171,7 +171,7 @@ class ContinuousStrategyFactoryService:
                 stop_reason = "campaign_end_hour_reached"
                 break
 
-            # Check budget (but don't stop if strategy is in progress)
+            # Verifica o orçamento (mas não interrompe se houver uma estratégia em andamento)
             if len(processed) >= max_strategies_budget and not strategy_in_progress:
                 stop_reason = "budget_max_strategies"
                 break
@@ -184,7 +184,7 @@ class ContinuousStrategyFactoryService:
                 if strategy_in_progress:
                     break
 
-                # No local work: optionally trigger Phase 14 and rebuild backlog.
+                # Sem trabalho local: opcionalmente aciona a Phase 14 e recria o backlog.
                 if bool(cfg.auto_research_when_queue_empty):
                     phase14_report = self._run_phase14_research(top_n=int(cfg.phase14_top_n))
                     research_cycles += 1
@@ -219,7 +219,7 @@ class ContinuousStrategyFactoryService:
                     end_dt=end_dt,
                     stage_counters=stage_counters,
                 )
-                # Record learning data for rejections
+                # Registra dados de aprendizado sobre rejeições
                 if item.get("state") in ["REJECTED_BY_PERFORMANCE", "REJECTED_BY_INFRASTRUCTURE"]:
                     self._record_rejection_knowledge(item, rejection_knowledge)
             except (KeyboardInterrupt, SystemExit) as e:
@@ -329,7 +329,7 @@ class ContinuousStrategyFactoryService:
         return {"summary": summary, "report": report, "outputs": outputs}
 
     def _run_phase14_research(self, top_n: int) -> dict[str, Any]:
-        """Run Phase 14 from Phase 13 loop to refill backlog automatically."""
+        """Executa a Fase 14 no ciclo da Fase 13 para preencher automaticamente a fila pendente."""
         try:
             from research.services.phase14_market_intelligence import (
                 MarketIntelligenceService,
@@ -349,7 +349,7 @@ class ContinuousStrategyFactoryService:
             return {"error": str(exc)}
 
     def _paper_candidate_promotion_audit(self, backlog: list[dict[str, Any]]) -> dict[str, Any]:
-        """Audit consistency: PAPER_CANDIDATE should auto-start paper experimental."""
+        """Audita a consistência: PAPER_CANDIDATE deve iniciar automaticamente o experimento em paper."""
         paper_candidates = [x for x in backlog if x.get("state") == "PAPER_CANDIDATE"]
         with_experiment = [x for x in paper_candidates if isinstance(x.get("paper_experimental"), dict)]
         without_experiment = [x for x in paper_candidates if not isinstance(x.get("paper_experimental"), dict)]
@@ -384,7 +384,7 @@ class ContinuousStrategyFactoryService:
         }
 
     def _is_rr_mismatch_infrastructure(self, item: dict[str, Any]) -> bool:
-        """Return True only for infra rejections that are RR-threshold mismatches."""
+        """Retorna True somente para rejeições de infraestrutura causadas por incompatibilidade com o limite de RR."""
         reason = str(item.get("rejection_reason") or item.get("state_reason") or "")
         return (
             "risk_error:" in reason
@@ -892,7 +892,7 @@ class ContinuousStrategyFactoryService:
             if self._canon(str(item.get("candidate_name", ""))) in self._phase13_6_focus_candidates:
                 item["queue_score"] = float(item.get("queue_score", 0.0)) + 100.0
 
-        # Ensure existing platform strategies are always available as fallback candidates.
+        # Garante que as estratégias existentes da plataforma estejam sempre disponíveis como candidatas alternativas.
         for strategy in list_registered_strategies():
             strategy_name = str(strategy.get("name", "")).strip()
             if not strategy_name:
@@ -1525,7 +1525,7 @@ class ContinuousStrategyFactoryService:
         approved = [x for x in backlog if x.get("state") in {"approved", "PAPER_APPROVED"}]
         in_paper = [x for x in backlog if x.get("state") in {"in_paper_trading", "PAPER_APPROVED"}]
         paper_candidates = [x for x in backlog if x.get("state") == "PAPER_CANDIDATE"]
-        # paper_candidates classified in THIS run specifically (not cumulative backlog)
+        # paper_candidates classificados especificamente NESTA execução (não no backlog acumulado)
         paper_candidates_this_run = [x for x in processed if x.get("state") == "PAPER_CANDIDATE"]
         paper_experimental_started = [
             x for x in backlog if isinstance(x.get("paper_experimental"), dict)
@@ -1712,30 +1712,30 @@ class ContinuousStrategyFactoryService:
         }
 
     def _record_rejection_knowledge(self, item: dict[str, Any], rejection_knowledge: dict[str, Any]) -> None:
-        """Record rejection data for learning and future prioritization."""
+        """Registra dados de rejeição para aprendizado e priorização futura."""
         family = item.get("family", "unknown")
         indicators = item.get("indicators", [])
         stage = item.get("rejection_stage", "unknown")
         metrics = item.get("final_metrics", {})
         
-        # Track by family
+        # Agrupa por família
         if family not in rejection_knowledge["family"]:
             rejection_knowledge["family"][family] = {"count": 0, "reasons": []}
         rejection_knowledge["family"][family]["count"] += 1
         rejection_knowledge["family"][family]["reasons"].append(item.get("rejection_reason", "unknown"))
         
-        # Track by indicators
+        # Agrupa por indicadores
         for ind in indicators:
             if ind not in rejection_knowledge["indicators"]:
                 rejection_knowledge["indicators"][ind] = {"count": 0, "stage": stage}
             rejection_knowledge["indicators"][ind]["count"] += 1
         
-        # Track by stage
+        # Agrupa por etapa
         if stage not in rejection_knowledge["stage"]:
             rejection_knowledge["stage"][stage] = 0
         rejection_knowledge["stage"][stage] += 1
         
-        # Add complete record
+        # Adiciona o registro completo
         rejection_knowledge["all_rejections"].append({
             "candidate_name": item.get("candidate_name"),
             "family": family,

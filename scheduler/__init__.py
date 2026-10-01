@@ -1,1 +1,1 @@
-"""Scheduler package."""
+"""Pacote do agendador."""

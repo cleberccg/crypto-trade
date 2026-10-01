@@ -1,8 +1,9 @@
 ﻿"""
-Backtesting metrics calculator.
+Calculadora de métricas de backtesting.
 
-Design decision: Metrics are computed from a list of closed trades and an
-equity curve Series.  Pure functions - no I/O, no side effects.
+Decisão de projeto: as métricas são calculadas a partir de uma lista de
+operações fechadas e de uma Series da curva de patrimônio. Funções puras, sem
+E/S ou efeitos colaterais.
 """
 from __future__ import annotations
 
@@ -20,26 +21,26 @@ logger = get_logger(__name__)
 @dataclass
 class BacktestMetrics:
     """
-    Aggregated performance metrics for a completed backtest.
+    Métricas de desempenho agregadas de um backtest concluído.
 
-    Attributes:
-        total_trades: Total number of closed trades.
-        winning_trades: Trades with pnl > 0.
-        losing_trades: Trades with pnl <= 0.
+    Atributos:
+        total_trades: Número total de operações fechadas.
+        winning_trades: Operações com pnl > 0.
+        losing_trades: Operações com pnl <= 0.
         win_rate: winning_trades / total_trades.
-        gross_profit: Sum of all positive PnL values.
-        gross_loss: Sum of all negative PnL values (positive number).
+        gross_profit: Soma de todos os valores positivos de PnL.
+        gross_loss: Soma de todos os valores negativos de PnL (número positivo).
         net_profit: gross_profit - gross_loss.
         profit_factor: gross_profit / gross_loss.
-        max_drawdown: Maximum peak-to-trough decline, reported as a positive magnitude.
-        max_drawdown_pct: Max drawdown as a positive fraction of peak equity.
-        avg_win: Average PnL of winning trades.
-        avg_loss: Average loss of losing trades (positive number).
-        expectancy: Expected PnL per trade.
-        sharpe_ratio: Risk-adjusted return (annualised, assuming daily returns).
-        initial_capital: Starting portfolio value.
-        final_capital: Ending portfolio value.
-        return_pct: Total return as percentage.
+        max_drawdown: Queda máxima do pico ao vale, expressa como magnitude positiva.
+        max_drawdown_pct: Drawdown máximo como fração positiva do pico do patrimônio.
+        avg_win: PnL médio das operações vencedoras.
+        avg_loss: Perda média das operações perdedoras (número positivo).
+        expectancy: PnL esperado por operação.
+        sharpe_ratio: Retorno ajustado ao risco (anualizado, supondo retornos diários).
+        initial_capital: Valor inicial da carteira.
+        final_capital: Valor final da carteira.
+        return_pct: Retorno total em percentual.
     """
 
     total_trades: int
@@ -61,7 +62,7 @@ class BacktestMetrics:
     return_pct: float
 
     def to_dict(self) -> dict[str, float | int]:
-        """Return metrics as a plain dictionary."""
+        """Retorna as métricas como um dicionário simples."""
         return {
             "total_trades": self.total_trades,
             "winning_trades": self.winning_trades,
@@ -107,16 +108,16 @@ def compute_metrics(
     initial_capital: float,
 ) -> BacktestMetrics:
     """
-    Compute all backtest metrics from a list of trade results and an equity
-    curve.
+    Calcula todas as métricas de backtest a partir de uma lista de resultados
+    de operações e de uma curva de patrimônio.
 
-    Args:
-        trades: List of dicts with at least a ``pnl`` key (float).
-        equity_curve: Series of portfolio values indexed by time.
-        initial_capital: Starting portfolio value.
+    Argumentos:
+    trades: Lista de dicionários com pelo menos uma chave ``pnl`` (float).
+    equity_curve: Series de valores da carteira indexada por tempo.
+    initial_capital: Valor inicial da carteira.
 
-    Returns:
-        Populated BacktestMetrics dataclass.
+    Retorno:
+    Instância de BacktestMetrics preenchida.
     """
     pnl_values = [t["pnl"] for t in trades if "pnl" in t]
 

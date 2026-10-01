@@ -1,4 +1,4 @@
-"""Official campaign orchestration for specialized ClassicDonchianBreakout paper trading."""
+"""Orquestração oficial de campanhas de paper trading especializadas em ClassicDonchianBreakout."""
 from __future__ import annotations
 
 import json
@@ -165,7 +165,7 @@ def _parse_marker_trade_id(value: Any) -> int:
 
 
 class SpecializedPaperCampaignService:
-    """Orchestrates the P1/P2 specialized paper campaign and its kill switch."""
+    """Orquestra a campanha especializada de paper trading P1/P2 e seu kill switch."""
 
     def __init__(self, base_dir: Path) -> None:
         self._base_dir = base_dir

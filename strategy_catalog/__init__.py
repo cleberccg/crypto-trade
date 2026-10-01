@@ -1,4 +1,4 @@
-"""Permanent scientific strategy catalog infrastructure (FASE 10)."""
+"""Infraestrutura permanente do catálogo científico de estratégias (FASE 10)."""
 
 from strategy_catalog.audit import StrategyCatalogAuditConfig, StrategyCatalogAuditService
 from strategy_catalog.catalog import StrategyCatalog, StrategyCatalogEntry

@@ -1,9 +1,10 @@
 ﻿"""
-Abstract base class for exchange clients.
+Classe base abstrata para clientes de exchange.
 
-Design decision: Defining an interface via ABC ensures that alternative
-exchange implementations (e.g. Kraken, Coinbase) can be swapped in without
-changing the rest of the application (Dependency Inversion Principle).
+Decisão de projeto: definir uma interface por meio de ABC garante que
+implementações alternativas de exchange (por exemplo, Kraken ou Coinbase)
+possam ser substituídas sem alterar o restante da aplicação (Princípio da
+Inversão de Dependência).
 """
 from __future__ import annotations
 
@@ -15,9 +16,9 @@ import pandas as pd
 
 class BaseExchange(ABC):
     """
-    Abstract interface every exchange adapter must implement.
+    Interface abstrata que todo adaptador de exchange deve implementar.
 
-    All price/amount values use float. All timestamps use UTC.
+    Todos os valores de preço/quantidade usam float. Todos os timestamps usam UTC.
     """
 
     # ------------------------------------------------------------------
@@ -26,11 +27,11 @@ class BaseExchange(ABC):
 
     @abstractmethod
     def connect(self) -> None:
-        """Initialise connection / authenticate with the exchange."""
+        """Inicializa a conexão/autentica com a exchange."""
 
     @abstractmethod
     def disconnect(self) -> None:
-        """Clean up connections and release resources."""
+        """Encerra as conexões e libera recursos."""
 
     # ------------------------------------------------------------------
     # Dados de mercado
@@ -45,31 +46,31 @@ class BaseExchange(ABC):
         limit: int | None = None,
     ) -> pd.DataFrame:
         """
-        Fetch OHLCV (candlestick) data.
+        Busca dados OHLCV (candles).
 
-        Args:
-            symbol: Trading pair, e.g. ``BTC/USDT``.
-            timeframe: Candle interval, e.g. ``1h``.
-            since: Start time as Unix timestamp in milliseconds.
-            limit: Maximum number of candles to return.
+        Argumentos:
+            symbol: Par de negociação, por exemplo, ``BTC/USDT``.
+            timeframe: Intervalo dos candles, por exemplo, ``1h``.
+            since: Horário inicial como timestamp Unix em milissegundos.
+            limit: Número máximo de candles a retornar.
 
-        Returns:
-            DataFrame with columns [open, high, low, close, volume]
-            indexed by a UTC-aware DatetimeIndex.
+        Retorno:
+            DataFrame com as colunas [open, high, low, close, volume],
+            indexado por um DatetimeIndex com fuso horário UTC.
         """
 
     @abstractmethod
     def fetch_ticker(self, symbol: str) -> dict[str, Any]:
         """
-        Return the latest ticker information for *symbol*.
+        Retorna as informações mais recentes do ticker de *symbol*.
 
-        The returned dict must include at least: ``last``, ``bid``, ``ask``,
-        ``volume``, ``timestamp``.
+        O dict retornado deve incluir pelo menos: ``last``, ``bid``, ``ask``,
+        ``volume`` e ``timestamp``.
         """
 
     @abstractmethod
     def fetch_order_book(self, symbol: str, limit: int = 20) -> dict[str, Any]:
-        """Return the current order book for *symbol*."""
+        """Retorna o livro de ofertas atual de *symbol*."""
 
     # ------------------------------------------------------------------
     # Conta
@@ -77,7 +78,7 @@ class BaseExchange(ABC):
 
     @abstractmethod
     def fetch_balance(self) -> dict[str, Any]:
-        """Return account balances keyed by currency."""
+        """Retorna os saldos da conta indexados por moeda."""
 
     # ------------------------------------------------------------------
     # Trading
@@ -91,15 +92,15 @@ class BaseExchange(ABC):
         quantity: float,
     ) -> dict[str, Any]:
         """
-        Place a market order.
+        Envia uma ordem a mercado.
 
-        Args:
-            symbol: Trading pair.
-            side: ``buy`` or ``sell``.
-            quantity: Amount in base currency.
+        Argumentos:
+            symbol: Par de negociação.
+            side: ``buy`` ou ``sell``.
+            quantity: Quantidade na moeda base.
 
-        Returns:
-            Exchange order response dict.
+        Retorno:
+            Dict de resposta da ordem da exchange.
         """
 
     @abstractmethod
@@ -110,16 +111,16 @@ class BaseExchange(ABC):
         quantity: float,
         price: float,
     ) -> dict[str, Any]:
-        """Place a limit order."""
+        """Envia uma ordem limitada."""
 
     @abstractmethod
     def cancel_order(self, order_id: str, symbol: str) -> dict[str, Any]:
-        """Cancel an open order by its exchange-assigned ID."""
+        """Cancela uma ordem aberta pelo ID atribuído pela exchange."""
 
     @abstractmethod
     def fetch_order(self, order_id: str, symbol: str) -> dict[str, Any]:
-        """Fetch the current state of a specific order."""
+        """Busca o estado atual de uma ordem específica."""
 
     @abstractmethod
     def fetch_open_orders(self, symbol: str | None = None) -> list[dict[str, Any]]:
-        """Return all currently open orders, optionally filtered by symbol."""
+        """Retorna todas as ordens atualmente abertas, opcionalmente filtradas por ativo."""

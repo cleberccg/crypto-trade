@@ -1,8 +1,8 @@
-"""Debug registry discovery for ReversaoNextGenV1."""
+"""Depura a descoberta de registro para ReversaoNextGenV1."""
 
 from strategies.registry import discover_strategies, _REGISTRY, list_registered_strategies
 
-# Discover all strategies
+# Descobre todas as estratégias
 discover_strategies()
 
 print("Total strategies in registry:", len(_REGISTRY))

@@ -40,7 +40,7 @@ class StrategyCatalogAuditConfig:
 
 
 class StrategyCatalogAuditService:
-    """FASE 10.2 - Scientific audit for strategy catalog evaluation pipeline."""
+    """FASE 10.2 - auditoria científica do pipeline de avaliação do catálogo de estratégias."""
 
     def __init__(self, base_dir: Path) -> None:
         self._base_dir = base_dir
@@ -218,14 +218,14 @@ class StrategyCatalogAuditService:
         robustness = self._robustness_score(cfg, strategy_name, start_dt, end_dt)
         stability = robustness
 
-        # Reduced optimizer probe (no deep optimization): strategy is considered probe-pass
-        # when it has enough trades and valid metrics for parameterized evaluation.
+        # Teste reduzido do otimizador (sem otimização profunda): a estratégia é considerada aprovada no teste
+        # quando tem negociações suficientes e métricas válidas para avaliação parametrizada.
         optimizer_pass = int(metrics.get("total_trades", 0)) >= 3
 
         if not optimizer_pass:
             elimination_stage = "Optimizer"
 
-        # Standardized reduced validation without deep optimization.
+        # Validação reduzida padronizada, sem otimização profunda.
         validation_pass = (
             float(metrics.get("profit_factor", 0.0)) >= float(criteria["profit_factor"])
             and float(metrics.get("sharpe_ratio", 0.0)) >= float(criteria["sharpe"])
@@ -267,7 +267,7 @@ class StrategyCatalogAuditService:
                 "passed": passed,
             }
 
-        # Implementability is computed from mean shortfall across criteria.
+        # A implementabilidade é calculada pela insuficiência média entre os critérios.
         shortfalls = [max(0.0, -float(v["distance_pct"])) / 100.0 for v in criterion_distance.values()]
         implementability = round(max(0.0, min(1.0, 1.0 - mean(shortfalls))), 4)
         values["implementability"] = implementability

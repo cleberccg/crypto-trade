@@ -1,9 +1,9 @@
 """
-ReversaoNextGenV2 — data-driven reconstruction of H27.
+ReversaoNextGenV2 — reconstrução de H27 orientada por dados.
 
-This strategy keeps the execution contract of the current engine (LONG/BUY
-entries) while using the validated Phase 5.6 rule model trained from the H27
-cluster reconstruction.
+Esta estratégia mantém o contrato de execução do mecanismo atual (entradas
+LONG/BUY) enquanto usa o modelo de regras validado na fase 5.6, treinado a partir
+da reconstrução do cluster H27.
 """
 from __future__ import annotations
 

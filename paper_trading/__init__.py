@@ -1,5 +1,5 @@
 ﻿"""
-Paper Trading Package.
+Pacote de paper trading.
 """
 from paper_trading.paper_broker import PaperBroker
 from paper_trading.edge_drift_monitor import EdgeDriftMonitorConfig, EdgeDriftMonitorService

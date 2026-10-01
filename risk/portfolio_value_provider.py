@@ -1,8 +1,8 @@
 """
-Portfolio value providers used by risk flows.
+Provedores do valor da carteira usados nos fluxos de risco.
 
-The goal is to keep the scientific sizing algorithm unchanged and only
-change where portfolio_value comes from.
+O objetivo é manter inalterado o algoritmo científico de dimensionamento e
+alterar somente a origem de portfolio_value.
 """
 from __future__ import annotations
 
@@ -17,15 +17,15 @@ if TYPE_CHECKING:
 
 
 class PortfolioValueProvider(ABC):
-    """Provides available portfolio value for opening new operations."""
+    """Fornece o valor disponível da carteira para abrir novas operações."""
 
     @abstractmethod
     def get_available_portfolio_value(self) -> Decimal:
-        """Return available quote value for new operations."""
+        """Retorna o valor disponível na moeda de cotação para novas operações."""
 
 
 class PaperPortfolioValueProvider(PortfolioValueProvider):
-    """Paper provider based on PaperBroker cash balance."""
+    """Provedor paper baseado no saldo em dinheiro do PaperBroker."""
 
     def __init__(self, broker: "PaperBroker") -> None:
         self._broker = broker
@@ -37,9 +37,9 @@ class PaperPortfolioValueProvider(PortfolioValueProvider):
 
 class BinancePortfolioValueProvider(PortfolioValueProvider):
     """
-    Binance Spot provider based exclusively on free USDT.
+    Provedor Binance Spot baseado exclusivamente em USDT livre.
 
-    Never uses total/locked/used/equity/margin fields.
+    Nunca usa os campos total/locked/used/equity/margin.
     """
 
     def __init__(self, exchange: BaseExchange, quote_asset: str = "USDT") -> None:
@@ -56,7 +56,7 @@ class BinancePortfolioValueProvider(PortfolioValueProvider):
             free_value = free_bucket.get(self._quote_asset, 0)
             return _to_decimal(free_value)
 
-        # Fallback format often present in ccxt payloads: balance["USDT"]["free"]
+        # Formato alternativo comum em payloads do ccxt: balance["USDT"]["free"]
         by_asset = balance.get(self._quote_asset)
         if isinstance(by_asset, dict):
             free_value = by_asset.get("free", 0)

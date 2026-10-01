@@ -1,1 +1,1 @@
-"""Monitoring services for live operational analytics."""
+"""Serviços de monitoramento para análises operacionais ao vivo."""

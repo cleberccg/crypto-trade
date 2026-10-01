@@ -1,4 +1,4 @@
-"""Persistent history tables for system executions and analytics."""
+"""Tabelas persistentes de histórico para execuções do sistema e análises."""
 from __future__ import annotations
 
 from datetime import datetime

@@ -1,1 +1,1 @@
-"""Research analytics package placeholder for next-phase activation."""
+"""Espaço reservado do pacote de análise de pesquisa para ativação na próxima fase."""

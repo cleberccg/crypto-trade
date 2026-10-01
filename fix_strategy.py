@@ -1,4 +1,4 @@
-"""Fix duplicate calculate() methods in reversao_nextgen_v1.py"""
+"""Corrige métodos calculate() duplicados em reversao_nextgen_v1.py."""
 content = open('d:/xampp/htdocs/crypto/strategies/reversao_nextgen_v1.py', encoding='utf-8').read()
 
 NEW_CALC = (
@@ -122,6 +122,6 @@ calc_end = content.find(end_marker, calc_start)
 new_content = content[:calc_start] + NEW_CALC + "    " + content[calc_end:]
 open('d:/xampp/htdocs/crypto/strategies/reversao_nextgen_v1.py', 'w', encoding='utf-8').write(new_content)
 print('Done. Total lines:', new_content.count('\n'))
-# Verify only one calculate()
+# Verifica se há somente um calculate()
 count = new_content.count('    def calculate(')
 print(f'calculate() definitions: {count}')

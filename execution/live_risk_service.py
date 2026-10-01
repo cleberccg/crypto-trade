@@ -1,8 +1,8 @@
 """
-Live risk service.
+Serviço de risco para operações ao vivo.
 
-This module connects the live balance source (Binance Spot free USDT)
-to the existing scientific risk pipeline without changing its formulas:
+Este módulo conecta a fonte de saldo ao vivo (USDT disponível na Binance Spot)
+ao pipeline científico de risco existente, sem alterar suas fórmulas:
 
 Binance -> PortfolioValueProvider -> RiskManager -> PositionSizer -> OrderExecutor
 """
@@ -13,8 +13,8 @@ from decimal import Decimal, ROUND_CEILING
 from typing import Any
 
 from config.settings import settings
-from database.models import Order, Trade
-from execution.order_executor import OrderExecutor
+from database.models import Trade
+from execution.order_executor import OrderExecution, OrderExecutor
 from risk.portfolio_value_provider import BinancePortfolioValueProvider, PortfolioValueProvider
 from risk.risk_manager import RiskManager, TradeRiskParams
 from utils.logger import get_logger
@@ -31,18 +31,18 @@ class SymbolTradingFilters:
 
 @dataclass(frozen=True)
 class LiveRiskExecutionResult:
-    """Result of a live entry evaluated and executed with risk controls."""
+    """Resultado de uma entrada ao vivo avaliada e executada com controles de risco."""
 
     portfolio_value: float
     risk_params: TradeRiskParams
-    order: Order
+    order: OrderExecution
 
 
 class LiveRiskService:
     """
-    Orchestrates live entry execution through the same risk algorithm used in paper.
+    Orquestra a execução de entradas ao vivo pelo mesmo algoritmo de risco usado no paper trading.
 
-    Only the source of portfolio_value changes.
+    Somente a origem de portfolio_value é diferente.
     """
 
     def __init__(
@@ -70,7 +70,7 @@ class LiveRiskService:
         strategy_score: float = 1.0,
         min_risk_reward_ratio: float | None = None,
     ) -> LiveRiskExecutionResult:
-        """Evaluate and execute a live market buy using risk constraints."""
+        """Avalia e executa uma compra a mercado ao vivo usando restrições de risco."""
         portfolio_value = float(self._portfolio_value_provider.get_available_portfolio_value())
         if portfolio_value <= 0.0:
             raise ValueError("Insufficient available portfolio value for live order.")

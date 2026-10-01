@@ -1,25 +1,25 @@
 ﻿"""
-Crypto Trading Bot - Entry Point.
+Bot de negociação de criptomoedas - ponto de entrada.
 
-Design decision: main.py is intentionally thin.  It wires together the
-application components and delegates all logic to the appropriate modules.
-No business logic lives here.
+Decisão de projeto: main.py foi intencionalmente mantido enxuto. Ele conecta os
+componentes da aplicação e delega toda a lógica aos módulos apropriados.
+Nenhuma lógica de negócio fica aqui.
 
-Usage examples
---------------
-Run a backtest::
+Exemplos de uso
+---------------
+Executar um backtest::
 
     python main.py backtest --symbol BTC/USDT --timeframe 1h
 
-Run paper trading on historical data::
+Executar paper trading com dados históricos::
 
     python main.py paper --symbol BTC/USDT --timeframe 1h
 
-Download historical data::
+Baixar dados históricos::
 
     python main.py download --symbol BTC/USDT --timeframe 1h --start 2023-01-01
 
-Expand the market data base::
+Expandir a base de dados de mercado::
 
     python main.py market-data-expansion --dry-run
 """
@@ -61,14 +61,14 @@ def _parse_args() -> argparse.Namespace:
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    # --- download ---
+    # --- download de dados ---
     dl = subparsers.add_parser("download", help="Download historical OHLCV data.")
     dl.add_argument("--symbol", default=settings.trading.default_symbol)
     dl.add_argument("--timeframe", default=settings.trading.default_timeframe)
     dl.add_argument("--start", required=True, help="Start date YYYY-MM-DD")
     dl.add_argument("--end", default=None, help="End date YYYY-MM-DD (default: now)")
 
-    # --- market-data-expansion ---
+    # --- expansão de dados de mercado ---
     mde = subparsers.add_parser(
         "market-data-expansion",
         help="Audit and expand the consolidated candle base, then generate inventory and quality reports.",
@@ -98,7 +98,7 @@ def _parse_args() -> argparse.Namespace:
         help="Maximum cycles in continuous mode before returning control (default: 1)",
     )
 
-    # --- market-data-daemon ---
+    # --- daemon de dados de mercado ---
     mdd = subparsers.add_parser(
         "market-data-daemon",
         help="Run continuous market data ingestion daemon that keeps candles updated for paper-live.",
@@ -116,7 +116,7 @@ def _parse_args() -> argparse.Namespace:
     mdd.add_argument("--max-cycles", type=int, default=0, help="0 means run continuously until interrupted")
     mdd.add_argument("--output-prefix", default="market_data_daemon")
 
-    # --- robustness-validation ---
+    # --- validação de robustez ---
     rv = subparsers.add_parser(
         "robustness-validation",
         help="Run scientific robustness validation with train/validation/test isolation and permanent artifacts.",
@@ -146,7 +146,7 @@ def _parse_args() -> argparse.Namespace:
     rv.add_argument("--output-prefix", default="scientific_robustness_validation")
     rv.add_argument("--no-db", action="store_true", help="Do not persist scientific robustness run in database")
 
-    # --- trade-outcome-learning ---
+    # --- aprendizado com resultados das negociações ---
     tol = subparsers.add_parser(
         "trade-outcome-learning",
         help="Run supervised trade outcome discovery with explainability, robustness and Trade Outcome Score.",
@@ -177,7 +177,7 @@ def _parse_args() -> argparse.Namespace:
     tol.add_argument("--output-prefix", default="trade_outcome_learning")
     tol.add_argument("--no-db", action="store_true", help="Do not persist trade outcome learning run in database")
 
-    # --- phase9-controlled-implementation ---
+    # --- implementação controlada da fase 9 ---
     p9 = subparsers.add_parser(
         "phase9-controlled-implementation",
         help="Run FASE 9 controlled implementation audit for the approved trade outcome candidate.",
@@ -205,7 +205,7 @@ def _parse_args() -> argparse.Namespace:
     p9.add_argument("--skip-research-labs", action="store_true")
     p9.add_argument("--no-db", action="store_true", help="Do not persist phase 9 run in database")
 
-    # --- execution-framework-optimization ---
+    # --- otimização da estrutura de execução ---
     efo = subparsers.add_parser(
         "execution-framework-optimization",
         help="Run FASE 9.0 permanent execution framework optimization, equivalence benchmark, and phase 9 rerun.",
@@ -219,7 +219,7 @@ def _parse_args() -> argparse.Namespace:
     efo.add_argument("--skip-phase9-rerun", action="store_true")
     efo.add_argument("--no-db", action="store_true", help="Do not persist framework optimization run in database")
 
-    # --- Backtest ---
+    # --- backtest ---
     bt = subparsers.add_parser("backtest", help="Run a strategy backtest.")
     bt.add_argument("--symbol", default=settings.trading.default_symbol)
     bt.add_argument("--timeframe", default=settings.trading.default_timeframe)
@@ -232,7 +232,7 @@ def _parse_args() -> argparse.Namespace:
         help="Enable detailed diagnostic report generation.",
     )
 
-    # --- paper ---
+    # --- paper trading ---
     paper = subparsers.add_parser("paper", help="Run paper trading on historical data.")
     paper.add_argument("--symbol", default=settings.trading.default_symbol)
     paper.add_argument("--timeframe", default=settings.trading.default_timeframe)
@@ -247,7 +247,7 @@ def _parse_args() -> argparse.Namespace:
         help="Skip automatic generation of paper trading daily report",
     )
 
-    # --- paper-daily-report ---
+    # --- relatório diário de paper trading ---
     pdr = subparsers.add_parser(
         "paper-daily-report",
         help="Generate a daily operational report from persisted paper trading data.",
@@ -257,7 +257,7 @@ def _parse_args() -> argparse.Namespace:
     pdr.add_argument("--strategy-version", default=None)
     pdr.add_argument("--output-prefix", default="paper_trading_daily_report")
 
-    # --- paper-live ---
+    # --- paper trading em tempo real ---
     plive = subparsers.add_parser(
         "paper-live",
         help="Run continuous paper trading operation with resume, versioning, and automatic reports.",
@@ -281,7 +281,7 @@ def _parse_args() -> argparse.Namespace:
     )
     plive.add_argument("--output-prefix", default="paper_live")
 
-    # --- live ---
+    # --- negociação em tempo real ---
     live = subparsers.add_parser(
         "live",
         help="Run official LIVE Binance Spot operation with risk-managed sizing.",
@@ -301,6 +301,24 @@ def _parse_args() -> argparse.Namespace:
     live.add_argument("--max-cycles", type=int, default=0, help="0 means run continuously until interrupted")
     live.add_argument("--output-prefix", default="live")
     live.add_argument("--no-resume", action="store_true")
+    live.add_argument(
+        "--enable-real-orders",
+        action="store_true",
+        help="Required to send REAL Binance Spot orders. Without it the live command refuses to start.",
+    )
+
+    # --- emergency-close ---
+    emergency = subparsers.add_parser(
+        "emergency-close",
+        help="Preview or explicitly close only a persisted bot-owned BNB/USDT position.",
+    )
+    emergency.add_argument("--strategy-name", required=True)
+    emergency.add_argument("--symbol", required=True)
+    emergency.add_argument(
+        "--enable-real-orders",
+        action="store_true",
+        help="Required to send the persisted bot-owned position to Binance. Default is DRY-RUN.",
+    )
 
     # --- paper-live-supervisor ---
     pls = subparsers.add_parser(
@@ -873,7 +891,7 @@ def _canonical_market(symbol: str, timeframe: str) -> tuple[str, str]:
 
 
 def cmd_download(args: argparse.Namespace) -> None:
-    """Download and persist historical OHLCV data."""
+    """Baixa e persiste dados históricos OHLCV."""
     from exchange.binance_market_data_client import BinanceMarketDataClient
     from exchange.data_downloader import DataDownloader
 
@@ -892,7 +910,7 @@ def cmd_download(args: argparse.Namespace) -> None:
 
 
 def cmd_backtest(args: argparse.Namespace) -> None:
-    """Execute a full backtest and print results."""
+    """Executa um backtest completo e imprime os resultados."""
     from datetime import timezone
 
     from backtesting.engine import BacktestConfig, BacktestEngine
@@ -981,7 +999,7 @@ def cmd_backtest(args: argparse.Namespace) -> None:
 
 
 def cmd_paper(args: argparse.Namespace) -> None:
-    """Run paper trading simulation on historical data."""
+    """Executa uma simulação de paper trading com dados históricos."""
     from datetime import timezone
     from sqlalchemy import func
 
@@ -1103,7 +1121,8 @@ def cmd_paper(args: argparse.Namespace) -> None:
                 PaperDailyReportConfig(
                     report_date=report_date,
                     strategy_name=strategy.name,
-                    strategy_version=str(args.strategy_version),
+                    strategy_version=str(args.strategy_version) if args.strategy_version else None,
+                    output_prefix=str(args.output_prefix),
                 )
             )
 
@@ -1181,7 +1200,14 @@ def cmd_paper_live(args: argparse.Namespace) -> None:
 
 
 def cmd_live(args: argparse.Namespace) -> None:
+    from exchange.binance_client import arm_real_orders
     from execution.live_trading_service import LiveTradingConfig, LiveTradingService
+
+    if not bool(getattr(args, "enable_real_orders", False)):
+        raise SystemExit(
+            "REAL ORDERS DISABLED: 'main.py live' requires --enable-real-orders. No order was sent."
+        )
+    arm_real_orders()
 
     timeframe = validate_timeframe(str(args.timeframe))
     symbols_raw = str(getattr(args, "symbols", "") or "").strip()
@@ -1228,6 +1254,27 @@ def cmd_live(args: argparse.Namespace) -> None:
     print("======================================")
     print("Summary:")
     print(json.dumps(result, ensure_ascii=False, indent=2, default=str))
+
+
+def cmd_emergency_close(args: argparse.Namespace) -> None:
+    from exchange.binance_client import arm_real_orders
+    from execution.live_trading_service import LiveTradingService
+
+    enable_real_orders = bool(getattr(args, "enable_real_orders", False))
+    if enable_real_orders:
+        arm_real_orders()
+
+    service = LiveTradingService(base_dir=Path(__file__).parent)
+    result = service.emergency_exit(
+        strategy_name=str(args.strategy_name),
+        symbol=str(args.symbol),
+        enable_real_orders=enable_real_orders,
+    )
+    print(f"BOT_POSITION_QUANTITY={result['bot_position_quantity']:.12f}")
+    print(f"CURRENT_PRICE={result['current_price']:.8f}")
+    print(f"ESTIMATED_NOTIONAL={result['estimated_notional']:.8f} USDT")
+    print(f"WOULD_SELL={'YES' if result['would_sell'] else 'NO'}")
+    print(f"REAL_ORDER_SENT={'YES' if result['real_order_sent'] else 'NO'}")
 
 
 def cmd_paper_live_supervisor(args: argparse.Namespace) -> None:
@@ -1933,7 +1980,7 @@ def cmd_optimize(args: argparse.Namespace) -> None:
     print("REAL-TIME METRICS")
     print(metrics_listener.state)
 
-    # Save only an export checkpoint here; per-combination results are already persisted by listeners.
+    # Salva aqui somente um checkpoint de exportação; os resultados de cada combinação já são persistidos pelos listeners.
     with get_session() as session:
         history = HistoryPersistenceService(session)
         history.save_checkpoint(
@@ -2355,6 +2402,13 @@ def cmd_continuous_strategy_factory(args: argparse.Namespace) -> None:
             print(f"- Estrategias ainda pendentes: {answers.get('pending', 0)}")
             print(f"- Cobertura antes (%): {answers.get('coverage_before_pct', 0.0)}")
             print(f"- Cobertura depois (%): {answers.get('coverage_after_pct', 0.0)}")
+            print(f"- Tempo medio por estrategia (s): {answers.get('average_time_per_strategy_seconds', 0.0)}")
+            print(f"- Tempo total da campanha (s): {answers.get('total_campaign_seconds', 0.0)}")
+            print(f"- Stop reason: {answers.get('stop_reason', 'unknown')}")
+            print("- Principais motivos de reprovacao:")
+            for reason, count in answers.get("top_rejection_reasons", []):
+                print(f"  - {reason}: {count}")
+            print(f"- Ranking atualizado: {len(answers.get('ranking_updated', []))} linhas")
 
             print("\nConsolidado 13.4:")
             print(f"- Reprocessadas: {answers.get('reprocessed_strategies', 0)}")
@@ -2454,11 +2508,11 @@ def cmd_market_intelligence(args: argparse.Namespace) -> None:
 
 def cmd_overnight_campaign(args: argparse.Namespace) -> None:
     """
-    Overnight campaign V2 autonomous orchestrator:
-    1. Process IMPLEMENTATION_PENDING/INCOMPLETE first
-    2. Refill backlog from Phase 14 automatically when queue is empty
-    3. Never stop only because PAPER_CANDIDATE was found
-    4. Continue until 09:00 / manual stop / resource or safety limit
+    Orquestrador autônomo V2 da campanha noturna:
+    1. Processa primeiro IMPLEMENTATION_PENDING/INCOMPLETE
+    2. Reabastece automaticamente a fila com itens da Phase 14 quando ela estiver vazia
+    3. Não para somente porque PAPER_CANDIDATE foi encontrado
+    4. Continua até as 09:00 / interrupção manual / limite de recursos ou segurança
     """
     from research.services.phase13_continuous_strategy_factory import (
         ContinuousStrategyFactoryService,
@@ -2479,22 +2533,22 @@ def cmd_overnight_campaign(args: argparse.Namespace) -> None:
 
     service = ContinuousStrategyFactoryService(base_dir=Path(__file__).parent)
     
-    # Overnight campaign settings
+    # Configurações da campanha noturna
     overnight_config = Phase13ContinuousFactoryConfig(
         symbol=symbol,
         timeframe=timeframe,
         window_days=max(10, int(args.window_days or 120)),
         capital=max(100.0, float(args.capital or 10000.0)),
-        batch_size=max(1, int(args.batch_size or 50)),  # Allow many strategies
-        target_approved=max(1, int(args.target_approved or 1)),  # Original target
-        target_paper_candidates=max(1, int(args.target_paper_candidates or 3)),  # NEW: 3 candidates instead of 1
+        batch_size=max(1, int(args.batch_size or 50)),  # Permite várias estratégias
+        target_approved=max(1, int(args.target_approved or 1)),  # Meta original
+        target_paper_candidates=max(1, int(args.target_paper_candidates or 3)),  # NOVO: 3 candidatas em vez de 1
         max_bars=max(500, int(args.max_bars or 3500)),
         optimizer_max_combinations=max(5, int(args.optimizer_max_combinations or 15)),
         optimizer_workers=max(1, int(args.optimizer_workers or 1)),
         max_strategy_runtime_seconds=max(30, int(args.max_strategy_runtime_seconds or 900)),
         max_cpu_per_worker_pct=max(1.0, min(100.0, float(args.max_cpu_per_worker_pct or 100.0))),
         campaign_max_seconds=max(0, int(args.campaign_max_seconds or 0)),
-        campaign_end_hour=int(args.campaign_end_hour or 9),  # Stop at 09:00
+        campaign_end_hour=int(args.campaign_end_hour or 9),  # Para às 09:00
         auto_research_when_queue_empty=not bool(args.disable_auto_research),
         phase14_top_n=max(5, int(args.phase14_top_n or 30)),
         stop_on_target_paper_candidates=False,
@@ -2583,7 +2637,7 @@ def cmd_overnight_campaign(args: argparse.Namespace) -> None:
         print(f"\nTempo total: {report.get('total_campaign_seconds', 0.0):.1f}s")
         print(f"Tempo médio por estratégia: {report.get('average_time_per_strategy_seconds', 0.0):.1f}s")
         
-        # Top 20
+        # 20 melhores
         ranking = report.get("ranking_updated", [])
         if ranking:
             print("\nTop 20 Estratégias:")
@@ -3406,86 +3460,1676 @@ def cmd_market_regime_router(args: argparse.Namespace) -> None:
         print(f"- {key}: {value}")
 
 
-_COMMANDS["optimize"] = cmd_optimize
-_COMMANDS["validate"] = cmd_validate
-_COMMANDS["api"] = cmd_api
-_COMMANDS["execution-manager"] = cmd_execution_manager
-_COMMANDS["execution-manager-rc1"] = cmd_execution_manager_rc1
-_COMMANDS["strategy-research-lab"] = cmd_strategy_research_lab
-_COMMANDS["trade-management-research-lab"] = cmd_trade_management_research_lab
-_COMMANDS["trade-lifecycle-audit"] = cmd_trade_lifecycle_audit
-_COMMANDS["phase9-4-controlled-improvement"] = cmd_phase9_4_controlled_improvement
-_COMMANDS["strategy-catalog-cycle"] = cmd_strategy_catalog_cycle
-_COMMANDS["strategy-catalog-audit"] = cmd_strategy_catalog_audit
-_COMMANDS["crypto-strategy-research"] = cmd_crypto_strategy_research
-_COMMANDS["supertrend-controlled-implementation"] = cmd_supertrend_controlled_implementation
-_COMMANDS["continuous-strategy-factory"] = cmd_continuous_strategy_factory
-_COMMANDS["overnight-campaign"] = cmd_overnight_campaign
-_COMMANDS["market-intelligence"] = cmd_market_intelligence
-_COMMANDS["phase13-1-audit-strengthening"] = cmd_phase13_1_audit_strengthening
-_COMMANDS["strategy-discovery"] = cmd_strategy_discovery
-_COMMANDS["market-data-expansion"] = cmd_market_data_expansion
-_COMMANDS["market-data-daemon"] = cmd_market_data_daemon
-_COMMANDS["robustness-validation"] = cmd_robustness_validation
-_COMMANDS["trade-outcome-learning"] = cmd_trade_outcome_learning
-_COMMANDS["phase9-controlled-implementation"] = cmd_phase9_controlled_implementation
-_COMMANDS["execution-framework-optimization"] = cmd_execution_framework_optimization
-_COMMANDS["paper-daily-report"] = cmd_paper_daily_report
-_COMMANDS["paper-live"] = cmd_paper_live
-_COMMANDS["live"] = cmd_live
-_COMMANDS["paper-live-supervisor"] = cmd_paper_live_supervisor
-_COMMANDS["paper-operational-report"] = cmd_paper_operational_report
-_COMMANDS["paper-specialized-validation"] = cmd_paper_specialized_validation
-_COMMANDS["edge-drift-monitor"] = cmd_edge_drift_monitor
-_COMMANDS["paper-specialized-campaign"] = cmd_paper_specialized_campaign
-_COMMANDS["paper-campaign-coverage"] = cmd_paper_campaign_coverage
-_COMMANDS["strategy-diagnostics"] = cmd_strategy_diagnostics
-_COMMANDS["strategy-version-compare"] = cmd_strategy_version_compare
-_COMMANDS["edge-discovery-lab"] = cmd_edge_discovery_lab
-_COMMANDS["edge-extraction-lab"] = cmd_edge_extraction_lab
-_COMMANDS["edge-external-validation-lab"] = cmd_edge_external_validation_lab
-_COMMANDS["edge-operational-pipeline"] = cmd_edge_operational_pipeline
-_COMMANDS["market-regime-router"] = cmd_market_regime_router
+_COMMANDS = {
+    "download": cmd_download,
+    "backtest": cmd_backtest,
+    "paper": cmd_paper,
+    "market-data-daemon": None,
+    "optimize": None,
+    "validate": None,
+    "api": None,
+    "execution-manager": None,
+    "execution-manager-rc1": None,
+    "strategy-research-lab": None,
+    "trade-management-research-lab": None,
+    "trade-lifecycle-audit": None,
+    "phase9-4-controlled-improvement": None,
+    "strategy-catalog-cycle": None,
+    "strategy-catalog-audit": None,
+    "crypto-strategy-research": None,
+    "supertrend-controlled-implementation": None,
+    "continuous-strategy-factory": None,
+    "overnight-campaign": None,
+    "market-intelligence": None,
+    "phase13-1-audit-strengthening": None,
+    "strategy-discovery": None,
+    "market-data-expansion": None,
+    "market-data-daemon": None,
+    "robustness-validation": None,
+    "trade-outcome-learning": None,
+    "phase9-controlled-implementation": None,
+    "execution-framework-optimization": None,
+    "paper-daily-report": None,
+    "paper-live": None,
+    "live": None,
+    "paper-live-supervisor": None,
+    "paper-operational-report": None,
+    "paper-specialized-validation": None,
+    "edge-drift-monitor": None,
+    "paper-specialized-campaign": None,
+    "paper-campaign-coverage": None,
+    "strategy-diagnostics": None,
+    "strategy-version-compare": None,
+    "edge-discovery-lab": None,
+    "edge-extraction-lab": None,
+    "edge-external-validation-lab": None,
+    "edge-operational-pipeline": None,
+    "market-regime-router": None,
+}
 
 
-def main() -> None:
-    """Application entry point."""
-    initialize_logging_service(
-        log_dir=settings.logging.log_dir,
-        level=settings.logging.level,
-        queue_maxsize=int(os.getenv("LOG_QUEUE_MAXSIZE", "20000")),
-        enable_console=True,
-        enable_time_rotation=os.getenv("LOG_ENABLE_TIME_ROTATION", "0") == "1",
+def cmd_api(args: argparse.Namespace) -> None:
+    import uvicorn
+
+    uvicorn.run("webapi.app:app", host=args.host, port=args.port, reload=args.reload)
+
+
+def _run_validation_for_execution(
+    execution_id: str,
+    symbol: str,
+    timeframe: str,
+    strategy_name: str,
+    capital: float,
+    top_n: int,
+    train_start: datetime | None,
+    train_end: datetime | None,
+    val_start: datetime | None,
+    val_end: datetime | None,
+) -> None:
+    from database.history_models import OptimizationResultRecord
+    from optimizer.optimization_result import OptimizationResult
+    from validation.validator import OptimizationValidator, ValidationCriteria, default_validation_window
+
+    candidate_limit = max(50, max(1, top_n))
+
+    with get_session() as session:
+        rows = (
+            session.query(OptimizationResultRecord)
+            .filter(OptimizationResultRecord.execution_id == execution_id)
+            .order_by(OptimizationResultRecord.profit_factor.desc())
+            .limit(candidate_limit)
+            .all()
+        )
+
+    if not rows:
+        raise SystemExit(
+            f"No persisted optimization results found for execution_id={execution_id}. "
+            "Validation cannot run without persisted optimization results."
+        )
+
+    optimized_results: list[OptimizationResult] = []
+    for index, row in enumerate(rows, start=1):
+        parameters = json.loads(row.parameters_json) if row.parameters_json else {}
+        metrics = {
+            "total_trades": row.trades or 0,
+            "win_rate": row.win_rate or 0.0,
+            "profit_factor": row.profit_factor or 0.0,
+            "net_profit": row.net_profit or 0.0,
+            "return_pct": row.return_percent or 0.0,
+            "max_drawdown_pct": row.drawdown or 0.0,
+            "sharpe_ratio": row.sharpe or 0.0,
+            "expectancy": row.expectancy or 0.0,
+        }
+        optimized_results.append(
+            OptimizationResult(
+                rank=index,
+                parameters=parameters,
+                metrics=metrics,
+                combinations_tested=len(rows),
+                runtime_seconds=0.0,
+                error=None,
+            )
+        )
+
+    criteria = ValidationCriteria(
+        min_trades=settings.validation.min_trades,
+        min_profit_factor=settings.validation.min_profit_factor,
+        max_drawdown_pct=settings.validation.max_drawdown_pct,
+        min_win_rate_pct=settings.validation.min_win_rate_pct,
+        min_expectancy=settings.validation.min_expectancy,
+        min_sharpe=settings.validation.min_sharpe,
     )
+    validator = OptimizationValidator(criteria, strategy_name=strategy_name)
+
+    default_window = default_validation_window(None, None, symbol=symbol, timeframe=timeframe)
+    final_train_start = train_start or default_window.train_start
+    final_train_end = train_end or default_window.train_end
+    final_val_start = val_start or default_window.validation_start
+    final_val_end = val_end or default_window.validation_end
+
+    validation_summary = validator.validate(
+        optimization_results=optimized_results,
+        symbol=symbol,
+        timeframe=timeframe,
+        capital=capital,
+        train_start=final_train_start,
+        train_end=final_train_end,
+        validation_start=final_val_start,
+        validation_end=final_val_end,
+        top_n=max(1, top_n),
+    )
+
+    print("\n======================================")
+    print("STATISTICAL VALIDATION REPORT")
+    print("======================================")
+    print(f"Execution ID: {execution_id}")
+    print(f"Symbol/Timeframe: {symbol}/{timeframe}")
+    print(f"Train: {final_train_start.date()} to {final_train_end.date()}")
+    print(f"Validation: {final_val_start.date()} to {final_val_end.date()}")
+    print(f"Total avaliadas: {validation_summary.total_candidates}")
+    print(f"Descartadas: {validation_summary.discarded}")
+    print(f"Aprovadas: {validation_summary.passed}")
+    if validation_summary.best_validated is not None:
+        print("Melhor configuracao validada:")
+        print(validation_summary.best_validated)
+    print("Arquivos de validacao gerados:")
+    for output_file in validation_summary.output_files:
+        print(f"- {output_file}")
+
+    with get_session() as session:
+        history = HistoryPersistenceService(session)
+        history.save_validation_run(
+            execution_id=HistoryPersistenceService.new_execution_id(),
+            optimizer_run=execution_id,
+            total_tested=validation_summary.total_candidates,
+            approved=validation_summary.passed,
+            rejected=validation_summary.discarded,
+            min_profit_factor=settings.validation.min_profit_factor,
+            min_trades=settings.validation.min_trades,
+            max_drawdown=settings.validation.max_drawdown_pct,
+            validation_status="completed",
+        )
+
+
+def _run_post_validation_pipeline(
+    execution_id: str,
+    symbol: str,
+    timeframe: str,
+    strategy_name: str,
+) -> None:
+    from database.history_models import OptimizationResultRecord, OptimizationRun, ValidationRun
+    from research.services.strategy_research_lab import ResearchLabConfig, StrategyResearchLab
+    from research.services.trade_management_research_lab import TradeManagementLabConfig, TradeManagementResearchLab
+    from sqlalchemy import desc, func
+
+    print("\n======================================")
+    print("POST-VALIDATION PIPELINE")
+    print("======================================")
+
+    strategy_lab_result = None
+    trade_lab_result = None
+    strategy_lab_error = None
+    trade_lab_error = None
+
     try:
-        settings.validate()
-        settings.validate_database_access()
+        print("[1/4] Strategy Research Lab...")
+        with get_session() as session:
+            lab = StrategyResearchLab(session=session, base_dir=Path(__file__).parent)
+            strategy_lab_result = lab.run(
+                ResearchLabConfig(
+                    strategies=[strategy_name],
+                    symbol=symbol,
+                    timeframe=timeframe,
+                    start=datetime(2024, 1, 1, tzinfo=timezone.utc),
+                    end=datetime(2024, 12, 31, tzinfo=timezone.utc),
+                    horizon_bars=12,
+                    max_candidates_per_strategy=8,
+                )
+            )
+        print("  Strategy Research Lab concluido.")
+    except Exception as exc:  # pragma: no cover
+        strategy_lab_error = str(exc)
+        print(f"  Strategy Research Lab falhou: {exc}")
+
+    try:
+        print("[2/4] Trade Management Research Lab...")
+        operations_csv = None
+        if strategy_lab_result:
+            operations_csv = strategy_lab_result.get("outputs", {}).get("operations_csv")
+        with get_session() as session:
+            lab = TradeManagementResearchLab(session=session, base_dir=Path(__file__).parent)
+            trade_lab_result = lab.run(
+                TradeManagementLabConfig(
+                    operations_csv=operations_csv,
+                    symbol=symbol,
+                    timeframe=timeframe,
+                    max_bars=96,
+                    atr_period=14,
+                    atr_mult=2.0,
+                    time_stop_bars=24,
+                    momentum_fast=8,
+                    momentum_slow=21,
+                    mfe_pullback_ratio=0.35,
+                    bootstrap_iterations=500,
+                )
+            )
+        print("  Trade Management Research Lab concluido.")
+    except Exception as exc:  # pragma: no cover
+        trade_lab_error = str(exc)
+        print(f"  Trade Management Research Lab falhou: {exc}")
+
+    print("[3/4] Ranking final...")
+    with get_session() as session:
+        top10 = (
+            session.query(OptimizationResultRecord)
+            .filter(OptimizationResultRecord.execution_id == execution_id)
+            .order_by(desc(OptimizationResultRecord.profit_factor), desc(OptimizationResultRecord.sharpe))
+            .limit(10)
+            .all()
+        )
+        validation = (
+            session.query(ValidationRun)
+            .filter(ValidationRun.optimizer_run == execution_id)
+            .order_by(desc(ValidationRun.created_at))
+            .first()
+        )
+
+        compare_strategies = ["TrendV1", "TrendV2", "MeanReversionV1", "BreakoutV1"]
+        compare_rows = []
+        for st in compare_strategies:
+            run = (
+                session.query(OptimizationRun)
+                .filter(OptimizationRun.strategy == st)
+                .order_by(desc(OptimizationRun.started_at))
+                .first()
+            )
+            if not run:
+                compare_rows.append((st, None, None))
+                continue
+            best_pf = session.query(func.max(OptimizationResultRecord.profit_factor)).filter(
+                OptimizationResultRecord.execution_id == run.execution_id
+            ).scalar()
+            best_sharpe = session.query(func.max(OptimizationResultRecord.sharpe)).filter(
+                OptimizationResultRecord.execution_id == run.execution_id
+            ).scalar()
+            compare_rows.append((st, best_pf, best_sharpe))
+
+    print("\nTOP 10 FINAL")
+    for i, row in enumerate(top10, start=1):
+        print(
+            f"{i:02d} | pf={row.profit_factor} sharpe={row.sharpe} expectancy={row.expectancy} "
+            f"win_rate={row.win_rate} trades={row.trades} drawdown={row.drawdown}"
+        )
+
+    print("\n[4/4] Relatorio executivo")
+    approved = bool(validation and validation.approved and validation.approved > 0)
+    decision = "APROVADA" if approved else "REPROVADA"
+    print(f"Decisao final: {decision}")
+    if validation:
+        print(
+            f"Validation: tested={validation.total_tested} approved={validation.approved} rejected={validation.rejected}"
+        )
+    if strategy_lab_result:
+        print(f"Strategy Lab: {json.dumps(strategy_lab_result.get('summary', {}), ensure_ascii=False)}")
+    elif strategy_lab_error:
+        print(f"Strategy Lab: erro={strategy_lab_error}")
+    if trade_lab_result:
+        print(f"Trade Mgmt Lab: {json.dumps(trade_lab_result.get('summary', {}), ensure_ascii=False)}")
+    elif trade_lab_error:
+        print(f"Trade Mgmt Lab: erro={trade_lab_error}")
+
+    print("Comparacao com outras estrategias (ultimo run):")
+    for st, pf, sharpe in compare_rows:
+        print(f"- {st}: best_pf={pf} best_sharpe={sharpe}")
+
+
+def cmd_optimize(args: argparse.Namespace) -> None:
+    from optimizer.optimizer import OptimizerRunConfig, StrategyOptimizer
+    from notifications.notification_service import get_notification_service
+    from notifications.telegram_listener import make_telegram_listener
+
+    history_listener = HistoryListener(checkpoint_interval=settings.optimizer.checkpoint_interval)
+    metrics_listener = MetricsListener()
+    notification_service = get_notification_service()
+    notification_service.start()
+    event_bus = EventBus(
+        listeners=[history_listener, LogListener(), metrics_listener, make_telegram_listener()],
+        async_dispatch=False,
+    )
+
+    symbol, timeframe = _canonical_market(args.symbol, args.timeframe)
+    start = _parse_date(args.start) or datetime(2024, 1, 1, tzinfo=timezone.utc)
+    end = _parse_date(args.end)
+
+    optimizer = StrategyOptimizer(
+        event_bus=event_bus,
+        checkpoint_interval=settings.optimizer.checkpoint_interval,
+    )
+    execution_id = args.resume_execution_id or HistoryPersistenceService.new_execution_id()
+
+    resume_state = history_listener.resume_execution(execution_id)
+    resume_from = resume_state.processed if resume_state and not resume_state.completed else 0
+    if args.resume_execution_id and resume_state is None:
+        raise SystemExit(f"Resume requested but no checkpoint found for execution_id={execution_id}")
+    try:
+        summary = optimizer.run(
+            OptimizerRunConfig(
+                symbol=symbol,
+                timeframe=timeframe,
+                start=start,
+                end=end,
+                capital=args.capital,
+                top_n=args.top,
+                workers=args.workers,
+                max_combinations=args.max_combinations,
+                diagnostic=args.diagnostic,
+                execution_id=execution_id,
+                resume_from=resume_from,
+                checkpoint_interval=settings.optimizer.checkpoint_interval,
+                strategy_name=settings.trading.strategy,
+                strategy_version=os.getenv("STRATEGY_VERSION", "v1"),
+                git_commit=os.getenv("GIT_COMMIT"),
+                host=platform.node(),
+                cpu=platform.processor() or None,
+                python_version=platform.python_version(),
+            )
+        )
     except ValueError as exc:
-        raise SystemExit(f"Configuration error:\n{exc}") from exc
-    except Exception as exc:
-        raise SystemExit(f"Startup validation failed: {exc}") from exc
+        logger.error("Optimization aborted: %s", exc)
+        raise SystemExit(1) from exc
+    finally:
+        notification_service.stop()
 
-    print(settings.startup_summary())
-    logger.info(
-        "Crypto Trading Bot starting - env=%s paper=%s",
-        settings.environment,
-        settings.paper_trading,
+    print("\n======================================")
+    print("OPTIMIZATION REPORT")
+    print("======================================")
+    print(f"Combinacoes testadas: {summary.combinations_tested}")
+    print(f"Combinacoes descartadas: {summary.combinations_discarded}")
+    print(f"Tempo total da otimizacao: {summary.duration_seconds:.2f}s")
+    if summary.best_profit_factor:
+        print("Melhor Profit Factor:")
+        print(summary.best_profit_factor)
+    if summary.best_net_profit:
+        print("Melhor Lucro:")
+        print(summary.best_net_profit)
+    if summary.lowest_drawdown:
+        print("Menor Drawdown:")
+        print(summary.lowest_drawdown)
+    if summary.best_sharpe:
+        print("Melhor Sharpe:")
+        print(summary.best_sharpe)
+    print("======================================")
+    print("TOP 10")
+    for result in summary.top_results[:10]:
+        print(result)
+    print("======================================")
+    print("Arquivos gerados:")
+    for output_file in summary.output_files:
+        print(f"- {output_file}")
+
+    print("REAL-TIME METRICS")
+    print(metrics_listener.state)
+
+    # Salva aqui somente um checkpoint de exportação; os resultados de cada combinação já são persistidos pelos listeners.
+    with get_session() as session:
+        history = HistoryPersistenceService(session)
+        history.save_checkpoint(
+            execution_id=execution_id,
+            stage="optimization_export",
+            processed=len(summary.top_results),
+            completed=True,
+            payload={"symbol": symbol, "timeframe": timeframe},
+        )
+
+    _run_validation_for_execution(
+        execution_id=execution_id,
+        symbol=symbol,
+        timeframe=timeframe,
+        strategy_name=settings.trading.strategy,
+        capital=args.capital,
+        top_n=args.top,
+        train_start=_parse_date(args.train_start),
+        train_end=_parse_date(args.train_end),
+        val_start=_parse_date(args.val_start),
+        val_end=_parse_date(args.val_end),
+    )
+    _run_post_validation_pipeline(
+        execution_id=execution_id,
+        symbol=symbol,
+        timeframe=timeframe,
+        strategy_name=settings.trading.strategy,
     )
 
-    # Garante que o schema e as tabelas do banco configurado existam
-    bootstrap_database()
 
-    args = _parse_args()
-    handler = _COMMANDS.get(args.command)
+def cmd_validate(args: argparse.Namespace) -> None:
+    from database.history_models import OptimizationRun
+
+    with get_session() as session:
+        run = session.query(OptimizationRun).filter(OptimizationRun.execution_id == args.execution_id).one_or_none()
+
+    if run is None:
+        raise SystemExit(f"Execution id not found in optimization_runs: {args.execution_id}")
+
+    symbol = args.symbol or run.symbol
+    timeframe = args.timeframe or run.timeframe
+    symbol, timeframe = _canonical_market(symbol, timeframe)
+
+    _run_validation_for_execution(
+        execution_id=args.execution_id,
+        symbol=symbol,
+        timeframe=timeframe,
+        strategy_name=run.strategy,
+        capital=args.capital,
+        top_n=args.top,
+        train_start=_parse_date(args.train_start),
+        train_end=_parse_date(args.train_end),
+        val_start=_parse_date(args.val_start),
+        val_end=_parse_date(args.val_end),
+    )
+
+
+def cmd_execution_manager(_args: argparse.Namespace) -> None:
+    from execution_manager.manager import ExecutionManager
+    from research.services.pipeline_executor import execute_pipeline
+
+    base_dir = Path(__file__).parent
+    if _args.pipeline:
+        execute_pipeline(base_dir=base_dir, pipeline_path=Path(_args.pipeline))
+        return
+
+    manager = ExecutionManager(base_dir, execution_id=_args.execution_id)
+    rc = manager.run()
+    if rc != 0:
+        raise SystemExit(rc)
+
+
+def cmd_execution_manager_rc1(_args: argparse.Namespace) -> None:
+    from execution_manager.validation_rc1 import run_rc1_validation
+
+    payload = run_rc1_validation(Path(__file__).parent)
+    print(json.dumps(payload, ensure_ascii=False, indent=2))
+    if payload.get("recommendation") != "APROVADO":
+        raise SystemExit(1)
+
+
+def cmd_strategy_research_lab(args: argparse.Namespace) -> None:
+    from research.services.strategy_research_lab import ResearchLabConfig, StrategyResearchLab
+
+    strategies = [item.strip() for item in args.strategies.split(",") if item.strip()]
+    if not strategies:
+        raise SystemExit("At least one strategy must be informed in --strategies")
+
+    symbol = validate_symbol(args.symbol) if args.symbol else None
+    timeframe = validate_timeframe(args.timeframe) if args.timeframe else None
+
+    with get_session() as session:
+        lab = StrategyResearchLab(session=session, base_dir=Path(__file__).parent)
+        result = lab.run(
+            ResearchLabConfig(
+                strategies=strategies,
+                symbol=symbol,
+                timeframe=timeframe,
+                start=_parse_date(args.start),
+                end=_parse_date(args.end),
+                horizon_bars=max(1, int(args.horizon_bars)),
+                max_candidates_per_strategy=max(1, int(args.max_candidates_per_strategy)),
+            )
+        )
+
+    print("\n======================================")
+    print("STRATEGY RESEARCH LAB")
+    print("======================================")
+    print("Summary:")
+    print(json.dumps(result.get("summary", {}), ensure_ascii=False, indent=2, default=str))
+    print("Outputs:")
+    for key, value in result.get("outputs", {}).items():
+        print(f"- {key}: {value}")
+
+
+def cmd_trade_lifecycle_audit(args: argparse.Namespace) -> None:
+    from trade_lifecycle_audit import TradeLifecycleAuditConfig, TradeLifecycleAuditService
+
+    service = TradeLifecycleAuditService(base_dir=Path(__file__).parent)
+    result = service.run(
+        TradeLifecycleAuditConfig(
+            strategy_name=str(args.strategy_name) if args.strategy_name else None,
+            strategy_version=str(args.strategy_version) if args.strategy_version else None,
+            symbol=str(args.symbol) if args.symbol else None,
+            timeframe=str(args.timeframe) if args.timeframe else None,
+            execution_id=str(args.execution_id) if args.execution_id else None,
+            window_days=max(1, int(args.window_days)),
+            output_prefix=str(args.output_prefix),
+            persist_to_db=not bool(args.no_db),
+        )
+    )
+
+    print("\n======================================")
+    print("TRADE LIFECYCLE AUDIT — FASE 9.3")
+    print("======================================")
+    print("Summary:")
+    print(json.dumps(result.get("summary", {}), ensure_ascii=False, indent=2, default=str))
+
+    report = result.get("report", {})
+    if report:
+        s7 = report.get("stage7_diagnosis", {})
+        print("\n--- BOTTLENECK SCORES ---")
+        for k, v in s7.get("bottleneck_scores", {}).items():
+            print(f"  {k}: {v:.1f}")
+        print(f"\nGARGALO PRINCIPAL: {s7.get('main_bottleneck', 'N/A').upper()}")
+        print("\nEvidências:")
+        for ev in s7.get("evidence", []):
+            print(f"  - {ev}")
+        print("\nRecomendações:")
+        for i, rec in enumerate(s7.get("recommendation", []), start=1):
+            print(f"  {i}. {rec}")
+
+    print("\nOutputs:")
+    for key, value in result.get("outputs", {}).items():
+        print(f"- {key}: {value}")
+
+
+def cmd_phase9_4_controlled_improvement(args: argparse.Namespace) -> None:
+    from phase94_controlled_improvement import Phase94Config, Phase94ControlledImprovementService
+
+    service = Phase94ControlledImprovementService(base_dir=Path(__file__).parent)
+    result = service.run(
+        Phase94Config(
+            symbol=str(args.symbol) if args.symbol else None,
+            timeframe=str(args.timeframe) if args.timeframe else None,
+            start=_parse_date(args.start),
+            end=_parse_date(args.end),
+            capital=max(100.0, float(args.capital)),
+            window_days=max(1, int(args.window_days)),
+            output_prefix=str(args.output_prefix),
+            run_paper_campaign_if_approved=not bool(args.skip_paper_campaign),
+            paper_cycles=max(1, int(args.paper_cycles)),
+        )
+    )
+
+    print("\n======================================")
+    print("FASE 9.4 - CONTROLLED IMPROVEMENT")
+    print("======================================")
+    print("Summary:")
+    print(json.dumps(result.get("summary", {}), ensure_ascii=False, indent=2, default=str))
+
+    report = result.get("report", {})
+    if report:
+        comp = report.get("comparison", {})
+        print("\nDecision:")
+        print(f"- A V1.1 melhorou a V1.0? {comp.get('v11_better_than_v10', 'Não')}")
+        print(f"- Métricas melhoradas: {', '.join(comp.get('improved_metrics', [])) or 'Nenhuma'}")
+        print(f"- Métricas pioradas: {', '.join(comp.get('worsened_metrics', [])) or 'Nenhuma'}")
+        print(f"- Estratégia pronta para Paper Trading? {comp.get('ready_for_paper_trading', 'Não')}")
+        print(f"- Recomendação: {comp.get('recommendation', 'Reverter para V1.0')}")
+
+    print("\nOutputs:")
+    for key, value in result.get("outputs", {}).items():
+        print(f"- {key}: {value}")
+
+
+def cmd_strategy_catalog_cycle(args: argparse.Namespace) -> None:
+    from strategy_catalog import StrategyCatalogCycleConfig, StrategyCatalogCycleService
+
+    symbol, timeframe = _canonical_market(args.symbol, args.timeframe)
+    service = StrategyCatalogCycleService(base_dir=Path(__file__).parent)
+    result = service.run(
+        StrategyCatalogCycleConfig(
+            symbol=symbol,
+            timeframe=timeframe,
+            window_days=max(30, int(args.window_days)),
+            initial_capital=max(100.0, float(args.capital)),
+            max_catalog_strategies=max(1, min(20, int(args.max_catalog_strategies))),
+            optimizer_max_combinations=max(5, int(args.optimizer_max_combinations)),
+            optimizer_workers=max(1, int(args.optimizer_workers)),
+            top_k_for_paper=max(1, min(3, int(args.top_k_for_paper))),
+            output_prefix=str(args.output_prefix),
+        )
+    )
+
+    print("\n======================================")
+    print("FASE 10 - STRATEGY CATALOG CYCLE")
+    print("======================================")
+    print("Summary:")
+    print(json.dumps(result.get("summary", {}), ensure_ascii=False, indent=2, default=str))
+
+    report = result.get("report", {})
+    if report:
+        print("\nTop 3 para Paper Trading:")
+        for idx, row in enumerate(report.get("top3_for_paper", []), start=1):
+            print(f"  {idx}. {row.get('strategy')} ({row.get('category')})")
+
+    print("\nOutputs:")
+    for key, value in result.get("outputs", {}).items():
+        print(f"- {key}: {value}")
+
+
+def cmd_strategy_catalog_audit(args: argparse.Namespace) -> None:
+    from strategy_catalog import StrategyCatalogAuditConfig, StrategyCatalogAuditService
+
+    symbol, timeframe = _canonical_market(args.symbol, args.timeframe)
+    benchmark_symbols = tuple(
+        _canonical_market(item.strip(), timeframe)[0]
+        for item in str(args.benchmark_symbols).split(",")
+        if item.strip()
+    )
+    benchmark_timeframes = tuple(
+        validate_timeframe(item.strip())
+        for item in str(args.benchmark_timeframes).split(",")
+        if item.strip()
+    )
+
+    service = StrategyCatalogAuditService(base_dir=Path(__file__).parent)
+    result = service.run(
+        StrategyCatalogAuditConfig(
+            symbol=symbol,
+            timeframe=timeframe,
+            window_days=max(30, int(args.window_days)),
+            initial_capital=max(100.0, float(args.capital)),
+            benchmark_symbols=benchmark_symbols or (symbol,),
+            benchmark_timeframes=benchmark_timeframes or (timeframe,),
+            optimizer_max_combinations=max(3, int(args.optimizer_max_combinations)),
+            optimizer_workers=max(1, int(args.optimizer_workers)),
+            max_bars=max(500, int(args.max_bars)),
+            output_prefix=str(args.output_prefix),
+        )
+    )
+
+    print("\n======================================")
+    print("FASE 10.2 - STRATEGY CATALOG AUDIT")
+    print("======================================")
+    print("Summary:")
+    print(json.dumps(result.get("summary", {}), ensure_ascii=False, indent=2, default=str))
+
+    report = result.get("report", {})
+    if report:
+        print("\nDecision:")
+        print(f"- Recomendacao final: {report.get('recommendation')}")
+        print(f"- Justificativa: {report.get('recommendation_reason')}")
+
+    print("\nOutputs:")
+    for key, value in result.get("outputs", {}).items():
+        print(f"- {key}: {value}")
+
+
+def cmd_crypto_strategy_research(args: argparse.Namespace) -> None:
+    from research.crypto_strategy_knowledge_base import (
+        CryptoStrategyKnowledgeBaseService,
+        CryptoStrategyResearchConfig,
+    )
+
+    service = CryptoStrategyKnowledgeBaseService(base_dir=Path(__file__).parent)
+    result = service.run(
+        CryptoStrategyResearchConfig(
+            output_prefix=str(args.output_prefix),
+        )
+    )
+
+    print("\n======================================")
+    print("FASE 11 - CRYPTO STRATEGY RESEARCH")
+    print("======================================")
+    print("Summary:")
+    print(json.dumps(result.get("summary", {}), ensure_ascii=False, indent=2, default=str))
+
+    print("\nOutputs:")
+    for key, value in result.get("outputs", {}).items():
+        print(f"- {key}: {value}")
+
+
+def cmd_supertrend_controlled_implementation(args: argparse.Namespace) -> None:
+    from phase12_supertrend_controlled import Phase12SuperTrendConfig, Phase12SuperTrendService
+
+    symbol, timeframe = _canonical_market(args.symbol, args.timeframe)
+    service = Phase12SuperTrendService(base_dir=Path(__file__).parent)
+    result = service.run(
+        Phase12SuperTrendConfig(
+            symbol=symbol,
+            timeframe=timeframe,
+            start=_parse_date(args.start),
+            end=_parse_date(args.end),
+            capital=max(100.0, float(args.capital)),
+            window_days=max(30, int(args.window_days)),
+            output_prefix=str(args.output_prefix),
+            max_bars=max(500, int(args.max_bars)),
+            optimizer_max_combinations=max(5, int(args.optimizer_max_combinations)),
+            optimizer_workers=max(1, int(args.optimizer_workers)),
+            run_paper_campaign_if_approved=not bool(args.skip_paper_campaign),
+            paper_cycles=max(1, int(args.paper_cycles)),
+        )
+    )
+
+    print("\n======================================")
+    print("FASE 12 - SUPER TREND CONTROLLED IMPLEMENTATION")
+    print("======================================")
+    print("Summary:")
+    print(json.dumps(result.get("summary", {}), ensure_ascii=False, indent=2, default=str))
+
+    report = result.get("report", {})
+    if report:
+        print("\nDecision:")
+        print(f"- Decisao final: {report.get('decision', 'OPCAO B')}")
+        print(f"- Early stop acionado: {'Sim' if report.get('early_stop', {}).get('triggered') else 'Nao'}")
+        print(f"- Aprovada para Paper: {'Sim' if report.get('status') == 'approved_for_paper' else 'Nao'}")
+
+    print("\nOutputs:")
+    for key, value in result.get("outputs", {}).items():
+        print(f"- {key}: {value}")
+
+
+def cmd_continuous_strategy_factory(args: argparse.Namespace) -> None:
+    from research.services.phase13_continuous_strategy_factory import (
+        ContinuousStrategyFactoryService,
+        Phase13ContinuousFactoryConfig,
+    )
+
+    symbol, timeframe = _canonical_market(args.symbol, args.timeframe)
+    service = ContinuousStrategyFactoryService(base_dir=Path(__file__).parent)
+    result = service.run(
+        Phase13ContinuousFactoryConfig(
+            symbol=symbol,
+            timeframe=timeframe,
+            window_days=max(10, int(args.window_days)),
+            capital=max(100.0, float(args.capital)),
+            batch_size=max(1, int(args.batch_size)),
+            target_approved=max(1, int(args.target_approved)),
+            max_bars=max(500, int(args.max_bars)),
+            optimizer_max_combinations=max(5, int(args.optimizer_max_combinations)),
+            optimizer_workers=max(1, int(args.optimizer_workers)),
+            max_strategy_runtime_seconds=max(30, int(args.max_strategy_runtime_seconds)),
+            max_cpu_per_worker_pct=max(1.0, min(100.0, float(args.max_cpu_per_worker_pct))),
+            campaign_max_seconds=max(0, int(args.campaign_max_seconds)),
+            optimizer_probe_enabled=True,
+            probe_max_combinations=max(5, min(10, int(args.probe_max_combinations))),
+            probe_top_n=max(1, min(3, int(args.probe_top_n))),
+            reprocess_implemented_catalog=True,
+            paper_candidate_min_trades=max(1, int(args.paper_candidate_min_trades)),
+            paper_candidate_min_profit_factor=max(0.0, float(args.paper_candidate_min_profit_factor)),
+            paper_candidate_min_expectancy=float(args.paper_candidate_min_expectancy),
+            paper_candidate_allow_overfitting=bool(args.paper_candidate_allow_overfitting),
+            paper_experiment_max_cycles=max(1, int(args.paper_experiment_max_cycles)),
+            paper_experiment_poll_seconds=max(1.0, float(args.paper_experiment_poll_seconds)),
+            paper_experiment_bootstrap_bars=max(200, int(args.paper_experiment_bootstrap_bars)),
+            paper_experiment_bootstrap_replay_bars=max(60, int(args.paper_experiment_bootstrap_replay_bars)),
+            paper_experiment_review_window_days=max(1, int(args.paper_experiment_review_window_days)),
+            output_prefix=str(args.output_prefix),
+        )
+    )
+
+    print("\n======================================")
+    print("FASE 13 - CONTINUOUS STRATEGY FACTORY")
+    print("======================================")
+    print("Summary:")
+    print(json.dumps(result.get("summary", {}), ensure_ascii=False, indent=2, default=str))
+
+    report = result.get("report", {})
+    if report:
+        print("\nFinal report:")
+        print(f"- Estrategias implementadas: {report.get('implemented_count', 0)}")
+        print(f"- Estrategias reprovadas por desempenho: {report.get('rejected_performance_count', 0)}")
+        print(f"- Estrategias reprovadas por infraestrutura: {report.get('rejected_infrastructure_count', 0)}")
+        print(f"- Estrategias inconclusivas: {report.get('inconclusive_count', 0)}")
+        print(f"- Estrategias aprovadas: {report.get('approved_count', 0)}")
+        print(f"- Estrategias em Paper Trading: {report.get('in_paper_trading_count', 0)}")
+        print(f"- Estrategias em PAPER_CANDIDATE: {report.get('paper_candidate_count', 0)}")
+        print(f"- Tempo medio por estrategia (s): {report.get('average_time_per_strategy_seconds', 0.0)}")
+        print(f"- Tempo total da campanha (s): {report.get('total_campaign_seconds', 0.0)}")
+        print(f"- Stop reason: {report.get('stop_reason', 'unknown')}")
+        print("- Principais motivos de reprovacao:")
+        for reason, count in report.get("top_rejection_reasons", []):
+            print(f"  - {reason}: {count}")
+        print(f"- Ranking atualizado: {len(report.get('ranking_updated', []))} linhas")
+
+        answers = report.get("answers", {})
+        if answers:
+            print("\nRespostas obrigatorias:")
+            print(f"- Quantas novas estrategias foram implementadas? {answers.get('newly_implemented', 0)}")
+            print(f"- Quantas foram efetivamente avaliadas? {answers.get('newly_effectively_evaluated', 0)}")
+            print(f"- Quantas avancaram para Paper Trading? {answers.get('advanced_to_paper', 0)}")
+            print(f"- Quantas continuam pendentes? {answers.get('continues_pending', 0)}")
+            print(f"- Existe agora alguma estrategia apta para operacao continua? {answers.get('has_strategy_ready_for_continuous_operation', 'NAO')}")
+
+        stage_counters = report.get("stage_counters", {})
+        if stage_counters:
+            print("\nValidacao final:")
+            print(f"- O backlog foi realmente consumido? {'SIM' if int(stage_counters.get('implementation_real', 0)) > 0 else 'NAO'}")
+            print(f"- Quantas estrategias passaram por implementacao real? {stage_counters.get('implementation_real', 0)}")
+            print(f"- Quantas chegaram ao Backtest? {stage_counters.get('backtest_reached', 0)}")
+            print(f"- Quantas chegaram ao Optimizer? {stage_counters.get('optimizer_reached', 0)}")
+            print(f"- Quantas chegaram ao Validation? {stage_counters.get('validation_reached', 0)}")
+            print(f"- Quantas chegaram ao Paper Qualification? {stage_counters.get('paper_qualification_reached', 0)}")
+            print(f"- Existe agora alguma estrategia apta para Paper Trading? {'SIM' if report.get('in_paper_trading_count', 0) > 0 else 'NAO'}")
+
+        answer = report.get("answer", {})
+        print(f"\n{answer.get('question', 'Pergunta')}")
+        print(answer.get("value", 0))
+
+    print("\nOutputs:")
+    for key, value in result.get("outputs", {}).items():
+        print(f"- {key}: {value}")
+
+
+def cmd_market_intelligence(args: argparse.Namespace) -> None:
+    from research.services.phase14_market_intelligence import (
+        MarketIntelligenceService,
+        Phase14MarketIntelligenceConfig,
+    )
+
+    service = MarketIntelligenceService(base_dir=Path(__file__).parent)
+    result = service.run(
+        Phase14MarketIntelligenceConfig(
+            top_n=max(5, int(args.top_n)),
+            output_prefix=str(args.output_prefix),
+        )
+    )
+
+    print("\n======================================")
+    print("FASE 14 - MARKET INTELLIGENCE")
+    print("======================================")
+    print("Summary:")
+    print(json.dumps(result.get("summary", {}), ensure_ascii=False, indent=2, default=str))
+
+    report = result.get("report", {})
+    if report:
+        print("\nFinal report:")
+        print(f"- Novas estrategias pesquisadas: {report.get('total_researched', 0)}")
+        print(f"- Descartadas por incompatibilidade: {report.get('total_incompatible', 0)}")
+        print(f"- Descartadas por duplicidade: {report.get('total_duplicates', 0)}")
+        print(f"- Eliminadas (outros motivos): {report.get('total_eliminated', 0)}")
+        print(f"- Adicionadas ao backlog: {report.get('total_classified', 0)}")
+        print(f"- Top 20: {len(report.get('top20', []))}")
+        print(f"- Top 10: {len(report.get('top10', []))}")
+        print(f"- Top 5: {len(report.get('top5', []))}")
+        print("- Distribuicao por categoria:")
+        for category, count in report.get("distribution_by_category", {}).items():
+            print(f"  - {category}: {count}")
+        print(f"- Principais indicadores encontrados: {report.get('top_indicators', [])[:5]}")
+        print(f"- Principais timeframes encontrados: {report.get('top_timeframes', [])[:5]}")
+        print(f"- Principais ativos encontrados: {report.get('top_assets', [])[:5]}")
+        print(f"- Estrategia mais promissora: {result.get('summary', {}).get('top_strategy')}")
+        incompatible_names = [x.get('name') for x in report.get('incompatible', [])]
+        if incompatible_names:
+            print(f"- Incompativeis (dados indisponiveis): {incompatible_names}")
+        dup_names = [x.get('name') for x in report.get('duplicates', [])]
+        if dup_names:
+            print(f"- Duplicatas detectadas: {dup_names}")
+        decision = report.get("decision", {})
+        print(f"\n{decision.get('question', 'Pergunta')}")
+        print(decision.get("answer", "NAO"))
+        if decision.get("answer") == "NAO":
+            print(f"Categorias faltantes: {decision.get('missing_categories_if_no', [])}")
+
+    print("\nOutputs:")
+    for key, value in result.get("outputs", {}).items():
+        print(f"- {key}: {value}")
+
+
+def cmd_overnight_campaign(args: argparse.Namespace) -> None:
+    """
+    Orquestrador autônomo V2 da campanha noturna:
+    1. Processa primeiro IMPLEMENTATION_PENDING/INCOMPLETE
+    2. Reabastece automaticamente a fila com itens da Phase 14 quando ela estiver vazia
+    3. Não para somente porque PAPER_CANDIDATE foi encontrado
+    4. Continua até as 09:00 / interrupção manual / limite de recursos ou segurança
+    """
+    from research.services.phase13_continuous_strategy_factory import (
+        ContinuousStrategyFactoryService,
+        Phase13ContinuousFactoryConfig,
+    )
+
+    symbol, timeframe = _canonical_market(args.symbol, args.timeframe)
+
+    precheck = _run_overnight_campaign_precheck(
+        symbol=symbol,
+        timeframe=timeframe,
+        min_candles=max(1, int(args.precheck_min_candles or 1000)),
+    )
+    _print_overnight_campaign_precheck(precheck)
+    if str(precheck.get("status", "failed")).lower() != "ok":
+        print("\nCampanha cancelada.")
+        return
+
+    service = ContinuousStrategyFactoryService(base_dir=Path(__file__).parent)
+    
+    # Configurações da campanha noturna
+    overnight_config = Phase13ContinuousFactoryConfig(
+        symbol=symbol,
+        timeframe=timeframe,
+        window_days=max(10, int(args.window_days or 120)),
+        capital=max(100.0, float(args.capital or 10000.0)),
+        batch_size=max(1, int(args.batch_size or 50)),  # Permite várias estratégias
+        target_approved=max(1, int(args.target_approved or 1)),  # Meta original
+        target_paper_candidates=max(1, int(args.target_paper_candidates or 3)),  # NOVO: 3 candidatas em vez de 1
+        max_bars=max(500, int(args.max_bars or 3500)),
+        optimizer_max_combinations=max(5, int(args.optimizer_max_combinations or 15)),
+        optimizer_workers=max(1, int(args.optimizer_workers or 1)),
+        max_strategy_runtime_seconds=max(30, int(args.max_strategy_runtime_seconds or 900)),
+        max_cpu_per_worker_pct=max(1.0, min(100.0, float(args.max_cpu_per_worker_pct or 100.0))),
+        campaign_max_seconds=max(0, int(args.campaign_max_seconds or 0)),
+        campaign_end_hour=int(args.campaign_end_hour or 9),  # Para às 09:00
+        auto_research_when_queue_empty=not bool(args.disable_auto_research),
+        phase14_top_n=max(5, int(args.phase14_top_n or 30)),
+        stop_on_target_paper_candidates=False,
+        checkpoint_interval_seconds=max(60, int(args.checkpoint_interval_seconds or 600)),
+        optimizer_probe_enabled=True,
+        probe_max_combinations=max(5, min(10, int(args.probe_max_combinations or 8))),
+        probe_top_n=max(1, min(3, int(args.probe_top_n or 3))),
+        reprocess_implemented_catalog=True,
+        paper_candidate_min_trades=max(1, int(args.paper_candidate_min_trades or 100)),
+        paper_candidate_min_profit_factor=max(0.0, float(args.paper_candidate_min_profit_factor or 1.10)),
+        paper_candidate_min_expectancy=float(args.paper_candidate_min_expectancy or 0.0),
+        paper_candidate_allow_overfitting=bool(args.paper_candidate_allow_overfitting or False),
+        paper_experiment_max_cycles=max(1, int(args.paper_experiment_max_cycles or 1)),
+        paper_experiment_poll_seconds=max(1.0, float(args.paper_experiment_poll_seconds or 2.0)),
+        paper_experiment_bootstrap_bars=max(200, int(args.paper_experiment_bootstrap_bars or 1500)),
+        paper_experiment_bootstrap_replay_bars=max(60, int(args.paper_experiment_bootstrap_replay_bars or 350)),
+        paper_experiment_review_window_days=max(1, int(args.paper_experiment_review_window_days or 14)),
+        output_prefix=str(args.output_prefix or "overnight_campaign"),
+    )
+    
+    print("\n" + "="*60)
+    print("OVERNIGHT CAMPAIGN - INTELLIGENT STRATEGY DISCOVERY")
+    print("="*60)
+    print(f"Start time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"Target time: 09:00 (local time)")
+    print(f"Target PAPER_CANDIDATE count (informativo): {overnight_config.target_paper_candidates}")
+    print(f"Priority: IMPLEMENTATION_PENDING first, then new research")
+    print(f"Auto-research Phase 14: {'ON' if overnight_config.auto_research_when_queue_empty else 'OFF'}")
+    print(f"Checkpoint interval (s): {overnight_config.checkpoint_interval_seconds}")
+    print("="*60 + "\n")
+    
+    result = service.run(overnight_config)
+
+    print("\n======================================")
+    print("OVERNIGHT CAMPAIGN - FINAL REPORT")
+    print("======================================")
+    
+    summary = result.get("summary", {})
+    print("\nExecutive Summary:")
+    print(f"- Status: {summary.get('status', 'unknown')}")
+    print(f"- Stop reason: {summary.get('stop_reason', 'unknown')}")
+    print(f"- Duration: {summary.get('duration_seconds', 0.0):.1f}s")
+
+    report = result.get("report", {})
+    if report:
+        print("\nCampanha Noturna - Consolidado Final:")
+        print(f"- Estrategias pesquisadas: {report.get('coverage_after', {}).get('strategies_researched', 0)}")
+        print(f"- Estrategias implementadas: {report.get('implemented_count', 0)}")
+        print(f"- Estrategias avaliadas (backtest reached): {report.get('stage_counters', {}).get('backtest_reached', 0)}")
+        print(f"- Estrategias reprovadas: {report.get('rejected_count', 0)}")
+        print(f"- Estrategias em PAPER_CANDIDATE: {report.get('paper_candidate_count', 0)}")
+        print(f"- Estrategias em Paper Trading: {report.get('in_paper_trading_count', 0)}")
+        print(f"- Paper Experimental iniciados: {report.get('paper_experimental_started_count', 0)}")
+        print(f"- Estrategias pendentes: {report.get('pending_count', 0)}")
+        
+        print("\nEtapas do Pipeline:")
+        sc = report.get("stage_counters", {})
+        print(f"- Smoke Test: {sc.get('reprocessed_total', 0)}")
+        print(f"- Backtest: {sc.get('backtest_reached', 0)}")
+        print(f"- Optimizer Probe: {sc.get('optimizer_probe_reached', 0)}")
+        print(f"- Optimizer Completo: {sc.get('optimizer_reached', 0)}")
+        print(f"- Validation: {sc.get('validation_reached', 0)}")
+        print(f"- Paper Qualification: {sc.get('paper_qualification_reached', 0)}")
+        
+        print("\nMotivos de Reprovação (Top 10):")
+        for reason, count in report.get("top_rejection_reasons", [])[:10]:
+            print(f"  - {reason}: {count}")
+
+        overnight = report.get("overnight_v2", {})
+        audit = overnight.get("paper_candidate_promotion_rule_audit", {}) if isinstance(overnight, dict) else {}
+        print("\nAuditoria PAPER_CANDIDATE:")
+        print(
+            "- PAPER_CANDIDATE deve iniciar automaticamente Paper Experimental? "
+            f"{overnight.get('paper_candidate_should_auto_start_paper_experimental', 'SIM')}"
+        )
+        print(f"- PAPER_CANDIDATE sem Paper Experimental: {audit.get('paper_candidate_without_experimental_count', 0)}")
+        
+        # Aprendizado contínuo
+        rejection_knowledge = report.get("rejection_knowledge", {})
+        if rejection_knowledge:
+            print("\nAprendizado Contínuo - Famílias com Maior Taxa de Reprovação:")
+            families = rejection_knowledge.get("family", {})
+            for family_name, data in sorted(families.items(), key=lambda x: x[1]["count"], reverse=True)[:5]:
+                print(f"  - {family_name}: {data['count']} reprovacoes")
+        
+        print(f"\nTempo total: {report.get('total_campaign_seconds', 0.0):.1f}s")
+        print(f"Tempo médio por estratégia: {report.get('average_time_per_strategy_seconds', 0.0):.1f}s")
+        
+        # 20 melhores
+        ranking = report.get("ranking_updated", [])
+        if ranking:
+            print("\nTop 20 Estratégias:")
+            for item in ranking[:20]:
+                status_str = item.get("state", "unknown")
+                score = item.get("queue_score", 0.0)
+                print(f"  {item['rank']:2d}. {item['candidate_name']:40s} [{status_str:25s}] score={score:.4f}")
+
+    print("\nOutputs:")
+    for key, value in result.get("outputs", {}).items():
+        print(f"- {key}: {value}")
+    
+    print(f"\nEnd time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print("="*60)
+
+
+def _run_overnight_campaign_precheck(
+    *,
+    symbol: str,
+    timeframe: str,
+    min_candles: int,
+    database_url: str | None = None,
+) -> dict[str, Any]:
+    db_url = database_url or settings.database.url
+    parsed = make_url(db_url)
+    backend = parsed.get_backend_name().strip().lower()
+
+    report: dict[str, Any] = {
+        "status": "ok",
+        "db": {
+            "url": db_url,
+            "type": backend,
+            "user": parsed.username or "N/A",
+            "schema": parsed.database or "N/A",
+            "connection_ok": False,
+        },
+        "config": {
+            "exchange": settings.trading.exchange,
+            "mode": settings.trading.mode,
+            "symbol": symbol,
+            "timeframe": timeframe,
+            "min_candles": int(max(1, min_candles)),
+        },
+        "candles": {
+            "total": 0,
+            "symbol_count": 0,
+            "timeframe_count": 0,
+            "symbol_timeframe_count": 0,
+            "first_open_time": None,
+            "last_open_time": None,
+        },
+        "history": {
+            "trade_history": 0,
+            "execution_sessions": 0,
+            "checkpoints": 0,
+            "optimization_results": 0,
+        },
+        "strategy": {
+            "eligible_count": 0,
+        },
+        "warnings": [],
+        "fail_reasons": [],
+    }
+
+    config_failures: list[str] = []
+    if not settings.trading.exchange:
+        config_failures.append("Exchange ausente")
+    if not settings.trading.mode:
+        config_failures.append("Modo ausente")
+    if not db_url:
+        config_failures.append("Banco ausente")
+    if not symbol:
+        config_failures.append("Simbolo ausente")
+    if not timeframe:
+        config_failures.append("Timeframe ausente")
+
+    if config_failures:
+        report["status"] = "failed"
+        report["fail_reasons"].extend(config_failures)
+        return report
+
+    db = DatabaseConnection(db_url)
     try:
-        if handler:
-            handler(args)
-        else:
-            logger.error("Unknown command: %s", args.command)
-            sys.exit(1)
+        with db.session() as session:
+            session.execute(text("SELECT 1"))
+            report["db"]["connection_ok"] = True
+
+            total = int(session.query(Candle).count())
+            symbol_count = int(session.query(Candle).filter(Candle.symbol == symbol).count())
+            timeframe_count = int(session.query(Candle).filter(Candle.timeframe == timeframe).count())
+
+            scoped_query = session.query(Candle).filter(Candle.symbol == symbol, Candle.timeframe == timeframe)
+            scoped_count = int(scoped_query.count())
+            first_candle = scoped_query.order_by(Candle.open_time.asc()).first()
+            last_candle = scoped_query.order_by(Candle.open_time.desc()).first()
+
+            report["candles"].update(
+                {
+                    "total": total,
+                    "symbol_count": symbol_count,
+                    "timeframe_count": timeframe_count,
+                    "symbol_timeframe_count": scoped_count,
+                    "first_open_time": first_candle.open_time.isoformat() if first_candle else None,
+                    "last_open_time": last_candle.open_time.isoformat() if last_candle else None,
+                }
+            )
+
+            counts_sql = {
+                "trade_history": "SELECT COUNT(*) FROM trade_history",
+                "execution_sessions": "SELECT COUNT(*) FROM execution_sessions",
+                "checkpoints": "SELECT COUNT(*) FROM execution_checkpoints",
+                "optimization_results": "SELECT COUNT(*) FROM optimization_results_history",
+            }
+            for key, query in counts_sql.items():
+                try:
+                    count = int(session.execute(text(query)).scalar_one())
+                    report["history"][key] = count
+                except Exception:
+                    report["history"][key] = 0
+                    report["warnings"].append(f"Tabela indisponivel para contagem: {key}")
+    except Exception as exc:
+        report["status"] = "failed"
+        report["fail_reasons"].append(f"Falha de conexao com banco: {exc}")
+        return report
     finally:
-        shutdown_logging_service()
+        db.dispose()
+
+    try:
+        eligible = list_registered_strategies()
+        report["strategy"]["eligible_count"] = len(eligible)
+    except Exception as exc:
+        report["strategy"]["eligible_count"] = 0
+        report["warnings"].append(f"Falha ao carregar estrategias registradas: {exc}")
+
+    if int(report["candles"]["symbol_timeframe_count"]) < int(report["config"]["min_candles"]):
+        report["fail_reasons"].append(
+            "Candles insuficientes"
+            f" (encontrados={report['candles']['symbol_timeframe_count']}"
+            f", minimo={report['config']['min_candles']})"
+        )
+
+    if int(report["strategy"]["eligible_count"]) <= 0:
+        report["fail_reasons"].append("Nenhuma estrategia elegivel encontrada")
+
+    if report["fail_reasons"]:
+        report["status"] = "failed"
+
+    for key, count in report["history"].items():
+        if int(count) <= 0:
+            report["warnings"].append(f"Historico vazio: {key}")
+
+    return report
 
 
-if __name__ == "__main__":
-    main()
+def _print_overnight_campaign_precheck(report: dict[str, Any]) -> None:
+    status = str(report.get("status", "failed")).upper()
+    db = report.get("db", {}) if isinstance(report.get("db"), dict) else {}
+    cfg = report.get("config", {}) if isinstance(report.get("config"), dict) else {}
+    candles = report.get("candles", {}) if isinstance(report.get("candles"), dict) else {}
+
+    print("\nPRECHECK")
+    print(f"Banco: {str(db.get('type', 'unknown')).upper()}")
+    print(f"Candles: {candles.get('symbol_timeframe_count', 0)}")
+    print(f"Simbolo: {cfg.get('symbol', 'N/A')}")
+    print(f"Timeframe: {cfg.get('timeframe', 'N/A')}")
+
+    if status == "OK":
+        print("Resultado: OK")
+        print("Campanha liberada.")
+    else:
+        print("FAILED")
+        reasons = report.get("fail_reasons", []) if isinstance(report.get("fail_reasons"), list) else []
+        motivo = reasons[0] if reasons else "precheck_invalid"
+        print(f"Motivo: {motivo}")
+        print(f"Mínimo necessário: {cfg.get('min_candles', 'N/A')}")
+
+
+def cmd_phase13_1_audit_strengthening(args: argparse.Namespace) -> None:
+    from research.services.phase13_1_audit_strengthening import (
+        Phase131AuditConfig,
+        Phase131AuditStrengtheningService,
+    )
+
+    symbol, timeframe = _canonical_market(args.symbol, args.timeframe)
+    service = Phase131AuditStrengtheningService(base_dir=Path(__file__).parent)
+    result = service.run(
+        Phase131AuditConfig(
+            symbol=symbol,
+            timeframe=timeframe,
+            window_days=max(10, int(args.window_days)),
+            capital=max(100.0, float(args.capital)),
+            max_bars=max(500, int(args.max_bars)),
+            optimizer_max_combinations=max(5, int(args.optimizer_max_combinations)),
+            optimizer_workers=max(1, int(args.optimizer_workers)),
+            max_pending_to_process=max(1, int(args.max_pending_to_process)),
+            mode=str(args.mode),
+            max_workers=max(1, int(args.max_workers)),
+            max_strategy_runtime_seconds=max(30, int(args.max_strategy_runtime_seconds)),
+            max_optimizer_combinations_per_strategy=max(1, int(args.max_optimizer_combinations_per_strategy)),
+            max_cpu_per_worker_pct=max(1.0, min(100.0, float(args.max_cpu_per_worker_pct))),
+            output_prefix=str(args.output_prefix),
+        )
+    )
+
+    print("\n======================================")
+    print("FASE 13.1 - AUDIT STRENGTHENING")
+    print("======================================")
+    print("Summary:")
+    print(json.dumps(result.get("summary", {}), ensure_ascii=False, indent=2, default=str))
+
+    report = result.get("report", {})
+    answers = report.get("answers", {})
+    if answers and str(args.mode) == "audit":
+        print("\nRespostas objetivas:")
+        print(f"- Estrategias efetivamente avaliadas: {answers.get('effectively_evaluated', 0)}")
+        print(f"- Estrategias apenas sem implementacao: {answers.get('without_implementation', 0)}")
+        print(f"- Estrategias reprovadas por desempenho: {answers.get('market_rejections', 0)}")
+        print(f"- Estrategias elegiveis para implementacao futura: {answers.get('eligible_for_future_implementation', 0)}")
+        print(f"- Estrategias aptas para Paper Trading apos auditoria: {answers.get('paper_ready_after_audit', 0)}")
+
+    if answers and str(args.mode) == "continuous_coverage":
+        print("\nRelatorio final FASE 13.2:")
+        print(f"- Estrategias pesquisadas: {answers.get('strategies_researched', 0)}")
+        print(f"- Tentativas totais na fila: {answers.get('attempts_total', 0)}")
+        print(f"- Estrategias implementadas nesta campanha: {answers.get('strategies_implemented_in_campaign', 0)}")
+        print(f"- Estrategias avaliadas nesta campanha: {answers.get('strategies_evaluated_in_campaign', 0)}")
+        print(f"- Estrategias reprovadas por desempenho: {answers.get('strategies_rejected_performance', 0)}")
+        print(f"- Estrategias reprovadas por infraestrutura: {answers.get('strategies_rejected_infrastructure', 0)}")
+        print(f"- Estrategias inconclusivas: {answers.get('strategies_inconclusive', 0)}")
+        print(f"- Estrategias aprovadas para Paper Trading: {answers.get('strategies_approved_for_paper', 0)}")
+        print(f"- Estrategias ainda pendentes: {answers.get('strategies_still_pending', 0)}")
+        print(f"- Cobertura antes (%): {answers.get('coverage_before_pct', 0.0)}")
+        print(f"- Cobertura apos (%): {answers.get('coverage_after_pct', 0.0)}")
+        print(f"- Tempo medio por estrategia (s): {answers.get('average_time_per_strategy_seconds', 0.0)}")
+        print(f"- Tempo total da campanha (s): {answers.get('total_campaign_seconds', 0.0)}")
+        print(f"- Motivo de parada da fila: {answers.get('queue_stop_reason', 'backlog_exhausted')}")
+        print("\nRespostas obrigatorias:")
+        print(f"- Quantas novas estrategias foram implementadas? {answers.get('newly_implemented', 0)}")
+        print(f"- Quantas foram efetivamente avaliadas? {answers.get('newly_effectively_evaluated', 0)}")
+        print(f"- Quantas avancaram para Paper Trading? {answers.get('advanced_to_paper', 0)}")
+        print(f"- Quantas continuam pendentes? {answers.get('continues_pending', 0)}")
+        print(f"- Existe agora alguma estrategia apta para operacao continua? {answers.get('has_strategy_ready_for_continuous_operation', 'NAO')}")
+
+    print("\nOutputs:")
+    for key, value in result.get("outputs", {}).items():
+        print(f"- {key}: {value}")
+
+
+def cmd_trade_management_research_lab(args: argparse.Namespace) -> None:
+    from research.services.trade_management_research_lab import TradeManagementLabConfig, TradeManagementResearchLab
+
+    symbol = validate_symbol(args.symbol) if args.symbol else None
+    timeframe = validate_timeframe(args.timeframe) if args.timeframe else None
+
+    with get_session() as session:
+        lab = TradeManagementResearchLab(session=session, base_dir=Path(__file__).parent)
+        result = lab.run(
+            TradeManagementLabConfig(
+                operations_csv=args.operations_csv,
+                symbol=symbol,
+                timeframe=timeframe,
+                max_bars=max(10, int(args.max_bars)),
+                atr_period=max(3, int(args.atr_period)),
+                atr_mult=max(0.1, float(args.atr_mult)),
+                time_stop_bars=max(1, int(args.time_stop_bars)),
+                momentum_fast=max(2, int(args.momentum_fast)),
+                momentum_slow=max(3, int(args.momentum_slow)),
+                mfe_pullback_ratio=min(0.95, max(0.05, float(args.mfe_pullback_ratio))),
+                bootstrap_iterations=max(50, int(args.bootstrap_iterations)),
+            )
+        )
+
+    print("\n======================================")
+    print("TRADE MANAGEMENT RESEARCH LAB")
+    print("======================================")
+    print("Summary:")
+    print(json.dumps(result.get("summary", {}), ensure_ascii=False, indent=2, default=str))
+    print("Outputs:")
+    for key, value in result.get("outputs", {}).items():
+        print(f"- {key}: {value}")
+
+
+def cmd_strategy_discovery(args: argparse.Namespace) -> None:
+    from research.services.strategy_discovery_pipeline import DiscoveryPilotPlan, DiscoveryWeights, run_strategy_discovery_pipeline
+
+    with get_session() as session:
+        result = run_strategy_discovery_pipeline(
+            session=session,
+            base_dir=Path(__file__).parent,
+            pilot=DiscoveryPilotPlan(
+                symbol=args.pilot_symbol,
+                timeframe=args.pilot_timeframe,
+                combinations=max(1, int(args.pilot_combinations)),
+                workers=max(1, int(args.pilot_workers)),
+            ),
+            weights=DiscoveryWeights(),
+        )
+
+    print("\n======================================")
+    print("STRATEGY DISCOVERY PIPELINE")
+    print("======================================")
+    print(json.dumps(result.get("summary", {}), ensure_ascii=False, indent=2, default=str))
+    print("Recommendation Reason:")
+    print(result.get("summary", {}).get("recommendation_reason", ""))
+
+    audit = result.get("audit", {})
+    table_rows = audit.get("table", [])
+    print("\nAUDIT TABLE")
+    if table_rows:
+        headers = [
+            "Family",
+            "Status",
+            "Discovery Score",
+            "Validation",
+            "Research",
+            "Trade Management",
+            "Classification Reason",
+            "Recommendation Reason",
+        ]
+        print(" | ".join(headers))
+        print("-" * 180)
+        for row in table_rows:
+            print(
+                " | ".join(
+                    [
+                        str(row.get("Family", "")),
+                        str(row.get("Status", "")),
+                        str(row.get("Discovery Score", "")),
+                        str(row.get("Validation", "")),
+                        str(row.get("Research", "")),
+                        str(row.get("Trade Management", "")),
+                        str(row.get("Classification Reason", "")),
+                        str(row.get("Recommendation Reason", "")),
+                    ]
+                )
+            )
+    else:
+        print("No audit rows available.")
+
+    print("\nAUDIT JSON")
+    print(json.dumps(audit.get("json", {}), ensure_ascii=False, indent=2, default=str))
+    print("Outputs:")
+    for key, value in result.get("outputs", {}).items():
+        print(f"- {key}: {value}")
+
+
+def cmd_market_data_expansion(args: argparse.Namespace) -> None:
+    from research.services.market_data_expansion import MarketDataExpansionConfig, MarketDataExpansionService
+
+    service = MarketDataExpansionService(Path(__file__).parent)
+    result = service.run(
+        MarketDataExpansionConfig(
+            mode=str(args.mode),
+            history_days=max(1, int(args.history_days)),
+            dry_run=bool(args.dry_run),
+            auto_pipeline=bool(args.auto_pipeline),
+            continuous=bool(args.continuous),
+            continuous_max_cycles=max(1, int(args.continuous_max_cycles)),
+        )
+    )
+
+    if result.get("mode") == "continuous":
+        print("\n======================================")
+        print("HISTORICAL DATA PLATFORM (CONTINUOUS)")
+        print("======================================")
+        print(json.dumps(result.get("runs", []), ensure_ascii=False, indent=2, default=str))
+        last_result = result.get("last_result") or {}
+        print("\nLAST GATE")
+        print(json.dumps(last_result.get("gate", {}), ensure_ascii=False, indent=2, default=str))
+        print("\nLAST OUTPUTS")
+        for key, value in (last_result.get("outputs", {}) or {}).items():
+            print(f"- {key}: {value}")
+        return
+
+    print("\n======================================")
+    print("MARKET DATA EXPANSION")
+    print("======================================")
+    print(json.dumps(result.get("metrics", {}), ensure_ascii=False, indent=2, default=str))
+    print("\nGATE")
+    print(json.dumps(result.get("gate", {}), ensure_ascii=False, indent=2, default=str))
+    print("\nQUALITY")
+    print(json.dumps(result.get("quality", {}), ensure_ascii=False, indent=2, default=str))
+    print("\nGROWTH")
+    growth = {
+        "candles_delta": result.get("after", {}).get("overall", {}).get("total_candles", 0) - result.get("before", {}).get("overall", {}).get("total_candles", 0),
+        "days_delta": result.get("after", {}).get("overall", {}).get("days_available", 0) - result.get("before", {}).get("overall", {}).get("days_available", 0),
+        "missing_candles_delta": result.get("after", {}).get("overall", {}).get("missing_candles", 0) - result.get("before", {}).get("overall", {}).get("missing_candles", 0),
+    }
+    print(json.dumps(growth, ensure_ascii=False, indent=2, default=str))
+    if result.get("previous_quantitative") is not None:
+        print("\nPREVIOUS QUANTITATIVE")
+        previous = result["previous_quantitative"]
+        compact_previous = {
+            "recommended_family": previous.get("recommendation", {}).get("family"),
+            "recommended_hypothesis": previous.get("recommendation", {}).get("hypothesis_id"),
+            "dataset_size": previous.get("dataset_size"),
+            "cluster_count": len(previous.get("cluster_metrics", [])),
+            "hypothesis_count": len(previous.get("hypotheses", [])),
+        }
+        print(json.dumps(compact_previous, ensure_ascii=False, indent=2, default=str))
+    if result.get("pipeline") is not None:
+        print("\nAUTO PIPELINE")
+        pipeline = result["pipeline"]
+        compact_pipeline = {
+            "requested": pipeline.get("requested"),
+            "executed": pipeline.get("executed"),
+            "blocked": pipeline.get("blocked"),
+            "reason": pipeline.get("reason"),
+            "h1_decision": (pipeline.get("h1_audit") or {}).get("decision"),
+        }
+        print(json.dumps(compact_pipeline, ensure_ascii=False, indent=2, default=str))
+    print("\nOUTPUTS")
+    for key, value in result.get("outputs", {}).items():
+        print(f"- {key}: {value}")
+
+
+def cmd_market_data_daemon(args: argparse.Namespace) -> None:
+    from market_data.daemon import MarketDataDaemonConfig, MarketDataDaemonService
+
+    symbols = tuple(
+        validate_symbol(item.strip())
+        for item in str(args.symbols).split(",")
+        if item.strip()
+    )
+    timeframes = tuple(
+        validate_timeframe(item.strip())
+        for item in str(args.timeframes).split(",")
+        if item.strip()
+    )
+
+    service = MarketDataDaemonService(Path(__file__).parent)
+    result = service.run(
+        MarketDataDaemonConfig(
+            symbols=symbols,
+            timeframes=timeframes,
+            polling_interval_seconds=max(0.1, float(args.polling_interval_seconds)),
+            context_delay_seconds=max(0.0, float(args.context_delay_seconds)),
+            batch_size=max(100, int(args.batch_size)),
+            retry_count=max(0, int(args.retry_count)),
+            retry_delay_seconds=max(0.1, float(args.retry_delay_seconds)),
+            bootstrap_days=max(1, int(args.bootstrap_days)),
+            recent_gap_bars=max(10, int(args.recent_gap_bars)),
+            report_every_cycles=max(1, int(args.report_every_cycles)),
+            max_cycles=max(0, int(args.max_cycles)),
+            output_prefix=str(args.output_prefix),
+        )
+    )
+
+    print("\n======================================")
+    print("MARKET DATA DAEMON")
+    print("======================================")
+    print("Summary:")
+    print(json.dumps(result.get("summary", {}), ensure_ascii=False, indent=2, default=str))
+    print("Outputs:")
+    for key, value in result.get("outputs", {}).items():
+        print(f"- {key}: {value}")
+
+
+def cmd_robustness_validation(args: argparse.Namespace) -> None:
+    from research.services.scientific_robustness_validation import (
+        ScientificRobustnessValidationConfig,
+        ScientificRobustnessValidationService,
+    )
+
+    with get_session() as session:
+        service = ScientificRobustnessValidationService(session=session, base_dir=Path(__file__).parent)
+        result = service.run(
+            ScientificRobustnessValidationConfig(
+                phase6_csv=str(args.phase6_csv),
+                candidate_csv=str(args.candidate_csv),
+                events_glob=str(args.events_glob),
+                train_ratio=float(args.train_ratio),
+                validation_ratio=float(args.validation_ratio),
+                min_support=max(10, int(args.min_support)),
+                max_rule_coverage=min(0.999, max(0.50, float(args.max_rule_coverage))),
+                min_discrimination_gap=max(0.0, float(args.min_discrimination_gap)),
+                min_scientific_score=max(0.0, min(100.0, float(args.min_scientific_score))),
+                min_generalization_score=max(0.0, min(1.0, float(args.min_generalization_score))),
+                min_robustness_score=max(0.0, min(1.0, float(args.min_robustness_score))),
+                min_files=max(1, int(args.min_files)),
+                min_events=max(1, int(args.min_events)),
+                min_assets=max(1, int(args.min_assets)),
+                min_timeframes=max(1, int(args.min_timeframes)),
+                min_context_events=max(1, int(args.min_context_events)),
+                min_coverage_days=max(1, int(args.min_coverage_days)),
+                min_contexts=max(1, int(args.min_contexts)),
+                output_prefix=str(args.output_prefix),
+                persist_to_db=not bool(args.no_db),
+            )
+        )
+
+    print("\n======================================")
+    print("SCIENTIFIC ROBUSTNESS VALIDATION")
+    print("======================================")
+    print("Summary:")
+    print(json.dumps(result.get("summary", {}), ensure_ascii=False, indent=2, default=str))
+    print("Outputs:")
+    for key, value in result.get("outputs", {}).items():
+        print(f"- {key}: {value}")
+
+
+def cmd_trade_outcome_learning(args: argparse.Namespace) -> None:
+    from research.labs.trade_outcome_learning_lab import (
+        TradeOutcomeLearningConfig,
+        TradeOutcomeLearningLab,
+    )
+
+    target_names = tuple([item.strip() for item in str(args.targets).split(",") if item.strip()])
+    if not target_names:
+        raise ValueError("--targets cannot be empty")
+
+    with get_session() as session:
+        service = TradeOutcomeLearningLab(session=session, base_dir=Path(__file__).parent)
+        result = service.run(
+            TradeOutcomeLearningConfig(
+                events_glob=str(args.events_glob),
+                targets=target_names,
+                return_above_threshold=float(args.return_above_threshold),
+                return_below_threshold=float(args.return_below_threshold),
+                risk_adjusted_threshold=max(0.0, float(args.risk_adjusted_threshold)),
+                train_ratio=max(0.20, min(0.80, float(args.train_ratio))),
+                validation_ratio=max(0.10, min(0.40, float(args.validation_ratio))),
+                min_support=max(10, int(args.min_support)),
+                max_rule_coverage=max(0.20, min(0.95, float(args.max_rule_coverage))),
+                min_precision_gain=max(0.0, min(0.50, float(args.min_precision_gain))),
+                min_generalization_score=max(0.0, min(1.0, float(args.min_generalization_score))),
+                min_robustness_score=max(0.0, min(1.0, float(args.min_robustness_score))),
+                max_overfit_gap=max(0.0, min(0.80, float(args.max_overfit_gap))),
+                trade_outcome_score_threshold=max(0.0, min(100.0, float(args.trade_outcome_score_threshold))),
+                top_k_candidates=max(1, int(args.top_k_candidates)),
+                output_prefix=str(args.output_prefix),
+                persist_to_db=not bool(args.no_db),
+            )
+        )
+
+    print("\n======================================")
+    print("TRADE OUTCOME LEARNING")
+    print("======================================")
+    print("Summary:")
+    print(json.dumps(result.get("summary", {}), ensure_ascii=False, indent=2, default=str))
+    print("Outputs:")
+    for key, value in result.get("outputs", {}).items():
+        print(f"- {key}: {value}")
+
+
+def cmd_phase9_controlled_implementation(args: argparse.Namespace) -> None:
+    from research.services.trade_outcome_controlled_implementation import (
+        TradeOutcomeControlledImplementationConfig,
+        TradeOutcomeControlledImplementationService,
+    )
+
+    with get_session() as session:
+        service = TradeOutcomeControlledImplementationService(session=session, base_dir=Path(__file__).parent)
+        result = service.run(
+            TradeOutcomeControlledImplementationConfig(
+                events_glob=str(args.events_glob),
+                trade_outcome_csv=str(args.trade_outcome_csv),
+                strategy_name=str(args.strategy_name),
+                target_name=str(args.target_name),
+                approved_rule=str(args.approved_rule),
+                distance_threshold=float(args.distance_threshold),
+                fidelity_min_f1=max(0.0, min(1.0, float(args.fidelity_min_f1))),
+                optimizer_max_combinations=max(1, int(args.optimizer_max_combinations)),
+                optimizer_workers=max(1, int(args.optimizer_workers)),
+                optimizer_capital=max(100.0, float(args.optimizer_capital)),
+                output_prefix=str(args.output_prefix),
+                run_optimizer_validation=not bool(args.skip_optimizer_validation),
+                run_research_labs=not bool(args.skip_research_labs),
+                persist_to_db=not bool(args.no_db),
+            )
+        )
+
+    print("\n======================================")
+    print("FASE 9 - CONTROLLED IMPLEMENTATION")
+    print("======================================")
+    print("Summary:")
+    print(json.dumps(result.get("summary", {}), ensure_ascii=False, indent=2, default=str))
+    print("Outputs:")
+    for key, value in result.get("outputs", {}).items():
+        print(f"- {key}: {value}")
+
+
+def cmd_execution_framework_optimization(args: argparse.Namespace) -> None:
+    from research.services.execution_framework_optimization import (
+        ExecutionFrameworkOptimizationConfig,
+        ExecutionFrameworkOptimizationService,
+    )
+
+    with get_session() as session:
+        service = ExecutionFrameworkOptimizationService(session=session, base_dir=Path(__file__).parent)
+        result = service.run(
+            ExecutionFrameworkOptimizationConfig(
+                strategy_name=str(args.strategy_name),
+                benchmark_symbol=str(args.benchmark_symbol),
+                benchmark_timeframe=str(args.benchmark_timeframe),
+                benchmark_bars=max(500, int(args.benchmark_bars)),
+                initial_capital=max(100.0, float(args.initial_capital)),
+                output_prefix=str(args.output_prefix),
+                rerun_phase9=not bool(args.skip_phase9_rerun),
+                persist_to_db=not bool(args.no_db),
+            )
+        )
+
+    print("\n======================================")
+    print("FASE 9.0 - EXECUTION FRAMEWORK OPTIMIZATION")
+    print("======================================")
+    print("Summary:")
+    print(json.dumps(result.get("summary", {}), ensure_ascii=False, indent=2, default=str))
+    print("Outputs:")
+    for key, value in result.get("outputs", {}).items():
+        print(f"- {key}: {value}")
+
+
+def cmd_edge_discovery_lab(args: argparse.Namespace) -> None:
+    from research.services.edge_discovery_lab import EdgeDiscoveryConfig, EdgeDiscoveryLabService
+
+    symbols = tuple([item.strip() for item in str(args.symbols).split(",") if item.strip()])
+    timeframes = tuple([item.strip() for item in str(args.timeframes).split(",") if item.strip()])
+    if not symbols:
+        raise ValueError("--symbols cannot be empty")
+    if not timeframes:
+        raise ValueError("--timeframes cannot be empty")
+
+    service = EdgeDiscoveryLabService(Path(__file__).parent)
+    result = service.run(
+        EdgeDiscoveryConfig(
+            report_file=str(args.report_file) if args.report_file else None,
+            symbols=symbols,
+            timeframes=timeframes,
+            window_days=max(10, int(args.window_days)),
+            capital=max(100.0, float(args.capital)),
+            max_bars=max(500, int(args.max_bars)),
+            min_trades_per_context=max(1, int(args.min_trades_per_context)),
+            only_paper_candidates=not bool(args.include_all_candidates),
+            limit_candidates=max(0, int(args.limit_candidates)),
+            output_prefix=str(args.output_prefix),
+        )
+    )
+
+    print("\n======================================")
+    print("EDGE DISCOVERY LAB")
+    print("======================================")
+    print("Summary:")
+    print(json.dumps(result.get("summary", {}), ensure_ascii=False, indent=2, default=str))
+    print("Outputs:")
+    for key, value in result.get("outputs", {}).items():
+        print(f"- {key}: {value}")
+
+
+def cmd_edge_extraction_lab(args: argparse.Namespace) -> None:
+    from research.services.edge_extraction_lab import EdgeExtractionConfig, EdgeExtractionLabService
+
+    prioritized = tuple([item.strip() for item in str(args.prioritized_strategies).split(",") if item.strip()])
+    symbols = tuple([item.strip() for item in str(args.symbols).split(",") if item.strip()])
+    timeframes = tuple([item.strip() for item in str(args.timeframes).split(",") if item.strip()])
+
+    if not prioritized:
+        raise ValueError("--prioritized-strategies cannot be empty")
+    if not symbols

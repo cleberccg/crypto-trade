@@ -168,7 +168,7 @@ class QuantitativeDiscoveryLab:
             profile["snapshot_sources"] += time.perf_counter() - t_snapshot
         combined_source = pd.concat([frame for frame in [operations, historical_events] if not frame.empty], ignore_index=True, copy=False)
         if not config.compute_source_snapshots:
-            # Keep only one large frame alive during the heavy analysis stage.
+            # Mantém apenas um dataframe grande ativo durante a etapa de análise intensiva.
             historical_events = pd.DataFrame()
         logger.info("Combined dataset assembled | rows=%s", len(combined_source))
 
@@ -406,7 +406,7 @@ class QuantitativeDiscoveryLab:
         if frames:
             combined = pd.concat(frames, ignore_index=True)
             dedupe_cols = [col for col in ["operation_id", "entry_time", "symbol", "timeframe", "direction", "regime"] if col in combined.columns]
-            # Full-base runs can exceed available memory when factorizing tens of millions of rows.
+            # Execuções com a base completa podem exceder a memória disponível ao fatorar dezenas de milhões de linhas.
             if dedupe_cols and len(combined) <= 2_000_000:
                 combined = combined.drop_duplicates(subset=dedupe_cols)
                 dedupe_applied = True
@@ -1107,7 +1107,7 @@ class QuantitativeDiscoveryLab:
         return 0
 
     def _prepare_dataset(self, df: pd.DataFrame) -> pd.DataFrame:
-        # Avoid deep copies for multi-million-row runs; we only need a mutable working view.
+        # Evita cópias profundas em execuções com milhões de linhas; precisamos apenas de uma visualização de trabalho mutável.
         work = df.copy(deep=False)
 
         def _series_or_default(column: str, default_value: Any) -> pd.Series:

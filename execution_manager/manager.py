@@ -73,7 +73,7 @@ class ExecutionManager:
             if not same_execution:
                 self.queue.clear()
             else:
-                # On restart, convert in-flight jobs back to waiting so the queue can recover.
+                # Ao reiniciar, converte os trabalhos em andamento de volta para aguardando, para que a fila possa se recuperar.
                 for job in existing:
                     if job.status in {JobStatus.RUNNING, JobStatus.RECOVERED, JobStatus.RETRIED}:
                         self.queue.mark(job.id, JobStatus.WAITING)
@@ -251,7 +251,7 @@ class ExecutionManager:
             execution_id=self.execution_id,
         )
 
-        # Soft recovery: reset failed/running jobs to waiting so queue can continue from persisted processed.
+        # Recuperação gradual: redefine trabalhos com falha/em execução para aguardando, para que a fila continue a partir do valor persistido de processed.
         with self._lock:
             for job in self.queue.list():
                 if job.status in {JobStatus.RUNNING, JobStatus.FAILED}:

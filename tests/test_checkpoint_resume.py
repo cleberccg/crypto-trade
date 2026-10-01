@@ -1,4 +1,4 @@
-"""Tests checkpoint persistence and resume state from HistoryListener."""
+"""Testa a persistência de checkpoints e a retomada de estado pelo HistoryListener."""
 from __future__ import annotations
 
 from datetime import datetime, timezone

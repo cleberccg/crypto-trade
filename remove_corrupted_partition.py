@@ -3,7 +3,7 @@ import json
 
 manifest = json.load(open('data/aggtrades/manifest.json'))
 
-# Remove BTCUSDT|2026-02 due to persistent data quality issue
+# Remove BTCUSDT|2026-02 devido a um problema persistente de qualidade dos dados
 if 'BTCUSDT|2026-02' in manifest['partitions']:
     del manifest['partitions']['BTCUSDT|2026-02']
     
@@ -13,7 +13,7 @@ if 'BTCUSDT|2026-02' in manifest['partitions']:
     print('✓ Deleted BTCUSDT|2026-02 from manifest')
     print(f'Total valid partitions now: {len(manifest["partitions"])}')
     
-    # Count by symbol
+    # Conta por símbolo
     btc = sum(1 for k in manifest['partitions'] if 'BTCUSDT' in k)
     eth = sum(1 for k in manifest['partitions'] if 'ETHUSDT' in k)
     print(f'BTCUSDT: {btc}, ETHUSDT: {eth}')

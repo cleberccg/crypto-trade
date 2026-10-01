@@ -1,4 +1,4 @@
-"""SuperTrend V1 strategy implementation for controlled FASE 12 validation."""
+"""Implementação da estratégia SuperTrend V1 para validação controlada da FASE 12."""
 from __future__ import annotations
 
 from datetime import datetime

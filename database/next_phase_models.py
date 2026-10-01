@@ -1,6 +1,6 @@
-"""Non-destructive next-phase ORM models prepared for post-run activation.
+"""Modelos ORM aditivos da próxima fase, preparados para ativação após a execução.
 
-These models are additive and not wired to destructive migrations.
+Esses modelos são aditivos e não estão associados a migrações destrutivas.
 """
 from __future__ import annotations
 

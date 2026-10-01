@@ -1,4 +1,4 @@
-"""Execution session and strategy version metadata tables."""
+"""Tabelas de metadados de sessões de execução e versões de estratégias."""
 from __future__ import annotations
 
 from datetime import datetime

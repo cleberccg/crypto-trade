@@ -1,4 +1,4 @@
-"""Permanent crypto strategy research knowledge base (FASE 11)."""
+"""Base de conhecimento permanente para pesquisa de estratégias de criptoativos (FASE 11)."""
 
 from research.crypto_strategy_knowledge_base.service import (
     CryptoStrategyKnowledgeBaseService,

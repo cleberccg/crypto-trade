@@ -76,7 +76,7 @@ class NotificationService:
         self._queue.put((notification_type, title, message, execution_id, destination))
 
     def publish_event(self, event_type: str, payload: dict) -> None:
-        # Channel toggles
+        # Ativação/desativação dos canais
         if event_type.endswith("failed") and not settings.telegram.send_errors:
             return
         if event_type.endswith("finished") and not settings.telegram.send_success:

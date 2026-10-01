@@ -14,7 +14,7 @@ import subprocess
 from datetime import datetime
 
 def run_overnight_campaign():
-    """Execute overnight campaign with intelligent prioritization."""
+    """Executa a campanha noturna com priorização inteligente."""
     
     print("\n" + "="*70)
     print("CAMPANHA NOTURNA - DESCOBERTA INTELIGENTE DE ESTRATÉGIAS")
@@ -34,8 +34,8 @@ def run_overnight_campaign():
         "overnight-campaign",
         "--symbol", "BTC/USDT",
         "--timeframe", "5m",
-        "--batch-size", "50",  # Allow many strategies
-        "--target-paper-candidates", "3",  # Find 3 candidates instead of 1
+        "--batch-size", "50",  # Permite várias estratégias
+        "--target-paper-candidates", "3",  # Encontra 3 candidatas em vez de 1
         "--campaign-end-hour", "9",  # Stop at 09:00
         "--campaign-max-seconds", "32400",  # 9 hours
         "--window-days", "120",

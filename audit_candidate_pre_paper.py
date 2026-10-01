@@ -1,16 +1,16 @@
-"""Pre-Paper audit of a FROZEN candidate strategy (no optimization, no rule
-changes, FINAL_HOLDOUT never loaded, Paper Live untouched).
+"""Auditoria pré-Paper de uma estratégia candidata FROZEN (sem otimização, sem alterações
+nas regras, FINAL_HOLDOUT nunca carregado, Paper Live intocado).
 
-Default target: ExtRepl_RegimeAdaptive_SMA200_MR on BNB/USDT 4h.
+Alvo padrão: ExtRepl_RegimeAdaptive_SMA200_MR em BNB/USDT 4h.
 
-Reuses, unmodified:
+Reutiliza, sem alterações:
 - RegimeAdaptiveStrategy / load_base_candles / resample_ohlcv / dev_val_oos_split
   / BASE_FEE / CAPITAL (research/external_strategy_replication_strategies.py)
 - _run_once (run_external_strategy_replication.py)
 - walk_forward (diagnose_oos_failure.py)
 - _profit_factor / BOOTSTRAP_ITERATIONS (strategy_discovery_cycle1.py)
 
-Read-only: writes no registry, no report file.
+Somente leitura: não grava registro nem arquivo de relatório.
 """
 from __future__ import annotations
 
@@ -64,14 +64,14 @@ def main() -> int:
     frame = resample_ohlcv(load_base_candles(SYMBOL), TIMEFRAME)
     _log(f"FRAME bars={len(frame)} start={frame.index[0]} end={frame.index[-1]}")
 
-    # --- base run over the full pre-holdout history (DEV+VAL+OOS contiguous) ---
+    # --- execução-base em todo o histórico anterior ao holdout (DEV+VAL+OOS contíguos) ---
     base = _run_once(RegimeAdaptiveStrategy(**PARAMS), frame, BASE_FEE, WARMUP)
     trades = base.trades
     pnl = _pnls(trades)
     _log(f"ETAPA0_FULL_HISTORY={_stats(pnl)} sharpe={round(base.metrics.sharpe_ratio,3)} "
          f"maxdd={round(base.metrics.max_drawdown_pct,4)}")
 
-    # --- ETAPA 2: walk-forward, frozen params, same windows as before ---
+    # --- ETAPA 2: walk-forward, parâmetros congelados, mesmas janelas de antes ---
     _log("STAGE=ETAPA2_WALK_FORWARD")
     windows = walk_forward(lambda: RegimeAdaptiveStrategy(**PARAMS), frame, WARMUP, WINDOW_BARS, STEP_BARS)
     for w in windows:
@@ -159,7 +159,7 @@ def main() -> int:
         rob_cls = "FRAGILE"
     _log(f"PARAM_ROBUSTNESS variants_pf>1={n_above1}/{len(pf_variants)} max_rel_pf_drop={round(rel_drop,3)} -> {rob_cls}")
 
-    # --- ETAPA 8: cost stress (diagnostic only, official model unchanged) ---
+    # --- ETAPA 8: estresse de custos (somente diagnóstico; modelo oficial inalterado) ---
     _log("STAGE=ETAPA8_COST_STRESS")
     for label, mult in (("BASE", 1.0), ("1.25x", 1.25), ("1.50x", 1.50)):
         r = base if mult == 1.0 else _run_once(RegimeAdaptiveStrategy(**PARAMS), frame, BASE_FEE * mult, WARMUP)
@@ -177,7 +177,7 @@ def main() -> int:
          f"EXP_CI95=[{round(float(np.percentile(exp_b,2.5)),4)}, {round(float(np.percentile(exp_b,97.5)),4)}] "
          f"P(PF>1)={round(float((pf_b > 1.0).mean()),4)}")
 
-    # --- OOS-only reference (already known, recomputed for consistency) ---
+    # --- Referência somente OOS (já conhecida, recalculada para manter consistência) ---
     for split in dev_val_oos_split(frame):
         r = _run_once(RegimeAdaptiveStrategy(**PARAMS), split.frame, BASE_FEE, WARMUP)
         _log(f"SPLIT_{split.name}={_stats(_pnls(r.trades))} sharpe={round(r.metrics.sharpe_ratio,3)} "
@@ -254,5 +254,80 @@ def final_b_audit() -> int:
     return 0
 
 
+def _load_stored_4h_pre_holdout() -> pd.DataFrame:
+    """Candles nativas de 4h do banco de dados (tabela reparada), excluindo o holdout."""
+    from datetime import datetime, timezone
+
+    from database.connection import get_session
+    from database.repositories import CandleRepository
+    from research.external_strategy_replication_strategies import FINAL_HOLDOUT_START
+
+    with get_session() as session:
+        rows = CandleRepository(session).get_range(
+            SYMBOL, TIMEFRAME, datetime(2015, 1, 1, tzinfo=timezone.utc),
+            FINAL_HOLDOUT_START.to_pydatetime() - pd.Timedelta(TIMEFRAME),
+        )
+        frame = pd.DataFrame(
+            [{"open": c.open, "high": c.high, "low": c.low, "close": c.close, "volume": c.volume} for c in rows],
+            index=pd.DatetimeIndex([c.open_time for c in rows], tz="UTC"),
+        )
+    frame = frame.sort_index()
+    return frame[frame.index < FINAL_HOLDOUT_START].astype(float)
+
+
+def _full_metrics(result) -> dict[str, float]:
+    trades = result.trades
+    pnl = _pnls(trades)
+    fees = float(sum(t.get("entry_fee", 0.0) + t.get("exit_fee", 0.0) for t in trades))
+    return {
+        "trades": int(len(pnl)),
+        "gross_pnl": round(float(pnl.sum()) + fees, 2),
+        "total_fees": round(fees, 2),
+        "net_pnl": round(float(pnl.sum()), 2),
+        "net_pf": round(_profit_factor(pnl), 3),
+        "expectancy": round(float(pnl.mean()), 4) if len(pnl) else 0.0,
+        "sharpe": round(result.metrics.sharpe_ratio, 3),
+        "max_drawdown": round(result.metrics.max_drawdown_pct, 4),
+        "win_rate": round(float((pnl > 0).mean()), 4) if len(pnl) else 0.0,
+    }
+
+
+def revalidate_frozen_on_stored_4h() -> int:
+    """Sma200RegimeGated congelada na tabela nativa de 4h reparada versus a referência original reamostrada de 15m.
+    Os limites das partições são obtidos da referência original (não são redefinidos)."""
+    from research.external_strategy_replication_strategies import CANDIDATE_MIN_NET_PF, CANDIDATE_MIN_TRADES_PER_SPLIT
+
+    logging.disable(logging.CRITICAL)
+    factory = lambda: Sma200RegimeGatedStrategy(**PARAMS)
+    baseline = resample_ohlcv(load_base_candles(SYMBOL), TIMEFRAME)
+    corrected = _load_stored_4h_pre_holdout()
+    bounds = [(s.name, s.frame.index[0], s.frame.index[-1]) for s in dev_val_oos_split(baseline)]
+    common = baseline.index.intersection(corrected.index)
+    close_diff = (baseline.loc[common, "close"] - corrected.loc[common, "close"]).abs() / corrected.loc[common, "close"]
+    print(f"FRAMES baseline_15m_resampled={len(baseline)} corrected_4h={len(corrected)} "
+          f"bars_close_diff_gt_1bp={int((close_diff > 1e-4).sum())}")
+    print("SPLITS " + " ".join(f"{n}={a}..{b}" for n, a, b in bounds))
+
+    verdict = {}
+    for label, frame in (("BASELINE", baseline), ("CORRECTED", corrected)):
+        print(f"{label}_FULL={_full_metrics(_run_once(factory(), frame, BASE_FEE, WARMUP))}")
+        gate = True
+        for name, start, end in bounds:
+            part = frame[(frame.index >= start) & (frame.index <= end)]
+            s = _stats(_pnls(_run_once(factory(), part, BASE_FEE, WARMUP).trades))
+            print(f"{label}_{name}={s}")
+            gate &= s["net_pf"] > 1.0 and s["expectancy"] > 0 and s["trades"] >= CANDIDATE_MIN_TRADES_PER_SPLIT
+            if name == "OOS":
+                gate &= s["net_pf"] >= CANDIDATE_MIN_NET_PF
+        print(f"{label}_WF={_wf_metrics(factory, frame)}")
+        verdict[label] = gate
+        print(f"{label}_PASSES_ORIGINAL_GATE={'YES' if gate else 'NO'}")
+    print(f"CORRECTED_DATA_STILL_SUPPORTS_STRATEGY={'YES' if verdict['CORRECTED'] else 'NO'}")
+    print("FINAL_HOLDOUT_USED=NO PAPER_LIVE_TOUCHED=NO")
+    return 0
+
+
 if __name__ == "__main__":
-    raise SystemExit(final_b_audit())
+    import sys
+
+    raise SystemExit(revalidate_frozen_on_stored_4h() if "--revalidate-stored-4h" in sys.argv else final_b_audit())

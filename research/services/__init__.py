@@ -1,4 +1,4 @@
-"""Research services package placeholder for next-phase activation."""
+"""Espaço reservado do pacote de serviços da pesquisa para ativação na próxima fase."""
 
 from research.services.strategy_discovery_pipeline import DiscoveryPilotPlan, DiscoveryWeights, run_strategy_discovery_pipeline
 from research.services.scientific_robustness_validation import (

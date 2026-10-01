@@ -1,6 +1,6 @@
 ﻿"""
-Input validation utilities used at system boundaries (API responses, user
-inputs, configuration).  Pure functions; no side effects.
+Utilitários de validação de entradas usados nos limites do sistema (respostas
+da API, entradas de usuário e configuração). Funções puras, sem efeitos colaterais.
 """
 from __future__ import annotations
 
@@ -21,9 +21,9 @@ _KNOWN_QUOTES = (
 
 
 def normalize_symbol(symbol: str) -> str:
-    """Normalize symbol variants to canonical BASE/QUOTE format.
+    """Normaliza variantes de símbolos para o formato canônico BASE/QUOTE.
 
-    Examples:
+        Exemplos:
         BTCUSDT -> BTC/USDT
         BTC-USDT -> BTC/USDT
         btc/usdt -> BTC/USDT
@@ -49,7 +49,7 @@ def normalize_symbol(symbol: str) -> str:
 
 
 def normalize_timeframe(timeframe: str) -> str:
-    """Normalize timeframe aliases to canonical format used by the platform."""
+    """Normaliza aliases de períodos para o formato canônico usado pela plataforma."""
     raw = timeframe.strip()
     if raw == "1M":
         return "1M"
@@ -68,18 +68,18 @@ def normalize_timeframe(timeframe: str) -> str:
 
 def validate_positive_float(value: Any, name: str) -> float:
     """
-    Ensure *value* can be cast to a positive float.
+    Garante que *value* possa ser convertido para um float positivo.
 
     Args:
-        value: The value to validate.
-        name: Human-readable field name used in error messages.
+        value: Valor a validar.
+        name: Nome legível do campo usado nas mensagens de erro.
 
     Returns:
-        The validated float value.
+        O valor float validado.
 
     Raises:
-        TypeError: If *value* cannot be cast to float.
-        ValueError: If *value* is not positive (> 0).
+        TypeError: se *value* não puder ser convertido para float.
+        ValueError: se *value* não for positivo (> 0).
     """
     try:
         result = float(value)
@@ -92,17 +92,17 @@ def validate_positive_float(value: Any, name: str) -> float:
 
 def validate_percentage(value: Any, name: str) -> float:
     """
-    Ensure *value* is a float in the (0, 1] range.
+    Garante que *value* seja um float no intervalo (0, 1].
 
     Args:
-        value: The value to validate.
-        name: Human-readable field name used in error messages.
+        value: Valor a validar.
+        name: Nome legível do campo usado nas mensagens de erro.
 
     Returns:
-        The validated percentage as a float.
+        O percentual validado como float.
 
     Raises:
-        ValueError: If *value* is outside the (0, 1] range.
+        ValueError: se *value* estiver fora do intervalo (0, 1].
     """
     result = validate_positive_float(value, name)
     if result > 1.0:
@@ -115,16 +115,16 @@ def validate_percentage(value: Any, name: str) -> float:
 
 def validate_symbol(symbol: str) -> str:
     """
-    Validate and normalize a trading pair symbol (e.g. ``BTC/USDT``).
+    Valida e normaliza o símbolo de um par de negociação (por exemplo, ``BTC/USDT``).
 
     Args:
-        symbol: Trading symbol string.
+        symbol: Texto com o símbolo de negociação.
 
     Returns:
-        Upper-cased, stripped symbol.
+        Símbolo sem espaços e em letras maiúsculas.
 
     Raises:
-        ValueError: If the symbol format is invalid.
+        ValueError: se o formato do símbolo for inválido.
     """
     symbol = normalize_symbol(symbol)
     if "/" not in symbol or len(symbol) < 5:
@@ -136,16 +136,16 @@ def validate_symbol(symbol: str) -> str:
 
 def validate_timeframe(timeframe: str) -> str:
     """
-    Validate that a timeframe string is a recognized ccxt/Binance value.
+    Valida se o texto do período corresponde a um valor reconhecido pelo ccxt/Binance.
 
     Args:
-        timeframe: Timeframe string (e.g. ``1m``, ``1h``, ``1d``).
+        timeframe: Texto do período (por exemplo, ``1m``, ``1h``, ``1d``).
 
     Returns:
-        The validated timeframe string.
+        O texto do período validado.
 
     Raises:
-        ValueError: If the timeframe is not recognized.
+        ValueError: se o período não for reconhecido.
     """
     timeframe = normalize_timeframe(timeframe)
     valid_timeframes = {

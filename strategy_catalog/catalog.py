@@ -19,7 +19,7 @@ class StrategyCatalogEntry:
 
 
 class StrategyCatalog:
-    """Permanent catalog with public classic strategies and metadata."""
+    """Catálogo permanente com estratégias clássicas públicas e seus metadados."""
 
     def __init__(self) -> None:
         today = date.today()

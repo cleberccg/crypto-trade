@@ -1,5 +1,5 @@
 ﻿"""
-Relative Strength Index (RSI) indicator.
+Indicador de índice de força relativa (Relative Strength Index, RSI).
 """
 from __future__ import annotations
 
@@ -10,13 +10,13 @@ from indicators.base_indicator import BaseIndicator
 
 class RSI(BaseIndicator):
     """
-    Wilder's Relative Strength Index.
+    Índice de força relativa (Relative Strength Index) de Wilder.
 
-    Overbought threshold: typically 70.
-    Oversold threshold: typically 30.
+    Limite de sobrecompra: geralmente 70.
+    Limite de sobrevenda: geralmente 30.
 
-    Args:
-        period: Lookback period (default 14).
+    Argumentos:
+        period: Período retroativo (padrão 14).
     """
 
     def __init__(self, period: int = 14) -> None:
@@ -30,14 +30,14 @@ class RSI(BaseIndicator):
 
     def calculate(self, df: pd.DataFrame) -> pd.Series:
         """
-        Compute RSI using Wilder's smoothing (equivalent to EMA with
+        Calcula o RSI usando a suavização de Wilder (equivalente à EMA com
         ``com = period - 1``).
 
-        Args:
-            df: OHLCV DataFrame.
+        Argumentos:
+            df: DataFrame OHLCV.
 
-        Returns:
-            Series named ``rsi_<period>`` with values in [0, 100].
+        Retorno:
+            Series chamada ``rsi_<period>`` com valores no intervalo [0, 100].
         """
         self._validate_min_length(df, self._period + 1)
 

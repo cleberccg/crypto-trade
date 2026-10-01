@@ -1,4 +1,4 @@
-"""Permanent strategy diagnostics for paper/live operation."""
+"""Diagnósticos permanentes de estratégias para operações paper/live."""
 from __future__ import annotations
 
 from collections import Counter
@@ -39,7 +39,7 @@ class StrategyDiagnosticsConfig:
 
 
 class StrategyDiagnosticsService:
-    """Audits the operational chain from candles to closed trades."""
+    """Audita a cadeia operacional, desde os candles até as operações encerradas."""
 
     def __init__(self, base_dir: Path) -> None:
         self._base_dir = base_dir

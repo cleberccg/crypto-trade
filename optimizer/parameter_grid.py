@@ -1,4 +1,4 @@
-"""Parameter grid generation for strategy optimization."""
+"""Geração de grades de parâmetros para otimização de estratégias."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -8,7 +8,7 @@ from typing import Iterable
 
 @dataclass(frozen=True)
 class ParameterGrid:
-    """Defines the optimizer search space."""
+    """Define o espaço de busca do otimizador."""
 
     ema_fast_min: int = 5
     ema_fast_max: int = 30
@@ -246,10 +246,10 @@ class ParameterGrid:
         return _generator()
 
     def _reversao_nextgen_combinations(self, limit: int | None = None) -> Iterable[dict[str, float | int]]:
-        """Parameter combinations for ReversaoNextGenV1 strategy (reversal edge detection)."""
+        """Combinações de parâmetros da estratégia ReversaoNextGenV1 (detecção de vantagem de reversão)."""
         ema_fast_values = [15, 20, 25]
         ema_slow_values = [45, 50]
-        rsi_period_values = [14]  # Fixed
+        rsi_period_values = [14]  # Fixo
         atr_period_values = [14]  # Fixed
         atr_stop_multiplier_values = [1.5, 2.0, 2.5]
         risk_reward_ratio_values = [2.5, 3.0, 3.18, 3.8]
@@ -277,7 +277,7 @@ class ParameterGrid:
         if target <= 0:
             return []
 
-        # Coprime step guarantees full-cycle deterministic permutation over total_space.
+        # Um passo coprimo garante uma permutação determinística de ciclo completo em todo o espaço total.
         start = self.sample_seed % total_space
         step = max(1, total_space - 1)
 
@@ -301,7 +301,7 @@ class ParameterGrid:
         return _generator()
 
     def _supertrend_combinations(self, limit: int | None = None) -> Iterable[dict[str, float | int]]:
-        """Compact SuperTrend search space for controlled phase pipelines."""
+        """Espaço de busca compacto de SuperTrend para pipelines de fases controladas."""
         atr_period_values = [7, 10, 14]
         atr_multiplier_values = [2.0, 2.5, 3.0]
         trend_confirmation_values = [1, 2, 3]

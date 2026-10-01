@@ -1,4 +1,4 @@
-"""Helpers to capture historical execution data without changing core engines."""
+"""Funções auxiliares para capturar dados históricos de execução sem alterar os mecanismos centrais."""
 from __future__ import annotations
 
 from dataclasses import dataclass, field

@@ -1,26 +1,26 @@
-"""Autonomous continuous Strategy Discovery campaign (single runner, no cycles).
+"""Campanha contínua e autônoma de descoberta de estratégias (executor único, sem ciclos).
 
-Reuses existing infrastructure instead of building parallel plumbing:
-- data/cache_minute_bars/ + DATASET_HASH + load_or_build_minute_bars() and
-  add_microstructure_features() from discover_microstructure_aggtrades.py
-  (aggTrades -> 1-minute microstructure bars, hash-verified cache).
-- classify_market_regimes() from research/services/market_regime_router_phase18.py.
-- _entry_metrics(), _passes_entry_gate(), ENTRY_* gate constants, BASE_FEE,
-  STRESS_FEE, _bootstrap() from strategy_discovery_cycle1.py (identical
-  scientific gate used by every prior Discovery cycle).
-- REJECTED_ENTRY_FAMILIES registry convention (extended here, not replaced).
+Reutiliza a infraestrutura existente em vez de criar uma estrutura paralela:
+- data/cache_minute_bars/ + DATASET_HASH + load_or_build_minute_bars() e
+    add_microstructure_features() de discover_microstructure_aggtrades.py
+    (aggTrades -> candles de microestrutura de 1 minuto, cache com hash verificado).
+- classify_market_regimes() de research/services/market_regime_router_phase18.py.
+- _entry_metrics(), _passes_entry_gate(), constantes de gate ENTRY_*, BASE_FEE,
+  STRESS_FEE, _bootstrap() de strategy_discovery_cycle1.py (mesmo gate
+  científico usado em todos os ciclos de Discovery anteriores).
+- Convenção de registro REJECTED_ENTRY_FAMILIES (ampliada aqui, não substituída).
 
-Adds only what does not exist yet:
-- 5 new microstructure features/hypotheses (FLOW_EXHAUSTION, TRADE_SIZE_SHIFT,
-  ARRIVAL_RATE_SHOCK, PRICE_FLOW_DIVERGENCE, LARGE_TRADE_CONCENTRATION), each
-  genuinely distinct from the 5 already-rejected families.
-- A persistent JSON registry (restart-safe: completed hypotheses/configs are
-  never re-run) and a process lock (same pattern as collect_aggtrades.py).
-- A single continuous campaign loop with cost-stress + light robustness
-  checks, stopping at 2 CANDIDATEs or SEARCH_SPACE_EXHAUSTED.
+Adiciona somente o que ainda não existe:
+- 5 novos recursos/hipóteses de microestrutura (FLOW_EXHAUSTION, TRADE_SIZE_SHIFT,
+    ARRIVAL_RATE_SHOCK, PRICE_FLOW_DIVERGENCE, LARGE_TRADE_CONCENTRATION), cada um
+        realmente distinto das 5 famílias já rejeitadas.
+- Um registro JSON persistente (seguro para reinicialização: hipóteses/configurações
+    concluídas nunca são executadas novamente) e um bloqueio de processo (mesmo padrão de collect_aggtrades.py).
+- Um único ciclo contínuo de campanha, com estresse de custos e verificações leves
+    de robustez, que para ao encontrar 2 CANDIDATEs ou atingir SEARCH_SPACE_EXHAUSTED.
 
-Does not touch BacktestEngine, RiskManager, PositionSizer or Paper Live.
-No strategy is registered or deployed from this script.
+Não altera BacktestEngine, RiskManager, PositionSizer nem Paper Live.
+Nenhuma estratégia é registrada ou implantada por este script.
 """
 from __future__ import annotations
 
@@ -62,9 +62,9 @@ LOCK_PATH = BASE_DIR / "autonomous_discovery.lock"
 OUT_JSON = BASE_DIR / "autonomous_discovery_latest.json"
 
 TARGET_CANDIDATES = 2
-SLIPPAGE_BPS = 2.0  # extra one-way stress cost on top of STRESS_FEE
+SLIPPAGE_BPS = 2.0  # Custo adicional de estresse em uma direção, além de STRESS_FEE
 
-# Already exhausted in prior sessions -- never re-tested here (any threshold).
+# Já esgotado em sessões anteriores — não será testado novamente aqui (em nenhum limiar).
 REJECTED_FAMILIES = {
     "BLOCK_FLOW_SIGNAL",
     "BURST_PERSISTENCE",
@@ -99,44 +99,44 @@ def _zscore(series: pd.Series, window: int = 30) -> pd.Series:
 
 
 def add_extended_features(frame: pd.DataFrame) -> pd.DataFrame:
-    """Adds 5 new, genuinely distinct microstructure signals on top of the
-    already-cached bars (which include signed_volume, cvd, intensity_z,
-    avg_trade_size, trade_count, max_aggressor_run from
+    """Adiciona 5 sinais de microestrutura novos e realmente distintos às barras
+    já armazenadas em cache (que incluem signed_volume, cvd, intensity_z,
+    avg_trade_size, trade_count e max_aggressor_run de
     discover_microstructure_aggtrades.add_microstructure_features)."""
     df = frame.copy()
     sign_flow = np.sign(df["signed_volume"])
 
-    # FLOW_EXHAUSTION: a recent burst of activity (last 3 bars) followed by
-    # the current bar going quiet again. Distinct from BURST_PERSISTENCE
-    # (which fires DURING the burst); this fires AFTER it fades.
+    # FLOW_EXHAUSTION: um pico recente de atividade (nas últimas 3 barras) seguido
+    # pela barra atual voltando à baixa atividade. Diferente de BURST_PERSISTENCE,
+    # que é acionado DURANTE o pico, este é acionado DEPOIS que ele diminui.
     burst_recent = df["intensity_z"].rolling(3, min_periods=3).max().shift(1)
     quiet_now = df["intensity_z"] < 0
     flow_dir_recent = np.sign(df["signed_volume"].rolling(3, min_periods=3).sum().shift(1))
     df["flow_exhaustion_signal"] = burst_recent.where(quiet_now) * flow_dir_recent
 
-    # TRADE_SIZE_SHIFT: z-scored average trade size alone (distribution
-    # shift), signed by current aggressor direction. Distinct from
-    # BLOCK_FLOW_SIGNAL (imbalance * size ratio, already rejected).
+    # TRADE_SIZE_SHIFT: somente o tamanho médio da negociação convertido em escore z (mudança
+    # na distribuição), com sinal definido pela direção do agressor atual. Diferente de
+    # BLOCK_FLOW_SIGNAL (desequilíbrio * razão de tamanhos, já rejeitado).
     size_z = _zscore(df["avg_trade_size"])
     df["trade_size_shift_signal"] = size_z * sign_flow
 
-    # ARRIVAL_RATE_SHOCK: activity-intensity shock signed by recent PRICE
-    # momentum (not by order flow), a mechanically different pairing than
-    # BURST_PERSISTENCE (signed by flow + run-length).
+    # ARRIVAL_RATE_SHOCK: choque na intensidade da atividade com sinal definido pelo momentum
+    # recente do PREÇO (não pelo fluxo de ordens), uma combinação mecanicamente distinta de
+    # BURST_PERSISTENCE (sinal definido pelo fluxo + tamanho da sequência).
     price_mom_dir = np.sign(df["close"].pct_change(3))
     df["arrival_rate_shock_signal"] = df["intensity_z"] * price_mom_dir
 
-    # PRICE_FLOW_DIVERGENCE: price return and order flow moving in opposite
-    # directions over the same 10-bar window; signal takes the flow's
-    # sign/magnitude when it contradicts price (flow leads, price catches up).
+    # PRICE_FLOW_DIVERGENCE: retorno do preço e fluxo de ordens movendo-se em direções
+    # opostas na mesma janela de 10 barras; o sinal usa o sinal/magnitude do fluxo
+    # quando ele contradiz o preço (o fluxo se adianta e o preço o acompanha).
     price_ret_z = _zscore(df["close"].pct_change(10))
     flow_sum_z = _zscore(df["signed_volume"].rolling(10, min_periods=10).sum())
     opposite = np.sign(price_ret_z) != np.sign(flow_sum_z)
     df["price_flow_divergence_signal"] = flow_sum_z.where(opposite)
 
-    # LARGE_TRADE_CONCENTRATION: unusually large average trade size while
-    # trade COUNT is below its trailing average (few, large trades rather
-    # than many small ones), signed by aggressor direction.
+    # LARGE_TRADE_CONCENTRATION: tamanho médio das negociações excepcionalmente grande enquanto
+    # a CONTAGEM de negociações está abaixo da média histórica (poucas negociações grandes
+    # em vez de muitas pequenas), com sinal definido pela direção do agressor.
     trade_count_z = _zscore(df["trade_count"])
     few_trades = trade_count_z < 0
     df["large_trade_concentration_signal"] = size_z.where(few_trades) * sign_flow
@@ -155,9 +155,9 @@ class HypothesisConfig:
         return f"{self.family}|{self.feature}|{self.threshold}|{self.direction}"
 
 
-# Pre-registered, finite search space for this campaign round (not scanned
-# by outcome). Two a priori thresholds per direction per family, following
-# the same non-outcome-driven calibration used for FLOW_ABSORPTION.
+# Espaço de busca finito e pré-registrado para esta rodada da campanha (não pesquisado
+# em função dos resultados). Dois limiares a priori por direção e família, seguindo
+# a mesma calibração não orientada pelos resultados usada para FLOW_ABSORPTION.
 PENDING_HYPOTHESES: list[HypothesisConfig] = []
 for _family, _feature in (
     ("FLOW_EXHAUSTION", "flow_exhaustion_signal"),
@@ -369,7 +369,7 @@ def main() -> int:
                 _log(f"STATUS: RUNNING CURRENT_HYPOTHESIS={config.family} CURRENT_STAGE=REJECTED_DEV CELLS={len(dev_cells)}")
                 continue
 
-            # Validation on the specific surviving cells only (no recalibration).
+            # Valida somente as células sobreviventes específicas (sem recalibração).
             best_survivor = None
             for cell in dev_survivors:
                 val_records = _cell_records(frames, config, "VALIDATION", regimes, cell["symbol"], cell["regime"], cell["horizon"])

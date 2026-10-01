@@ -230,7 +230,7 @@ def generate_research_phase2_outputs(base_dir: Path) -> dict[str, str]:
     ]
     summary_html.write_text("\n".join(html), encoding="utf-8")
 
-    # Minimal valid PDF bytes placeholder without external dependencies.
+    # Bytes mínimos de um PDF válido como placeholder, sem dependências externas.
     summary_pdf.write_bytes(b"%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Count 0>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF")
 
     return {

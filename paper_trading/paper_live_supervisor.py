@@ -1,4 +1,4 @@
-"""Supervisor for resilient PaperLive campaign execution."""
+"""Supervisor para execução resiliente de campanhas PaperLive."""
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
@@ -419,8 +419,8 @@ class PaperLiveSupervisorService:
         try:
             payload = json.loads(state_file.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError):
-            # On Windows, atomic replace/write can briefly lock the file.
-            # Treat transient read failures as "no progress snapshot" and retry next cycle.
+            # No Windows, uma substituição/gravação atômica pode bloquear o arquivo brevemente.
+            # Trata falhas temporárias de leitura como "nenhum snapshot de progresso" e tenta novamente no próximo ciclo.
             return None
         if not isinstance(payload, dict):
             return None

@@ -5,7 +5,7 @@ from pathlib import Path
 
 
 def atomic_write_text(path: Path, content: str, *, encoding: str = "utf-8") -> None:
-    """Write text atomically using a sibling temp file + os.replace."""
+    """Grava texto atomicamente usando um arquivo temporário irmão e os.replace."""
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp_path = path.with_suffix(path.suffix + ".tmp")
 

@@ -1,4 +1,4 @@
-"""Edge drift monitor for specialized paper trading operations."""
+"""Monitor de deriva da vantagem para operações especializadas de paper trading."""
 from __future__ import annotations
 
 import json
@@ -196,7 +196,7 @@ def _history_stability(history: list[dict[str, Any]]) -> dict[str, float]:
 
 
 class EdgeDriftMonitorService:
-    """Continuously compares live paper trading against backtest and rolling OOS references."""
+    """Compara continuamente o paper trading ao vivo com referências de backtest e OOS móvel."""
 
     def __init__(self, base_dir: Path) -> None:
         self._base_dir = base_dir

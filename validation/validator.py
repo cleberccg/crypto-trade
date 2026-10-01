@@ -1,4 +1,4 @@
-"""Statistical validation module for optimization results with walk-forward validation."""
+"""Módulo de validação estatística de resultados de otimização com validação walk-forward."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -27,7 +27,7 @@ logger = get_logger(__name__)
 
 @dataclass(frozen=True)
 class ValidationCriteria:
-    """Minimum thresholds required for train and validation periods."""
+    """Limiares mínimos exigidos para os períodos de treinamento e validação."""
 
     min_trades: int
     min_profit_factor: float
@@ -39,7 +39,7 @@ class ValidationCriteria:
 
 @dataclass(frozen=True)
 class ValidationSummary:
-    """Validation execution summary with artifacts and ranking."""
+    """Resumo da execução de validação com artefatos e classificação."""
 
     total_candidates: int
     discarded: int
@@ -51,7 +51,7 @@ class ValidationSummary:
 
 @dataclass(frozen=True)
 class WalkForwardWindow:
-    """Train/validation date windows for walk-forward checks."""
+    """Janelas de datas de treinamento/validação para verificações walk-forward."""
 
     train_start: datetime
     train_end: datetime
@@ -60,7 +60,7 @@ class WalkForwardWindow:
 
 
 class OptimizationValidator:
-    """Runs post-optimization statistical validation and exports reports."""
+    """Executa a validação estatística pós-otimização e exporta relatórios."""
 
     def __init__(
         self,
@@ -76,10 +76,10 @@ class OptimizationValidator:
 
     @staticmethod
     def _get_available_date_range(symbol: str, timeframe: str) -> tuple[datetime | None, datetime | None]:
-        """Query database for actual min/max dates of available candles for a symbol/timeframe.
+        """Consulta no banco as datas mínima/máxima reais dos candles disponíveis para um ativo/período.
         
         Returns:
-            Tuple of (min_date, max_date) or (None, None) if no candles found.
+            Tupla (min_date, max_date) ou (None, None) se nenhum candle for encontrado.
         """
         symbol = validate_symbol(symbol)
         timeframe = validate_timeframe(timeframe)
@@ -105,10 +105,10 @@ class OptimizationValidator:
         validation_start: datetime,
         validation_end: datetime,
     ) -> None:
-        """Pre-validation: check if required historical data exists before attempting backtests.
+        """Pré-validação: verifica se os dados históricos necessários existem antes de iniciar os backtests.
         
         Raises:
-            ValueError: With detailed information about missing data.
+            ValueError: com informações detalhadas sobre os dados ausentes.
         """
         min_available, max_available = self._get_available_date_range(symbol, timeframe)
         
@@ -349,7 +349,7 @@ class OptimizationValidator:
             validation_end=validation_end,
         )
 
-        # Pre-validate that data exists before running expensive backtests
+        # Pré-valida a existência dos dados antes de executar backtests custosos
         self.validate_data_availability(
             symbol, timeframe, train_start, train_end, validation_start, validation_end
         )
@@ -432,21 +432,23 @@ def default_validation_window(
     symbol: str = "BTC/USDT",
     timeframe: str = "5m",
 ) -> WalkForwardWindow:
-    """Build a walk-forward window that respects actual available data.
+    """Cria uma janela walk-forward que respeita os dados realmente disponíveis.
     
-    If explicit start/end are provided, uses them to define the window.
-    Otherwise, detects actual available data and splits it 70/30 train/validation.
+    Se start/end forem informados explicitamente, usa esses valores para definir
+    a janela. Caso contrário, detecta os dados disponíveis e os divide em 70/30
+    para treinamento/validação.
     
     Args:
-        start: Optimization start date (unused if data is detected)
-        end: Optimization end date (unused if data is detected)
-        symbol: Trading pair for data availability check
-        timeframe: Candle interval for data availability check
+        Args:
+        start: Data inicial da otimização (não usada quando os dados são detectados)
+        end: Data final da otimização (não usada quando os dados são detectados)
+        symbol: Par de negociação usado para verificar a disponibilidade dos dados
+        timeframe: Intervalo dos candles usado para verificar a disponibilidade dos dados
     
     Returns:
-        WalkForwardWindow with train/validation date ranges
+        WalkForwardWindow com os intervalos de datas de treinamento/validação
     """
-    # If explicit dates provided, use them
+    # Se forem fornecidas datas explícitas, usa-as
     if start and end:
         mid_point = start + (end - start) * 0.7
         return WalkForwardWindow(
@@ -456,7 +458,7 @@ def default_validation_window(
             validation_end=end,
         )
     
-    # Otherwise detect actual data availability
+    # Caso contrário, detecta a disponibilidade real dos dados
     min_date, max_date = OptimizationValidator._get_available_date_range(symbol, timeframe)
     
     if min_date is None or max_date is None:
@@ -465,10 +467,10 @@ def default_validation_window(
             "Run download before validation."
         )
     
-    # Split available data 70% train, 30% validation
+    # Divide os dados disponíveis em 70% para treino e 30% para validação
     total_days = (max_date - min_date).days
     if total_days < 2:
-        # Not enough data
+        # Dados insuficientes
         return WalkForwardWindow(
             train_start=min_date,
             train_end=max_date,

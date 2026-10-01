@@ -1,17 +1,18 @@
 ﻿"""
-Database bootstrap utilities.
+Utilitários de inicialização do banco de dados.
 
-This module is responsible for two things:
-1. Creating the target database/schema when using MySQL.
-2. Creating all application tables after the schema is available.
+Este módulo é responsável por duas tarefas:
+1. Criar o banco/esquema de destino ao usar MySQL.
+2. Criar todas as tabelas da aplicação depois que o esquema estiver disponível.
 
-The bootstrap is intentionally idempotent so it can run on every startup.
+A inicialização é intencionalmente idempotente, para que possa ser executada
+a cada inicialização.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass
 
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.engine import URL
 from sqlalchemy.engine.url import make_url
 
@@ -24,7 +25,7 @@ logger = get_logger(__name__)
 
 @dataclass(frozen=True)
 class BootstrapResult:
-    """Result summary returned after the bootstrap completes."""
+    """Resumo do resultado retornado após a conclusão da inicialização."""
 
     database_url: str
     database_created: bool
@@ -33,11 +34,11 @@ class BootstrapResult:
 
 def bootstrap_database(database_url: str | None = None) -> BootstrapResult:
     """
-    Ensure the configured database and tables exist.
+    Garante que o banco de dados configurado e suas tabelas existam.
 
-    For SQLite, this only creates tables.
-    For MySQL, this first creates the schema/database if it does not exist,
-    then creates the application tables.
+    Para SQLite, cria somente as tabelas.
+    Para MySQL, primeiro cria o esquema/banco de dados, caso ainda não exista,
+    e depois cria as tabelas da aplicação.
     """
     raw_url = database_url or settings.database.url
     url = make_url(raw_url)
@@ -46,14 +47,13 @@ def bootstrap_database(database_url: str | None = None) -> BootstrapResult:
     if url.get_backend_name() == "mysql":
         database_created = _create_mysql_database(url)
 
-    from database import history_models  # noqa: F401  # ensure ORM metadata is registered
-    from database import next_phase_models  # noqa: F401  # ensure ORM metadata is registered
-    from database import session_models  # noqa: F401  # ensure ORM metadata is registered
+    from database import history_models  # noqa: F401  # Garante o registro dos metadados do ORM
+    from database import next_phase_models  # noqa: F401  # Garante o registro dos metadados do ORM
+    from database import session_models  # noqa: F401  # Garante o registro dos metadados do ORM
 
     connection = DatabaseConnection(raw_url)
     connection.create_tables()
-    if url.get_backend_name() == "mysql":
-        _migrate_mysql_trade_table(connection)
+    _migrate_live_accounting_schema(connection)
     connection.dispose()
 
     logger.info(
@@ -71,10 +71,11 @@ def bootstrap_database(database_url: str | None = None) -> BootstrapResult:
 
 def _create_mysql_database(url: URL) -> bool:
     """
-    Create the MySQL schema/database if it does not exist yet.
+    Cria o esquema/banco de dados MySQL caso ainda não exista.
 
-    MySQL requires connecting to an existing server schema first, so we strip
-    the database portion from the URL and issue a CREATE DATABASE statement.
+    O MySQL exige que a conexão inicial seja feita a um esquema existente no
+    servidor; por isso, removemos da URL a parte referente ao banco e
+    executamos uma instrução CREATE DATABASE.
     """
     database_name = url.database
     if not database_name:
@@ -100,51 +101,48 @@ def _create_mysql_database(url: URL) -> bool:
     return True
 
 
-def _migrate_mysql_trade_table(connection: DatabaseConnection) -> None:
-    """Bring the legacy trades table in sync with the current ORM model."""
+def _migrate_live_accounting_schema(connection: DatabaseConnection) -> None:
+    """Adiciona campos contábeis anuláveis sem reescrever o histórico de operações existente."""
     required_columns = {
-        "execution_id": "VARCHAR(36) NULL",
-        "strategy": "VARCHAR(100) NULL",
-        "timeframe": "VARCHAR(10) NULL",
-        "risk_reward": "FLOAT NULL",
-        "duration_minutes": "FLOAT NULL",
-        "score": "FLOAT NULL",
+        "trades": {
+            "execution_id": "VARCHAR(36) NULL",
+            "strategy": "VARCHAR(100) NULL",
+            "timeframe": "VARCHAR(10) NULL",
+            "risk_reward": "FLOAT NULL",
+            "duration_minutes": "FLOAT NULL",
+            "score": "FLOAT NULL",
+            "total_fees_usdt": "FLOAT NULL",
+            "gross_pnl": "FLOAT NULL",
+            "original_quantity": "FLOAT NULL",
+            "entry_fee_usdt": "FLOAT NULL",
+            "entry_fee_allocated_usdt": "FLOAT NULL",
+            "exit_fee_usdt": "FLOAT NULL",
+            "fee_accounting_complete": "BOOLEAN NOT NULL DEFAULT 0",
+        },
+        "orders": {
+            "fee_currency": "VARCHAR(20) NULL",
+            "fee_usdt": "FLOAT NULL",
+            "fee_source": "VARCHAR(32) NOT NULL DEFAULT 'MISSING'",
+            "fee_conversion_price": "FLOAT NULL",
+            "base_fee_quantity": "FLOAT NOT NULL DEFAULT 0",
+        },
     }
 
-    with connection.engine.connect() as db_connection:
-        db_connection = db_connection.execution_options(isolation_level="AUTOCOMMIT")
-        existing_columns = {
-            row[0]
-            for row in db_connection.execute(
-                text(
-                    """
-                    SELECT COLUMN_NAME
-                    FROM INFORMATION_SCHEMA.COLUMNS
-                    WHERE TABLE_SCHEMA = DATABASE()
-                      AND TABLE_NAME = 'trades'
-                    """
+    with connection.engine.begin() as db_connection:
+        inspector = inspect(db_connection)
+        table_names = set(inspector.get_table_names())
+        for table_name, columns in required_columns.items():
+            if table_name not in table_names:
+                continue
+            existing = {column["name"] for column in inspect(db_connection).get_columns(table_name)}
+            for column_name, column_ddl in columns.items():
+                if column_name in existing:
+                    continue
+                logger.info(
+                    "Migrating %s table - adding missing column %s",
+                    table_name,
+                    column_name,
                 )
-            )
-        }
-
-        missing_columns = [
-            (name, ddl)
-            for name, ddl in required_columns.items()
-            if name not in existing_columns
-        ]
-
-        for column_name, column_ddl in missing_columns:
-            logger.info(
-                "Migrating trades table - adding missing column %s (%s)",
-                column_name,
-                column_ddl,
-            )
-            db_connection.execute(
-                text(f"ALTER TABLE trades ADD COLUMN {column_name} {column_ddl}")
-            )
-
-    if missing_columns:
-        logger.info(
-            "Trades table migration complete - added %d missing columns.",
-            len(missing_columns),
-        )
+                db_connection.execute(
+                    text(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_ddl}")
+                )

@@ -3,7 +3,7 @@ import pymysql
 conn = pymysql.connect(host='127.0.0.1', user='root', password='', database='crypto_bot')
 cursor = conn.cursor()
 
-# Check if execution exists
+# Verifica se a execução existe
 cursor.execute("""
     SELECT execution_id, status, created_at, strategy, symbol 
     FROM optimization_runs 
@@ -20,7 +20,7 @@ if result:
 else:
     print("❌ Execution NÃO encontrada no banco")
 
-# Check latest execution
+# Verifica a execução mais recente
 cursor.execute("""
     SELECT execution_id, status, created_at, strategy
     FROM optimization_runs 

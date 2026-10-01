@@ -1,5 +1,5 @@
 ﻿"""
-Exchange Package - abstractions over crypto exchange connectivity.
+Pacote exchange: abstrações para conexão com exchanges de criptomoedas.
 """
 from exchange.base_exchange import BaseExchange
 from exchange.binance_client import BinanceClient

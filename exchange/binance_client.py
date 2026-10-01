@@ -1,9 +1,10 @@
 ﻿"""
-Binance exchange adapter built on top of ccxt.
+Adaptador da exchange Binance baseado em ccxt.
 
-Design decision: ccxt is used as the primary library because it normalises
-responses across 100+ exchanges. python-binance is kept as an optional
-dependency for Binance-specific WebSocket streams not covered by ccxt.
+Decisão de projeto: ccxt é usada como biblioteca principal porque normaliza
+respostas de mais de 100 exchanges. python-binance é mantida como dependência
+opcional para streams WebSocket específicos da Binance que não são cobertos
+por ccxt.
 """
 from __future__ import annotations
 
@@ -21,14 +22,26 @@ from utils.validators import validate_symbol, validate_timeframe
 
 logger = get_logger(__name__)
 
+# As ordens reais permanecem bloqueadas, a menos que a CLI live seja iniciada com --enable-real-orders.
+_REAL_ORDERS_ARMED = False
+
+
+def arm_real_orders() -> None:
+    global _REAL_ORDERS_ARMED
+    _REAL_ORDERS_ARMED = True
+
+
+def real_orders_armed() -> bool:
+    return _REAL_ORDERS_ARMED
+
 
 class BinanceClient(BaseExchange):
     """
-    Binance exchange adapter.
+    Adaptador da exchange Binance.
 
-    Uses ccxt under the hood, with testnet support via the ``sandbox`` flag.
-    All public methods log entry, exit and any errors so that every API
-    interaction is fully auditable.
+    Usa ccxt internamente, com suporte à testnet por meio da flag ``sandbox``.
+    Todos os métodos públicos registram início, término e erros, garantindo
+    a auditabilidade de cada interação com a API.
     """
 
     def __init__(self) -> None:
@@ -39,7 +52,7 @@ class BinanceClient(BaseExchange):
     # ------------------------------------------------------------------
 
     def connect(self) -> None:
-        """Initialise the ccxt Binance instance and validate credentials."""
+        """Inicializa a instância ccxt da Binance e valida as credenciais."""
         cfg = settings.binance
         recv_window_ms = max(5000, int(os.getenv("BINANCE_RECV_WINDOW_MS", "60000")))
         self._exchange = ccxt.binance(
@@ -61,13 +74,13 @@ class BinanceClient(BaseExchange):
         else:
             logger.info("BinanceClient connected in LIVE mode.")
 
-        # Eager-load markets so subsequent calls don't trigger extra requests
+        # Carrega os mercados antecipadamente para que as chamadas seguintes não gerem solicitações extras
         self._exchange.load_markets()
         self._sync_time_offset(context="connect")
         logger.debug("Markets loaded - %d symbols available.", len(self._exchange.markets))
 
     def disconnect(self) -> None:
-        """Release any open sessions."""
+        """Libera quaisquer sessões abertas."""
         if self._exchange:
             # O ccxt nao mantem conexoes persistentes, mas chamar close
             # e uma boa pratica para garantir compatibilidade futura.
@@ -76,7 +89,7 @@ class BinanceClient(BaseExchange):
 
     @property
     def _client(self) -> ccxt.binance:
-        """Return the underlying ccxt client, raising if not connected."""
+        """Retorna o cliente ccxt subjacente ou gera uma exceção se não estiver conectado."""
         if self._exchange is None:
             raise RuntimeError(
                 "BinanceClient is not connected. Call connect() first."
@@ -84,7 +97,7 @@ class BinanceClient(BaseExchange):
         return self._exchange
 
     def is_symbol_supported(self, symbol: str) -> bool:
-        """Return True when the symbol exists in loaded Binance markets."""
+        """Retorna True quando o ativo existe nos mercados carregados da Binance."""
         symbol = validate_symbol(symbol)
         return symbol in self._client.markets
 
@@ -102,16 +115,16 @@ class BinanceClient(BaseExchange):
         limit: int | None = None,
     ) -> pd.DataFrame:
         """
-        Fetch OHLCV data and return a normalised DataFrame.
+        Busca dados OHLCV e retorna um DataFrame normalizado.
 
-        Args:
-            symbol: Trading pair (e.g. ``BTC/USDT``).
-            timeframe: Candle interval (e.g. ``1h``).
-            since: Start time in milliseconds UTC.
-            limit: Max candles to return (Binance max = 1000).
+        Argumentos:
+            symbol: Par de negociação (por exemplo, ``BTC/USDT``).
+            timeframe: Intervalo dos candles (por exemplo, ``1h``).
+            since: Horário inicial em milissegundos UTC.
+            limit: Número máximo de candles a retornar (máximo da Binance = 1000).
 
-        Returns:
-            Normalised OHLCV DataFrame indexed by UTC DatetimeIndex.
+        Retorno:
+            DataFrame OHLCV normalizado, indexado por DatetimeIndex em UTC.
         """
         symbol = validate_symbol(symbol)
         timeframe = validate_timeframe(timeframe)
@@ -145,7 +158,7 @@ class BinanceClient(BaseExchange):
 
     @retry(max_attempts=3, delay_seconds=1.0)
     def fetch_ticker(self, symbol: str) -> dict[str, Any]:
-        """Return the latest ticker for *symbol*."""
+        """Retorna o ticker mais recente de *symbol*."""
         symbol = validate_symbol(symbol)
         ticker = self._client.fetch_ticker(symbol)
         logger.debug("fetch_ticker - symbol=%s last=%s", symbol, ticker.get("last"))
@@ -153,7 +166,7 @@ class BinanceClient(BaseExchange):
 
     @retry(max_attempts=3, delay_seconds=1.0)
     def fetch_order_book(self, symbol: str, limit: int = 20) -> dict[str, Any]:
-        """Return the order book for *symbol*."""
+        """Retorna o livro de ofertas de *symbol*."""
         symbol = validate_symbol(symbol)
         return self._client.fetch_order_book(symbol, limit=limit)
 
@@ -163,7 +176,7 @@ class BinanceClient(BaseExchange):
 
     @retry(max_attempts=3, delay_seconds=2.0)
     def fetch_balance(self) -> dict[str, Any]:
-        """Return the account balance."""
+        """Retorna o saldo da conta."""
         try:
             balance = self._client.fetch_balance()
         except Exception as exc:
@@ -179,7 +192,7 @@ class BinanceClient(BaseExchange):
         return balance
 
     def _sync_time_offset(self, context: str) -> None:
-        """Synchronize local/server clock offset in ccxt when available."""
+        """Sincroniza no ccxt a diferença entre o relógio local e o do servidor, quando disponível."""
         try:
             offset_ms = self._client.load_time_difference()
             logger.info("Binance time offset synced (%s): %sms", context, offset_ms)
@@ -201,7 +214,7 @@ class BinanceClient(BaseExchange):
         side: str,
         quantity: float,
     ) -> dict[str, Any]:
-        """Place a market order."""
+        """Envia uma ordem a mercado."""
         self._guard_live_trading()
         symbol = validate_symbol(symbol)
         logger.info(
@@ -218,7 +231,7 @@ class BinanceClient(BaseExchange):
         quantity: float,
         price: float,
     ) -> dict[str, Any]:
-        """Place a limit order."""
+        """Envia uma ordem limitada."""
         self._guard_live_trading()
         symbol = validate_symbol(symbol)
         logger.info(
@@ -234,7 +247,7 @@ class BinanceClient(BaseExchange):
 
     @retry(max_attempts=3, delay_seconds=1.0)
     def cancel_order(self, order_id: str, symbol: str) -> dict[str, Any]:
-        """Cancel an open order."""
+        """Cancela uma ordem aberta."""
         symbol = validate_symbol(symbol)
         logger.info("cancel_order - id=%s symbol=%s", order_id, symbol)
         result = self._client.cancel_order(order_id, symbol)
@@ -243,13 +256,13 @@ class BinanceClient(BaseExchange):
 
     @retry(max_attempts=3, delay_seconds=1.0)
     def fetch_order(self, order_id: str, symbol: str) -> dict[str, Any]:
-        """Fetch a specific order's current state."""
+        """Busca o estado atual de uma ordem específica."""
         symbol = validate_symbol(symbol)
         return self._client.fetch_order(order_id, symbol)
 
     @retry(max_attempts=3, delay_seconds=1.0)
     def fetch_open_orders(self, symbol: str | None = None) -> list[dict[str, Any]]:
-        """Return open orders, optionally filtered by symbol."""
+        """Retorna ordens abertas, opcionalmente filtradas por ativo."""
         if symbol:
             symbol = validate_symbol(symbol)
         orders = self._client.fetch_open_orders(symbol)
@@ -257,7 +270,7 @@ class BinanceClient(BaseExchange):
         return orders
 
     def fetch_symbol_trading_filters(self, symbol: str) -> dict[str, float]:
-        """Return Binance official trading filters for a symbol."""
+        """Retorna os filtros oficiais de negociação da Binance para um ativo."""
         symbol = validate_symbol(symbol)
         market = self._client.market(symbol)
 
@@ -305,12 +318,17 @@ class BinanceClient(BaseExchange):
 
     def _guard_live_trading(self) -> None:
         """
-        Raise RuntimeError when paper trading mode is active.
+        Gera RuntimeError quando o modo paper trading está ativo.
 
-        This prevents accidental live order placement during testing.
+        Isso evita o envio acidental de ordens reais durante os testes.
         """
         if settings.is_paper_trading:
             raise RuntimeError(
                 "Live order rejected: paper trading mode is active. "
                 "Set PAPER_TRADING=false in .env to enable real orders."
+            )
+        if not _REAL_ORDERS_ARMED:
+            raise RuntimeError(
+                "Live order rejected: real orders are not armed. "
+                "Start 'main.py live' with --enable-real-orders to allow them."
             )

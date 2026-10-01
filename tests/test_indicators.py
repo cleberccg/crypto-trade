@@ -1,5 +1,5 @@
 ﻿"""
-Unit tests for all technical indicators.
+Testes unitários de todos os indicadores técnicos.
 """
 from __future__ import annotations
 
@@ -74,7 +74,7 @@ class TestRSI:
             RSI(1)
 
     def test_all_gains_produces_100(self) -> None:
-        """Strictly increasing close prices should produce RSI near 100."""
+        """Preços de fechamento estritamente crescentes devem produzir RSI próximo de 100."""
         df = make_ohlcv(n=50, trend=0.01)
         result = RSI(14).calculate(df)
         assert result.iloc[-1] > 90.0

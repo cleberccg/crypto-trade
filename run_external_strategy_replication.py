@@ -1,10 +1,10 @@
-"""Runner: replicate 5 published trend-following strategies and gate them
-DEV -> Validation -> OOS on our Binance Spot dataset (candles DB), with cost
-stress, looking for ONE production candidate (TARGET_CANDIDATES = 1).
+"""Executor: replica 5 estratégias publicadas de acompanhamento de tendência e as avalia
+em DEV -> Validation -> OOS no nosso conjunto de dados Binance Spot (banco de candles), com
+estresse de custos, buscando UM candidato para produção (TARGET_CANDIDATES = 1).
 
-Reuses BacktestEngine/RiskManager/compute_metrics/CandleRepository unmodified.
-Does not touch Paper Live, CDB, RiskManager or PositionSizer.
-FINAL_HOLDOUT (>= 2026-06-01) is never loaded (see load_base_candles()).
+Reutiliza BacktestEngine/RiskManager/compute_metrics/CandleRepository sem alterações.
+Não altera Paper Live, CDB, RiskManager nem PositionSizer.
+FINAL_HOLDOUT (>= 2026-06-01) nunca é carregado (consulte load_base_candles()).
 """
 from __future__ import annotations
 
@@ -149,7 +149,7 @@ def main() -> int:
     candidate_found = False
 
     # -----------------------------------------------------------------
-    # STRATEGY 1 -- BTC 4H SMA200 TREND
+    # ESTRATÉGIA 1 -- tendência SMA200 de BTC em 4h
     # -----------------------------------------------------------------
     _log("CURRENT_STRATEGY=BTC_4H_SMA200_TREND SOURCE=iolufemi/crypto-trend-research STAGE=LOAD_DATA")
     base = load_base_candles("BTC/USDT")
@@ -171,10 +171,10 @@ def main() -> int:
 
     if not candidate_found:
         # -----------------------------------------------------------------
-        # STRATEGY 2 -- APEX NO-PYRAMID
+        # ESTRATÉGIA 2 -- APEX sem pirâmide
         # -----------------------------------------------------------------
         _log("CURRENT_STRATEGY=APEX_NO_PYRAMID SOURCE=EstebanSP23/crypto_systematic_research STAGE=LOAD_DATA")
-        apex_symbols = ["BTC/USDT", "ETH/USDT", "SOL/USDT", "LINK/USDT", "ADA/USDT", "ARB/USDT", "SUI/USDT"]  # SEI unavailable, not invented
+        apex_symbols = ["BTC/USDT", "ETH/USDT", "SOL/USDT", "LINK/USDT", "ADA/USDT", "ARB/USDT", "SUI/USDT"]  # SEI indisponível; não foi inventado
         pooled_frames = {}
         for sym in apex_symbols:
             try:
@@ -182,7 +182,7 @@ def main() -> int:
                 pooled_frames[sym] = resample_ohlcv(b, "4h")
             except Exception as exc:
                 _log(f"STAGE=SKIP_SYMBOL SYMBOL={sym} REASON={exc}")
-        # Evaluate on BTC first (longest, most reliable history) as primary test.
+        # Avalia primeiro em BTC (histórico mais longo e confiável) como teste principal.
         r2 = evaluate_strategy("APEX_NO_PYRAMID_BTC", "EstebanSP23/crypto_systematic_research", lambda: ApexNoPyramidStrategy(), pooled_frames["BTC/USDT"], warmup_bars=1100)
         r2["original_spec_reproduced"] = (
             "PARTIAL: breakout(~6mo)+SMA50/200 filter+volume>1.5x reproduced; "
@@ -198,7 +198,7 @@ def main() -> int:
 
     if not candidate_found:
         # -----------------------------------------------------------------
-        # STRATEGY 3 -- QUATTRO DONCHIAN
+        # ESTRATÉGIA 3 -- QUATTRO DONCHIAN
         # -----------------------------------------------------------------
         _log("CURRENT_STRATEGY=QUATTRO_DONCHIAN SOURCE=EstebanSP23/crypto_systematic_research STAGE=LOAD_DATA")
         base_btc = load_base_candles("BTC/USDT")
@@ -217,7 +217,7 @@ def main() -> int:
 
     if not candidate_found:
         # -----------------------------------------------------------------
-        # STRATEGY 4 -- 5 EMA WEEKLY TREND FILTER
+        # ESTRATÉGIA 4 -- filtro de tendência semanal com EMA 5
         # -----------------------------------------------------------------
         _log("CURRENT_STRATEGY=5EMA_WEEKLY_FILTER SOURCE=EstebanSP23/crypto_systematic_research STAGE=LOAD_DATA")
         base_btc = load_base_candles("BTC/USDT")
@@ -232,7 +232,7 @@ def main() -> int:
 
     if not candidate_found:
         # -----------------------------------------------------------------
-        # STRATEGY 5 -- MULTI-ASSET VOLATILITY-NORMALIZED TREND
+        # ESTRATÉGIA 5 -- tendência multiativo normalizada por volatilidade
         # -----------------------------------------------------------------
         _log("CURRENT_STRATEGY=MULTI_ASSET_VOL_NORMALIZED_TREND SOURCE=PeterLP123/systematic-crypto-research STAGE=LOAD_DATA")
         symbols5 = ["BTC/USDT", "ETH/USDT", "BNB/USDT", "ADA/USDT"]

@@ -1,15 +1,15 @@
 #!/usr/bin/env python
-"""Monitor live trade intent, execution and errors.
+"""Monitora intenções de operação live, execução e erros.
 
-This script is meant to run continuously in a terminal while the live bot is
-running. It watches the application log and the database, then prints concise
-alerts when it detects:
-- new BUY / SELL intent
-- risk approval / rejection
-- order execution
-- open / closed trades
-- errors or crashes in the live loop
-- BUY intent without execution within a configurable grace period
+Este script foi projetado para ser executado continuamente em um terminal enquanto o bot live está
+em execução. Ele acompanha o log da aplicação e o banco de dados e exibe alertas concisos
+quando detecta:
+- nova intenção de BUY / SELL
+- aprovação / rejeição de risco
+- execução de ordem
+- operações abertas / encerradas
+- erros ou falhas no ciclo live
+- intenção de BUY sem execução dentro de um período de tolerância configurável
 """
 from __future__ import annotations
 
@@ -41,7 +41,7 @@ LIVE_PATTERNS = {
     "risk_rejected": re.compile(r"Entrada rejeitada|abortando nova entrada|saldo insuficiente", re.IGNORECASE),
     "order_buy": re.compile(r"Compra executada", re.IGNORECASE),
     "order_sell": re.compile(r"Stop ou take profit executados|Venda executada", re.IGNORECASE),
-    # Avoid false positives like "nenhuma posicao aberta encontrada" during startup reconciliation.
+    # Evita falsos positivos como "nenhuma posição aberta encontrada" durante a reconciliação de inicialização.
     "position_open": re.compile(r"Posicao aberta\s*-\s*trade_id=", re.IGNORECASE),
     "position_closed": re.compile(r"Posicao fechada\s*-\s*trade_id=", re.IGNORECASE),
     "startup_clean": re.compile(r"Reconciliacao: nenhuma posicao aberta encontrada", re.IGNORECASE),

@@ -1,9 +1,9 @@
 ﻿"""
-Paper broker - simulates order execution without touching the real exchange.
+Corretora simulada: simula a execução de ordens sem interagir com a exchange real.
 
-Design decision: PaperBroker mirrors the interface expected by any order
-executor so that switching from paper to live trading requires no changes in
-upper layers - only a different broker is injected.
+Decisão de projeto: PaperBroker replica a interface esperada por qualquer
+executor de ordens, de modo que a troca de paper trading para operações ao vivo
+não exija mudanças nas camadas superiores — basta injetar outra corretora.
 """
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ _TAKER_FEE = 0.001  # 0.1%
 
 @dataclass
 class PaperOrder:
-    """Represents a simulated order."""
+    """Representa uma ordem simulada."""
 
     order_id: str
     symbol: str
@@ -38,24 +38,24 @@ class PaperOrder:
 
 @dataclass
 class PaperBalance:
-    """Current simulated portfolio balances."""
+    """Saldos atuais da carteira simulada."""
 
     cash: float
     positions: dict[str, float] = field(default_factory=dict)
 
     @property
     def total_value(self) -> float:
-        """Total value including cash (positions are valued at cost basis here)."""
+        """Valor total incluindo o caixa (as posições são avaliadas pelo custo de aquisição)."""
         return self.cash
 
 
 class PaperBroker:
     """
-    Simulates exchange order execution for paper trading.
+    Simula a execução de ordens da exchange em paper trading.
 
     Args:
-        initial_capital: Starting cash balance in quote currency.
-        fee_pct: Simulated taker fee per fill (default 0.1%).
+        initial_capital: Saldo inicial em caixa na moeda de cotação.
+        fee_pct: Taxa taker simulada por execução (padrão 0.1%).
     """
 
     def __init__(
@@ -79,22 +79,26 @@ class PaperBroker:
     # Balance
     # ------------------------------------------------------------------
 
+    @property
+    def fee_pct(self) -> float:
+        return float(self._fee_pct)
+
     def get_balance(self) -> PaperBalance:
-        """Return a copy of the current balance state."""
+        """Retorna uma cópia do estado atual do saldo."""
         return PaperBalance(
             cash=self._balance.cash,
             positions=dict(self._balance.positions),
         )
 
     def export_runtime_state(self) -> dict[str, Any]:
-        """Export broker balance state for runtime resume."""
+        """Exporta o estado do saldo da corretora para retomada da execução."""
         return {
             "cash": float(self._balance.cash),
             "positions": {asset: float(qty) for asset, qty in self._balance.positions.items()},
         }
 
     def import_runtime_state(self, state: dict[str, Any] | None) -> None:
-        """Restore broker balance state for runtime resume."""
+        """Restaura o estado do saldo da corretora para retomada da execução."""
         if not isinstance(state, dict):
             return
 
@@ -111,20 +115,20 @@ class PaperBroker:
         self._balance = PaperBalance(cash=max(0.0, cash), positions=positions)
 
     def get_position_quantity(self, symbol: str) -> float:
-        """Return base-asset quantity currently held for a symbol."""
+        """Retorna a quantidade do ativo-base atualmente mantida para um ativo de negociação."""
         base_asset = symbol.split("/")[0]
         return float(self._balance.positions.get(base_asset, 0.0))
 
     def get_portfolio_value(self, prices: dict[str, float]) -> float:
         """
-        Calculate total portfolio value using current market prices.
+        Calcula o valor total da carteira usando os preços de mercado atuais.
 
         Args:
-            prices: Dict mapping base currency to current price (e.g.
+                prices: Dict que associa a moeda base ao preço atual (por exemplo,
                     ``{"BTC": 42000.0}``).
 
         Returns:
-            Total value in quote currency.
+            Valor total na moeda de cotação.
         """
         position_value = sum(
             qty * prices.get(asset, 0.0)
@@ -138,15 +142,15 @@ class PaperBroker:
 
     def create_market_buy(self, symbol: str, quantity: float, price: float) -> PaperOrder:
         """
-        Simulate a market buy order.
+        Simula uma ordem de compra a mercado.
 
         Args:
-            symbol: Trading pair (e.g. ``BTC/USDT``).
-            quantity: Amount in base currency.
-            price: Simulated fill price (typically the candle's close).
+            symbol: Par de negociação (por exemplo, ``BTC/USDT``).
+            quantity: Quantidade na moeda base.
+            price: Preço simulado de execução (normalmente o fechamento do candle).
 
         Returns:
-            Filled PaperOrder.
+            PaperOrder executada.
         """
         cost = quantity * price
         fee = cost * self._fee_pct
@@ -177,15 +181,15 @@ class PaperBroker:
 
     def create_market_sell(self, symbol: str, quantity: float, price: float) -> PaperOrder:
         """
-        Simulate a market sell order.
+        Simula uma ordem de venda a mercado.
 
         Args:
-            symbol: Trading pair.
-            quantity: Amount in base currency to sell.
-            price: Simulated fill price.
+            symbol: Par de negociação.
+            quantity: Quantidade na moeda base a vender.
+            price: Preço simulado de execução.
 
         Returns:
-            Filled PaperOrder.
+            PaperOrder executada.
         """
         base_asset = symbol.split("/")[0]
         available = self._balance.positions.get(base_asset, 0.0)

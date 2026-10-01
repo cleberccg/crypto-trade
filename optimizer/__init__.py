@@ -1,4 +1,4 @@
-"""Strategy optimization package."""
+"""Pacote de otimização de estratégias."""
 
 from optimizer.optimization_result import OptimizationResult
 from optimizer.optimizer import StrategyOptimizer

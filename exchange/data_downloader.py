@@ -1,9 +1,9 @@
 ﻿"""
-Historical and real-time data downloader.
+Downloader de dados históricos e em tempo real.
 
-Design decision: DataDownloader is a high-level service that coordinates
-between the exchange client and the database. It handles pagination for
-large historical downloads and deduplicates inserts via CandleRepository.
+Decisão de projeto: DataDownloader é um serviço de alto nível que coordena o
+cliente da exchange e o banco de dados. Gerencia a paginação de grandes
+downloads históricos e evita inserções duplicadas por meio de CandleRepository.
 """
 from __future__ import annotations
 
@@ -22,15 +22,15 @@ from utils.validators import validate_symbol, validate_timeframe
 
 logger = get_logger(__name__)
 
-# Binance returns at most 1000 candles per request
+# A Binance retorna no máximo 1.000 candles por solicitação
 _MAX_CANDLES_PER_REQUEST = 1000
 
 
 class DataDownloader:
     """
-    Downloads OHLCV data from an exchange and persists it to the database.
+    Baixa dados OHLCV de uma exchange e os persiste no banco de dados.
 
-    Usage::
+    Uso::
 
         client = BinanceClient()
         client.connect()
@@ -53,18 +53,18 @@ class DataDownloader:
         end: datetime | None = None,
     ) -> pd.DataFrame:
         """
-        Download and persist historical OHLCV data for a date range.
+        Baixa e persiste dados históricos OHLCV para um intervalo de datas.
 
-        Paginates automatically to bypass the exchange's per-request limit.
+        Faz a paginação automaticamente para contornar o limite da exchange por requisição.
 
-        Args:
-            symbol: Trading pair (e.g. ``BTC/USDT``).
-            timeframe: Candle interval (e.g. ``1h``).
-            start: Inclusive start datetime (UTC).
-            end: Inclusive end datetime; defaults to now.
+        Argumentos:
+            symbol: Par de negociação (por exemplo, ``BTC/USDT``).
+            timeframe: Intervalo dos candles (por exemplo, ``1h``).
+            start: Data/hora inicial inclusiva (UTC).
+            end: Data/hora final inclusiva; por padrão, o momento atual.
 
-        Returns:
-            Concatenated DataFrame of all downloaded candles.
+        Retorno:
+            DataFrame concatenado com todos os candles baixados.
         """
         symbol = validate_symbol(symbol)
         timeframe = validate_timeframe(timeframe)
@@ -107,17 +107,17 @@ class DataDownloader:
         limit: int = 500,
     ) -> pd.DataFrame:
         """
-        Fetch the most recent *limit* candles without persisting them.
+        Busca os *limit* candles mais recentes sem persistí-los.
 
-        Useful for strategy signal generation without writing to the DB.
+        Útil para gerar sinais de estratégia sem gravar no banco de dados.
 
-        Args:
-            symbol: Trading pair.
-            timeframe: Candle interval.
-            limit: Number of most-recent candles.
+        Argumentos:
+            symbol: Par de negociação.
+            timeframe: Intervalo dos candles.
+            limit: Número de candles mais recentes.
 
-        Returns:
-            OHLCV DataFrame.
+        Retorno:
+            DataFrame OHLCV.
         """
         symbol = validate_symbol(symbol)
         timeframe = validate_timeframe(timeframe)
@@ -139,10 +139,11 @@ class DataDownloader:
         end: datetime,
     ) -> Iterator[pd.DataFrame]:
         """
-        Yield DataFrame batches by paginating the exchange API.
+        Produz lotes de DataFrame por meio da paginação da API da exchange.
 
-        Stops when the batch's last timestamp exceeds *end* or the exchange
-        returns fewer candles than requested (signalling exhaustion).
+        Para quando o último timestamp do lote ultrapassar *end* ou quando a
+        exchange retornar menos candles do que o solicitado (indicando que os
+        dados se esgotaram).
         """
         since_ms = datetime_to_timestamp_ms(start)
         end_ms = datetime_to_timestamp_ms(end)
@@ -179,7 +180,7 @@ class DataDownloader:
     def _persist_batch(
         self, symbol: str, timeframe: str, df: pd.DataFrame
     ) -> int:
-        """Convert a DataFrame batch to ORM objects and upsert them."""
+        """Converte um lote de DataFrame em objetos ORM e faz upsert deles."""
         candles = [
             Candle(
                 symbol=symbol,

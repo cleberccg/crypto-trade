@@ -1,16 +1,16 @@
-"""Autonomous microstructure research v3.
+"""Pesquisa autônoma de microestrutura v3.
 
-Goals:
-- Reuse validated dataset hash and existing 1m cache (no raw aggTrades reload).
-- Keep FINAL_HOLDOUT structurally locked (rows >= oos_end are never loaded).
-- Run full funnel per hypothesis:
+Objetivos:
+- Reutilizar o hash do conjunto de dados validado e o cache de 1m existente (sem recarregar aggTrades brutos).
+- Manter FINAL_HOLDOUT bloqueado estruturalmente (linhas >= oos_end nunca são carregadas).
+- Executar o funil completo para cada hipótese:
   DEV -> ENTRY EDGE -> VALIDATION -> OOS -> ROBUSTNESS -> COST STRESS -> OPERATIONAL BACKTEST.
-- Preserve strict gates (no relaxation).
-- Maintain persistent registry + lock (restart-safe).
-- Continue generating economically distinct hypotheses after initial round.
-- Stop only when:
-  A) TARGET_REACHED_AWAITING_FINAL_HOLDOUT (>=2 distinct candidates), or
-  B) RESEARCH_SPACE_EXHAUSTED_WITHOUT_EDGE (scientific exhaustion criteria met).
+- Preservar critérios rigorosos (sem flexibilização).
+- Manter registro persistente + bloqueio (seguro para reinicialização).
+- Continuar gerando hipóteses economicamente distintas após a rodada inicial.
+- Parar somente quando:
+    A) TARGET_REACHED_AWAITING_FINAL_HOLDOUT (>=2 candidatos distintos), ou
+    B) RESEARCH_SPACE_EXHAUSTED_WITHOUT_EDGE (critérios de esgotamento científico atendidos).
 """
 from __future__ import annotations
 
@@ -52,7 +52,7 @@ SYMBOLS = ("BTCUSDT", "ETHUSDT")
 TIMEFRAME = "1m"
 SLIPPAGE_BPS = 2.0
 
-# Same temporal boundaries used by pipeline.
+# Mesmos limites temporais usados pelo pipeline.
 DEV_END = pd.Timestamp("2025-09-01T00:00:00Z")
 VALIDATION_END = pd.Timestamp("2026-02-01T00:00:00Z")
 OOS_END = pd.Timestamp("2026-06-01T00:00:00Z")
@@ -88,10 +88,10 @@ class HypothesisSpec:
 
 
 class SignalHoldStrategy(BaseStrategy):
-    """Minimal strategy adapter for operational backtest after OOS pass.
+    """Adaptador mínimo de estratégia para backtest operacional após aprovação no OOS.
 
-    It uses precomputed entry starts from a signal rule and exits after a fixed
-    holding horizon; stops/targets remain active via BacktestEngine + RiskManager.
+    Usa pontos de entrada pré-computados a partir de uma regra de sinal e sai após um
+    horizonte fixo de manutenção; stops/alvos permanecem ativos via BacktestEngine + RiskManager.
     """
 
     def __init__(self, frame: pd.DataFrame, feature: str, threshold: float, direction: str, hold_bars: int, name: str) -> None:
@@ -134,7 +134,7 @@ class SignalHoldStrategy(BaseStrategy):
         row = df.iloc[-1]
         px = float(row["close"])
         if bool(row.get("_entry_start", False)):
-            # Keep absolute levels valid for RiskManager constraints.
+            # Mantém os níveis absolutos válidos para as restrições de RiskManager.
             return StrategySignal(
                 signal=SignalType.BUY,
                 price=px,
@@ -183,7 +183,7 @@ def _load_pipeline_context() -> tuple[str, Path]:
     state = json.loads(STATE_PATH.read_text(encoding="utf-8"))
     dataset_hash = str(state.get("DATASET_MANIFEST_HASH", "")).strip()
     if not dataset_hash:
-        # Fallback to newest cache folder.
+        # Usa como alternativa a pasta de cache mais recente.
         folders = [p for p in CACHE_ROOT.iterdir() if p.is_dir()]
         if not folders:
             raise RuntimeError("No cache folder found")
@@ -244,7 +244,7 @@ def _add_features(frames: dict[str, pd.DataFrame]) -> dict[str, pd.DataFrame]:
         df["flow_continuation_signal"] = (flow_imb.rolling(5, min_periods=5).mean() * ret5).replace(0.0, np.nan)
         # 3) ABSORPTION + RELEASE
         df["absorption_release_signal"] = ((df["flow_imb_z30"].abs() - df["price_move_z30"]) * ret1.shift(-1)).replace(0.0, np.nan)
-        # 4) FAILED AUCTION / BREAKOUT
+        # 4) LEILÃO FALHO / ROMPIMENTO
         prior_high = df["high"].rolling(20, min_periods=20).max().shift(1)
         prior_low = df["low"].rolling(20, min_periods=20).min().shift(1)
         breakout_up_fail = (df["high"] > prior_high) & (df["close"] < prior_high)
@@ -263,7 +263,7 @@ def _add_features(frames: dict[str, pd.DataFrame]) -> dict[str, pd.DataFrame]:
         df["micro_momentum_signal"] = (flow_imb.rolling(8, min_periods=8).mean() + ret5 + 0.2 * df["trade_intensity_z30"]).replace(0.0, np.nan)
         # 10) MICROSTRUCTURE MEAN REVERSION
         df["micro_mean_reversion_signal"] = (flow_imb - ret1).replace(0.0, np.nan)
-        # 11) VOL EXPANSION AFTER FLOW COMPRESSION
+        # 11) EXPANSÃO DA VOLATILIDADE APÓS COMPRESSÃO DO FLUXO
         flow_compress = flow_imb.rolling(20, min_periods=20).std()
         vol_expand = range_hl.rolling(10, min_periods=10).mean() / range_hl.rolling(40, min_periods=40).mean()
         df["flow_compression_vol_expansion_signal"] = ((-flow_compress) * vol_expand).replace([np.inf, -np.inf], np.nan)
@@ -571,7 +571,7 @@ def _generate_round(frames: dict[str, pd.DataFrame], round_idx: int, reg: dict[s
 
     eq_existing = _already_tested_equivalents(reg)
 
-    # Round 1: two quantile thresholds per feature (dev only), both directions.
+    # Rodada 1: dois limiares de quantil por característica (somente dev), em ambas as direções.
     # Round 2+: adaptive widening around DEV quantiles (still bounded, no brute force).
     for family, feature, rationale, mechanism in seeds:
         q_hi, q_lo = _feature_quantiles(frames, feature)
@@ -618,11 +618,11 @@ def _scientific_exhausted(reg: dict[str, Any], round_idx: int) -> bool:
     if totals["TOTAL_CONTEXT_CELLS_TESTED"] >= MAX_CONTEXT_CELLS:
         return True
 
-    # After at least 2 adaptive rounds and enough tests, no temporal generalization.
+    # Após pelo menos 2 rodadas adaptativas e testes suficientes, não há generalização temporal.
     if round_idx >= 2 and tested >= 40 and dev_surv > 0 and val_surv == 0 and oos_surv == 0:
         return True
 
-    # Stronger criterion: no DEV survivor at all after broad mechanism coverage.
+    # Critério mais rigoroso: nenhum sobrevivente DEV após cobrir amplamente os mecanismos.
     if round_idx >= 2 and tested >= 30 and dev_surv == 0:
         return True
 
@@ -668,7 +668,7 @@ def run() -> int:
                     _save_registry(registry)
                     _log("STAGE: RESEARCH_SPACE_EXHAUSTED_WITHOUT_EDGE")
                     return 0
-                # No novel non-equivalent hypotheses in this round; continue one more adaptive round.
+                # Nenhuma hipótese nova e não equivalente nesta rodada; continuar por mais uma rodada adaptativa.
                 if round_idx >= 3:
                     registry["status"] = "RESEARCH_SPACE_EXHAUSTED_WITHOUT_EDGE"
                     _save_registry(registry)
@@ -796,7 +796,7 @@ def run() -> int:
                             registry["totals"]["VALIDATION_SURVIVORS"] += 1
                             registry["totals"]["OOS_SURVIVORS"] += 1
 
-                            # Diversity rule: require distinct mechanism cluster among candidates.
+                            # Regra de diversidade: exige agrupamentos de mecanismos distintos entre as candidatas.
                             mechanism = spec.expected_mechanism
                             existing_mechanisms = {c.get("expected_mechanism") for c in candidates}
                             if mechanism in existing_mechanisms:

@@ -1,6 +1,4 @@
-﻿"""
-Strategies Package.
-"""
+﻿"""Pacote de estratégias."""
 from strategies.base_strategy import BaseStrategy, SignalType, StrategySignal
 from strategies.factory import create_strategy
 from strategies.families import QuantStrategy

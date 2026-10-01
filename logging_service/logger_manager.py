@@ -56,7 +56,7 @@ def initialize_logging_service(
             if same_config:
                 return
 
-            # Reconfigure in place to support test isolation and runtime changes.
+            # Reconfigura no próprio objeto para permitir isolamento dos testes e alterações em tempo de execução.
             if _RUNTIME.listener is not None:
                 _RUNTIME.listener.stop()
             _RUNTIME.initialized = False
@@ -87,7 +87,7 @@ def initialize_logging_service(
 def ensure_initialized_from_settings() -> None:
     if _RUNTIME.initialized:
         return
-    # Child processes must be explicitly bound to a shared queue by caller code.
+    # O código chamador deve vincular explicitamente os processos filhos a uma fila compartilhada.
     if current_process().name != "MainProcess":
         return
     from config.settings import settings
@@ -104,10 +104,10 @@ def ensure_initialized_from_settings() -> None:
 def get_logger(name: str) -> logging.Logger:
     ensure_initialized_from_settings()
     if _RUNTIME.queue is None:
-        # Fallback only when logger is requested before explicit startup.
+        # Usa a alternativa somente quando o logger é solicitado antes da inicialização explícita.
         ensure_initialized_from_settings()
     if _RUNTIME.queue is None:
-        # Worker process fallback: use basic logger without queue
+        # Alternativa para o processo worker: usa um logger básico sem fila
         if current_process().name != "MainProcess":
             logger = logging.getLogger(name)
             if not logger.handlers:
@@ -222,7 +222,7 @@ def get_logging_queue_handle() -> Queue | None:
 
 
 def bind_worker_logging_queue(queue: Queue, level: str | int = "INFO") -> None:
-    """Bind a spawned worker process to the shared logging queue (no local listener)."""
+    """Vincula um processo worker iniciado à fila de logs compartilhada (sem listener local)."""
     with _RUNTIME.lock:
         _RUNTIME.queue = queue
         _RUNTIME.listener = None

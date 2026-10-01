@@ -1,9 +1,9 @@
-"""Validate the consolidated Binance Spot aggTrades dataset (streaming, single pass).
+"""Valida o conjunto de dados consolidado de aggTrades da Binance Spot (em fluxo, passagem única).
 
-Reused by the microstructure Discovery hypothesis; not part of BacktestEngine,
-RiskManager or Paper Live. Read-only validation utility. Uses stdlib gzip
-(GzipFile), which verifies the per-member CRC32/ISIZE trailer on read, so any
-corrupted or truncated member surfaces as BadGzipFile/zlib.error here.
+Reutilizado pela hipótese de descoberta de microestrutura; não faz parte de BacktestEngine,
+RiskManager nem Paper Live. Utilitário de validação somente leitura. Usa gzip da biblioteca padrão
+(GzipFile), que verifica o trailer CRC32/ISIZE de cada membro durante a leitura; assim, qualquer
+membro corrompido ou truncado gera BadGzipFile/zlib.error aqui.
 """
 from __future__ import annotations
 
@@ -113,8 +113,8 @@ def run_validation() -> dict[str, Any]:
                 stats["out_of_order_ts"] += 1
             if stats["last_id"] is not None:
                 if trade_id <= stats["last_id"]:
-                    # aggTrade ids are unique/sequential per symbol; a non-increasing
-                    # id here means either a duplicate row or an out-of-order write.
+                    # Os IDs de aggTrade são exclusivos/sequenciais por símbolo; um
+                    # ID não crescente indica uma linha duplicada ou uma gravação fora de ordem.
                     stats["non_increasing_id"] += 1
                 elif trade_id > stats["last_id"] + 1:
                     stats["id_gaps"] += 1

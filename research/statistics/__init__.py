@@ -1,1 +1,1 @@
-"""Research statistics package placeholder for next-phase activation."""
+"""Espaço reservado do pacote de estatísticas da pesquisa para ativação na próxima fase."""

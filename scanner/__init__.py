@@ -1,1 +1,1 @@
-"""Market scanner package."""
+"""Pacote do scanner de mercado."""

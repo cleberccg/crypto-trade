@@ -1,9 +1,10 @@
 ﻿"""
-Abstract base class for all technical indicators.
+Classe base abstrata para todos os indicadores técnicos.
 
-Design decision: An ABC enforces a uniform interface so strategies can work
-with any indicator interchangeably.  The `calculate` method takes a DataFrame
-and returns a new Series, keeping indicators side-effect-free.
+Decisão de projeto: uma ABC impõe uma interface uniforme para que as
+estratégias possam usar qualquer indicador de forma intercambiável. O método
+`calculate` recebe um DataFrame e retorna uma nova Series, mantendo os
+indicadores livres de efeitos colaterais.
 """
 from __future__ import annotations
 
@@ -14,38 +15,38 @@ import pandas as pd
 
 class BaseIndicator(ABC):
     """
-    Interface all indicator implementations must satisfy.
+        Interface que todas as implementações de indicador devem cumprir.
 
-    Each subclass must:
-    - Accept configuration via ``__init__``.
-    - Implement ``calculate`` returning a named ``pd.Series`` (or a
-      ``pd.DataFrame`` for multi-output indicators such as MACD/Bollinger).
-    - Be stateless between calls (no stored intermediate state).
+        Cada subclasse deve:
+        - Aceitar configuração por meio de ``__init__``.
+        - Implementar ``calculate`` retornando uma ``pd.Series`` nomeada (ou um
+            ``pd.DataFrame`` para indicadores com várias saídas, como MACD/Bollinger).
+        - Não manter estado entre chamadas (sem estado intermediário armazenado).
     """
 
     @property
     @abstractmethod
     def name(self) -> str:
-        """Short human-readable name used for column labelling."""
+        """Nome curto e legível usado na identificação das colunas."""
 
     @abstractmethod
     def calculate(self, df: pd.DataFrame) -> pd.Series | pd.DataFrame:
         """
-        Compute the indicator from *df*.
+        Calcula o indicador a partir de *df*.
 
-        Args:
-            df: OHLCV DataFrame with at minimum [open, high, low, close, volume]
-                columns and a DatetimeIndex.
+        Argumentos:
+            df: DataFrame OHLCV com, no mínimo, as colunas [open, high, low,
+                close, volume] e um DatetimeIndex.
 
-        Returns:
-            A ``pd.Series`` (single-output) or ``pd.DataFrame`` (multi-output)
-            aligned to *df*'s index.
+        Retorno:
+            Uma ``pd.Series`` (saída única) ou um ``pd.DataFrame`` (múltiplas
+            saídas), alinhado ao índice de *df*.
         """
 
     def _validate_min_length(self, df: pd.DataFrame, min_length: int) -> None:
         """
-        Raise ValueError if *df* does not have enough rows to compute the
-        indicator reliably.
+        Gera ValueError se *df* não tiver linhas suficientes para calcular o
+        indicador de forma confiável.
         """
         if len(df) < min_length:
             raise ValueError(

@@ -17,7 +17,7 @@ def _truncate_file(path: str) -> None:
         with open(path, "w", encoding="utf-8"):
             pass
     except Exception:
-        # Logging must never fail hard.
+        # A gravação de logs nunca deve causar uma falha irrecuperável.
         return
 
 
@@ -31,18 +31,18 @@ def _gzip_rotator(source: str, dest: str) -> None:
             try:
                 os.remove(source)
             except PermissionError:
-                # Another process/thread still holds the file. Keep execution alive.
+                # Outro processo/thread ainda mantém o arquivo aberto. Mantém a execução ativa.
                 _truncate_file(source)
             return
         except PermissionError as exc:
             last_error = exc
-            # Backoff to allow transient Windows lock release.
+            # Aguarda um intervalo para permitir a liberação de bloqueios temporários do Windows.
             time.sleep(0.05 * (attempt + 1))
         except Exception as exc:
             last_error = exc
             break
 
-    # Graceful degradation: keep service running, preserve forward logging.
+    # Degradação controlada: mantém o serviço em execução e preserva o registro dos próximos eventos.
     try:
         fallback_name = f"{dest}.fallback"
         shutil.copyfile(source, fallback_name)
@@ -57,20 +57,20 @@ def _gzip_namer(default_name: str) -> str:
 
 
 class SafeRotatingFileHandler(RotatingFileHandler):
-    """Rotation handler that degrades gracefully under transient file locks."""
+    """Handler de rotação que lida de forma resiliente com bloqueios temporários de arquivo."""
 
     def doRollover(self) -> None:
         try:
             super().doRollover()
         except PermissionError:
-            # Keep current file and continue logging.
+            # Mantém o arquivo atual e continua registrando logs.
             return
         except Exception:
             return
 
 
 class SafeTimedRotatingFileHandler(TimedRotatingFileHandler):
-    """Timed rotation handler resilient to Windows file-lock contention."""
+    """Handler de rotação temporizada resiliente à contenção por bloqueios de arquivo no Windows."""
 
     def doRollover(self) -> None:
         try:

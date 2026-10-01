@@ -24,7 +24,7 @@ export function useSchedulerSocket(enabled: boolean) {
       try {
         setData(JSON.parse(event.data) as SchedulerTick);
       } catch {
-        // Ignore malformed payloads.
+        // Ignora payloads malformados.
       }
     };
 

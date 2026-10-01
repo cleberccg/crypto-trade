@@ -1,4 +1,4 @@
-"""Optimization reporting utilities."""
+"""Utilitários para relatórios de otimização."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -13,7 +13,7 @@ logger = get_logger(__name__)
 
 
 class OptimizationReport:
-    """Persist optimization output to CSV, JSON and SQLite-friendly JSONL."""
+    """Persiste os resultados da otimização em CSV, JSON e JSONL compatível com SQLite."""
 
     def __init__(self, output_dir: Path | None = None) -> None:
         self._output_dir = output_dir or Path(__file__).parent.parent / "optimization" / "results"

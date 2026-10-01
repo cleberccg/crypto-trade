@@ -86,7 +86,7 @@ def test_incremental_update_uses_only_new_range(tmp_path: Path) -> None:
     cfg = MarketDataDaemonConfig(symbols=("BTC/USDT",), timeframes=("5m",), max_cycles=1)
 
     key = ("BTC/USDT", "5m")
-    daemon.latest[key] = now - timedelta(minutes=5)
+    daemon.latest[key] = now - timedelta(minutes=10)
     daemon.counts[key] = 100
     daemon._ensure_context_state(*key)
 
@@ -94,8 +94,9 @@ def test_incremental_update_uses_only_new_range(tmp_path: Path) -> None:
 
     assert len(daemon.calls) == 1
     _symbol, _timeframe, start, end = daemon.calls[0]
-    assert start == now
-    assert end == now
+    # O candle que abre em `now` ainda está em formação e não deve ser solicitado.
+    assert start == now - timedelta(minutes=5)
+    assert end == now - timedelta(minutes=5)
 
 
 def test_no_duplicate_download_when_already_up_to_date(tmp_path: Path) -> None:
@@ -183,7 +184,7 @@ def test_multiple_symbols_and_timeframes_processed(tmp_path: Path) -> None:
     daemon._client = _NoopClient()  # type: ignore[assignment]
     daemon._downloader = object()  # type: ignore[assignment]
 
-    # Bypass external client construction for this isolated loop check.
+    # Ignora a criação do cliente externo para esta verificação isolada do loop.
     daemon._client = _NoopClient()  # type: ignore[assignment]
 
     cfg = MarketDataDaemonConfig(
@@ -192,15 +193,15 @@ def test_multiple_symbols_and_timeframes_processed(tmp_path: Path) -> None:
         max_cycles=1,
     )
 
-    # Run through service loop with monkeypatched connect/disconnect/downloader creation.
+    # Executa pelo loop do serviço com connect/disconnect e a criação do downloader substituídos por monkeypatches.
     daemon._client = _NoopClient()  # type: ignore[assignment]
     daemon._downloader = object()  # type: ignore[assignment]
 
-    # Execute the loop by patching run prerequisites.
+    # Executa o loop substituindo por patches os pré-requisitos de run.
     original_client_cls = daemon.__class__.__dict__.get("_client")
     _ = original_client_cls
 
-    # Call internals directly to keep test deterministic.
+    # Chama diretamente os componentes internos para manter o teste determinístico.
     for symbol in cfg.symbols:
         for timeframe in cfg.timeframes:
             daemon._sync_context(symbol, timeframe, cfg)

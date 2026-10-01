@@ -1,4 +1,4 @@
-"""Concurrent-safe campaign registry persistence helpers."""
+"""Funções auxiliares para persistência concorrente e segura do registro de campanhas."""
 from __future__ import annotations
 
 import json

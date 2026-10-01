@@ -1,4 +1,4 @@
-"""Diagnose multi-member gzip corruption in the aggTrades dataset (read-only)."""
+"""Diagnostica a corrupção de gzip com vários membros no conjunto de dados aggTrades (somente leitura)."""
 from __future__ import annotations
 
 import zlib

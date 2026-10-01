@@ -11,6 +11,7 @@ from typing import Any
 
 from database.connection import get_session
 from database.history_models import ScientificTradeSnapshot, TradeHistory
+from paper_trading.paper_broker import _TAKER_FEE
 from sqlalchemy import func, or_, select
 from utils.metrics import (
     expectancy_from_pnl,
@@ -180,16 +181,21 @@ def fetch_closed_trades_metrics(execution_ids: list[str]) -> dict[str, float | i
             "expectancy": 0.0,
             "max_drawdown": 0.0,
             "sharpe": 0.0,
+            "gross_profit": 0.0,
+            "total_fees": 0.0,
         }
 
     pnl_values: list[float] = []
     pnl_percent_values: list[float] = []
+    gross_total = 0.0
+    fees_total = 0.0
 
     with get_session() as session:
         stmt = (
             select(
-                TradeHistory.pnl,
-                TradeHistory.pnl_percent,
+                TradeHistory.entry_price,
+                TradeHistory.exit_price,
+                TradeHistory.quantity,
                 TradeHistory.exit_time,
             )
             .where(TradeHistory.execution_id.in_(ids))
@@ -197,15 +203,19 @@ def fetch_closed_trades_metrics(execution_ids: list[str]) -> dict[str, float | i
         )
         rows = session.execute(stmt).all()
 
-    for pnl, pnl_percent, _exit_time in rows:
-        try:
-            pnl_values.append(float(pnl or 0.0))
-        except (TypeError, ValueError):
-            pnl_values.append(0.0)
-        try:
-            pnl_percent_values.append(float(pnl_percent or 0.0))
-        except (TypeError, ValueError):
-            pnl_percent_values.append(0.0)
+    # O pnl armazenado era bruto antes da correção das taxas; derive-o dos preços para manter consistência entre registros antigos e novos.
+    for entry_price, exit_price, quantity, _exit_time in rows:
+        entry_v = float(entry_price or 0.0)
+        exit_v = float(exit_price or 0.0)
+        qty = float(quantity or 0.0)
+        gross = (exit_v - entry_v) * qty
+        fees = (entry_v + exit_v) * qty * _TAKER_FEE
+        net = gross - fees
+        gross_total += gross
+        fees_total += fees
+        pnl_values.append(net)
+        stake = entry_v * qty
+        pnl_percent_values.append(net / stake if stake > 0 else 0.0)
 
     closed_trades = len(pnl_values)
     wins = sum(1 for x in pnl_values if x > 0)
@@ -223,6 +233,8 @@ def fetch_closed_trades_metrics(execution_ids: list[str]) -> dict[str, float | i
         "expectancy": float(expectancy_from_pnl(pnl_values)),
         "max_drawdown": float(max_drawdown_from_pnl(pnl_values)),
         "sharpe": float(sharpe_from_pnl(sharpe_base)),
+        "gross_profit": float(gross_total),
+        "total_fees": float(fees_total),
     }
 
 
@@ -406,7 +418,8 @@ def print_paper_block(index: int, row: StateRow, stale_limit_seconds: float) -> 
     print(f"NET_EXPECTANCY: {metric('expectancy', lambda value: f'{value:+.6f}')}")
     print(f"SHARPE: {metric('sharpe', lambda value: f'{value:.6f}')}")
     print(f"MAX_DRAWDOWN: {metric('max_drawdown', lambda value: f'{value:.6f}')}")
-    print("TOTAL_FEES: N/A")
+    print(f"GROSS_PNL: {metric('gross_profit', lambda value: f'{value:+.6f}')}")
+    print(f"TOTAL_FEES: {metric('total_fees', lambda value: f'{value:.6f}')}")
     print(f"EVIDENCE_STATUS: {'ACCUMULATING' if has_metrics else 'TOO_EARLY'}")
     print(f"OPERATIONAL_ALERTS: {'WORKER_STOPPED' if is_stale else 'NONE'}")
     return metrics
@@ -502,7 +515,8 @@ def main() -> int:
         print(f"NET_EXPECTANCY: {metric('expectancy', lambda value: f'{value:+.6f}')}")
         print(f"SHARPE: {metric('sharpe', lambda value: f'{value:.6f}')}")
         print(f"MAX_DRAWDOWN: {metric('max_drawdown', lambda value: f'{value:.6f}')}")
-        print("TOTAL_FEES: N/A")
+        print(f"GROSS_PNL: {metric('gross_profit', lambda value: f'{value:+.6f}')}")
+        print(f"TOTAL_FEES: {metric('total_fees', lambda value: f'{value:.6f}')}")
         print(f"EVIDENCE_STATUS: {evidence}")
         print(f"OPERATIONAL_ALERTS: {', '.join(alert for alert in alerts if alert) or 'NONE'}")
         return 0

@@ -1,4 +1,4 @@
-"""Operational coverage monitor for specialized paper campaign contexts."""
+"""Monitor operacional de cobertura para contextos especializados de campanhas de paper trading."""
 from __future__ import annotations
 
 import csv
@@ -107,7 +107,7 @@ def _status_for_context(
 
 
 class PaperCampaignCoverageService:
-    """Read-only monitor that checks execution coverage of approved campaign contexts."""
+    """Monitor somente leitura que verifica a cobertura de execução dos contextos de campanha aprovados."""
 
     def __init__(self, base_dir: Path) -> None:
         self._base_dir = base_dir

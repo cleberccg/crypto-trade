@@ -861,7 +861,7 @@ def _persist_env_updates(updates: dict[str, str]) -> None:
 
 
 def update_runtime_config(payload: dict[str, str | int]) -> dict:
-    # Keep overrides in-memory only; do not mutate frozen settings dataclasses.
+    # Mantém as substituições somente em memória; não altera dataclasses de configuração congeladas.
     allowed = {"mode", "symbol", "timeframe", "workers"}
     for key, value in payload.items():
         if key in allowed:

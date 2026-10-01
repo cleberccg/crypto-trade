@@ -58,10 +58,10 @@ def _dt(value: str) -> datetime:
 
 
 def _acquire_lock(path: Path) -> int:
-    """Create an exclusive lock file to prevent two collector instances from
-    appending to the same gzip output concurrently (root cause of the
-    2025-01 corruption: interleaved 'ab' writes from overlapping processes
-    corrupted the multi-member gzip stream from the second member onward)."""
+    """Cria um arquivo de bloqueio exclusivo para impedir que duas instâncias do coletor
+    acrescentem dados simultaneamente ao mesmo arquivo gzip (causa raiz da
+    corrupção de 2025-01: gravações 'ab' intercaladas por processos sobrepostos
+    corromperam o fluxo gzip de vários membros a partir do segundo membro)."""
     path.parent.mkdir(parents=True, exist_ok=True)
     try:
         fd = os.open(str(path), os.O_CREAT | os.O_EXCL | os.O_WRONLY)

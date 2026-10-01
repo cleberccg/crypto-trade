@@ -595,7 +595,7 @@ def main() -> None:
                     routed["window_id"] = win.idx
                     agg_router_trades.extend(routed.to_dict("records"))
 
-                # Router frozen decisions on every test bar.
+                # O roteador mantém congeladas as decisões em cada barra de teste.
                 decisions = test_regimes[["trend_bucket", "vol_regime"]].copy()
                 decisions = decisions.reset_index().rename(columns={decisions.index.name or "index": "timestamp"})
                 decisions["symbol"] = symbol

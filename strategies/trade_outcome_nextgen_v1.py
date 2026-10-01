@@ -1,13 +1,13 @@
 """
-TradeOutcomeNextGenV1 - faithful operational translation of the approved FASE 8.1 candidate.
+TradeOutcomeNextGenV1 — tradução operacional fiel do candidato aprovado na FASE 8.1.
 
-Approved candidate:
+Candidato aprovado:
 - target: return_above
 - rule: distance_to_ema_pct <= 0.162026
 
-This strategy keeps the entry rule exactly as approved and relies on the
-existing risk manager defaults for stop/take/trailing when explicit levels are
-not provided by the rule itself.
+Esta estratégia mantém a regra de entrada exatamente como aprovada e depende
+dos padrões existentes do gerenciador de risco para stop/take/trailing quando a
+própria regra não fornece níveis explícitos.
 """
 from __future__ import annotations
 
@@ -44,7 +44,7 @@ from strategies.registry import register_strategy
     aliases=["trade_outcome_v1", "tonextgenv1"],
 )
 class TradeOutcomeNextGenV1Strategy(QuantStrategy):
-    """Candidate translation strategy for controlled implementation (FASE 9)."""
+    """Estratégia de tradução do candidato para implementação controlada (FASE 9)."""
 
     def __init__(self, ema_slow: int = 50, distance_threshold: float = 0.162026, **_: object) -> None:
         self._ema_slow_period = int(ema_slow)

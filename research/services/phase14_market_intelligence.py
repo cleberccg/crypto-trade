@@ -80,7 +80,7 @@ class MarketIntelligenceService:
         self._results_dir.mkdir(parents=True, exist_ok=True)
 
     # ------------------------------------------------------------------
-    # Entry point
+    # Ponto de entrada
     # ------------------------------------------------------------------
 
     def run(self, cfg: Phase14MarketIntelligenceConfig) -> dict[str, Any]:

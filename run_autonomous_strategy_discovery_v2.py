@@ -1,13 +1,13 @@
-"""Discovery funnel v2: same scientific protocol as run_autonomous_strategy_discovery.py
-(DEV -> Validation -> OOS -> robustness -> cost stress -> CANDIDATE), pointed
-at the new multi-year, multi-timeframe feature cache instead of the Jan-2025
-single-month dataset. FINAL_HOLDOUT is enforced structurally: rows at/after
-oos_end are never loaded into this process at all.
+"""Funil de descoberta v2: mesmo protocolo científico de run_autonomous_strategy_discovery.py
+(DEV -> Validation -> OOS -> robustness -> cost stress -> CANDIDATE), direcionado
+ao novo cache de recursos multi-anual e multi-timeframe, em vez do conjunto de dados
+de um único mês de Jan-2025. FINAL_HOLDOUT é imposto estruturalmente: linhas em ou após
+oos_end nunca são carregadas neste processo.
 
-Adds 2 genuinely new hypothesis families (regime transitions; BTC<->ETH
-order-flow lead-lag) -- distinct mechanisms from every previously rejected
-family. Reuses the exact gate constants/statistics from
-strategy_discovery_cycle1.py, same as every prior Discovery cycle.
+Adiciona 2 famílias de hipóteses realmente novas (transições de regime; defasagem
+do fluxo de ordens BTC<->ETH) -- mecanismos distintos de todas as famílias anteriormente
+rejeitadas. Reutiliza exatamente as constantes/métricas de gate de
+strategy_discovery_cycle1.py, como em todos os ciclos de Discovery anteriores.
 """
 from __future__ import annotations
 
@@ -39,7 +39,7 @@ LOCK_PATH = BASE_DIR / "autonomous_discovery_v2.lock"
 TARGET_CANDIDATES = 2
 SLIPPAGE_BPS = 2.0
 SYMBOLS = ("BTCUSDT", "ETHUSDT")
-TIMEFRAME = "1m"  # regime-transition and cross-asset flow are evaluated at 1m; justified: both mechanisms are defined bar-to-bar.
+TIMEFRAME = "1m"  # A transição de regime e o fluxo entre ativos são avaliados em 1m, pois ambos os mecanismos são definidos barra a barra.
 
 REJECTED_FAMILIES = {
     "BLOCK_FLOW_SIGNAL", "BURST_PERSISTENCE", "CVD_ACCELERATION", "FLOW_ABSORPTION",
@@ -81,8 +81,8 @@ class HypothesisConfig:
 def _load_bars(cache_dir: Path, symbol: str, oos_end: pd.Timestamp) -> pd.DataFrame:
     path = cache_dir / f"{symbol}_{TIMEFRAME}.parquet"
     bars = pd.read_parquet(path)
-    # FINAL_HOLDOUT structural protection: rows >= oos_end are simply never
-    # loaded past this point in the process.
+    # Proteção estrutural de FINAL_HOLDOUT: as linhas >= oos_end simplesmente nunca são
+    # carregadas além deste ponto do processo.
     return bars.loc[bars.index < oos_end].copy()
 
 
@@ -91,19 +91,19 @@ def add_v2_features(frames: dict[str, pd.DataFrame]) -> dict[str, pd.DataFrame]:
         regimes = classify_market_regimes(df[["open", "high", "low", "close", "volume"]])
         df["regime_key"] = regimes["regime_key"].reindex(df.index)
 
-    # REGIME_TRANSITION: fires on the bar where regime_key changes vs the
-    # previous bar; signed by the direction of the NEW regime's trend bucket
-    # (bullish=+1, bearish=-1, sideways -> no signal). Distinct mechanism:
-    # discrete state-change detection, not a continuous feature threshold.
+    # REGIME_TRANSITION: é acionado na barra em que regime_key muda em relação à
+    # barra anterior; o sinal segue a direção da NOVA faixa de tendência do regime
+    # (bullish=+1, bearish=-1, sideways -> sem sinal). É um mecanismo distinto:
+    # detecção discreta de mudança de estado, não um limiar contínuo de característica.
     for symbol, df in frames.items():
         trend = df["regime_key"].str.split("|").str[0]
         trend_sign = trend.map({"bullish": 1.0, "bearish": -1.0, "sideways": 0.0})
         changed = df["regime_key"] != df["regime_key"].shift(1)
         df["regime_transition_signal"] = (trend_sign * changed.astype(float)).replace(0.0, np.nan)
 
-    # BTC_ETH_FLOW_LEADLAG: one asset's recent signed-volume burst (z-scored)
-    # used to predict the OTHER asset's forward return. Distinct mechanism:
-    # cross-asset order-flow spillover, not a single-asset feature.
+    # BTC_ETH_FLOW_LEADLAG: um pico recente de volume com sinal de um ativo (convertido em escore z)
+    # usado para prever o retorno futuro do OUTRO ativo. Mecanismo distinto:
+    # transbordamento do fluxo de ordens entre ativos, não uma característica de um único ativo.
     if "BTCUSDT" in frames and "ETHUSDT" in frames:
         btc, eth = frames["BTCUSDT"], frames["ETHUSDT"]
         common_index = btc.index.intersection(eth.index)

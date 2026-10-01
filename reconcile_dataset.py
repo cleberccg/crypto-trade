@@ -32,7 +32,7 @@ def _section(title: str) -> None:
 
 
 def task1_canonical_partition_model() -> dict[str, Any]:
-    """Recalculate expected partition plan 2024-01 to 2026-08."""
+    """Recalcula o plano de partições esperado de 2024-01 a 2026-08."""
     _section("TAREFA 1: DEFINIR MODELO CANONICO DE PARTICAO")
     
     today = datetime.now(timezone.utc).date()
@@ -74,7 +74,7 @@ def task1_canonical_partition_model() -> dict[str, Any]:
 
 
 def task2_validate_august_2026() -> dict[str, Any]:
-    """Inspect files on disk."""
+    """Inspeciona os arquivos no disco."""
     _section("TAREFA 2: VALIDAR ARQUIVOS 2026-08")
     
     august_files = {}
@@ -113,7 +113,7 @@ def task2_validate_august_2026() -> dict[str, Any]:
 
 
 def task3_btcusdt_2026_02() -> dict[str, Any]:
-    """Verify BTCUSDT 2026-02 data quality issue."""
+    """Verifica o problema de qualidade dos dados de BTCUSDT de 2026-02."""
     _section("TAREFA 3: BTCUSDT 2026-02 - DATA QUALITY ISSUE")
     
     manifest = json.loads(MANIFEST_PATH.read_text())
@@ -154,7 +154,7 @@ def task3_btcusdt_2026_02() -> dict[str, Any]:
 
 
 def task4_reconcile_manifest(expected: dict, august: dict) -> dict[str, Any]:
-    """Compare expected vs manifest vs disk."""
+    """Compara o esperado com o manifesto e com os arquivos no disco."""
     _section("TAREFA 4: RECONCILIAR MANIFEST COM REALIDADE")
     
     manifest = json.loads(MANIFEST_PATH.read_text())
@@ -226,7 +226,7 @@ def task4_reconcile_manifest(expected: dict, august: dict) -> dict[str, Any]:
 
 
 def task5_explain_numbers(expected: dict) -> dict[str, Any]:
-    """Explain 126/110/107/63."""
+    """Explica os números 126/110/107/63."""
     _section("TAREFA 5: RESOLVER CONTAGEM 126/110/107/63")
     
     manifest = json.loads(MANIFEST_PATH.read_text())
@@ -264,7 +264,7 @@ def task5_explain_numbers(expected: dict) -> dict[str, Any]:
 
 
 def task6_coverage() -> dict[str, Any]:
-    """Calculate coverage by asset."""
+    """Calcula a cobertura por ativo."""
     _section("TAREFA 6: COBERTURA REAL POR ATIVO")
     
     coverage = {}
@@ -283,7 +283,7 @@ def task6_coverage() -> dict[str, Any]:
 
 
 def task7_gap_safety() -> dict[str, Any]:
-    """Check gap safety."""
+    """Verifica a segurança da lacuna."""
     _section("TAREFA 7: GAP SAFETY")
     
     manifest = json.loads(MANIFEST_PATH.read_text())
@@ -307,7 +307,7 @@ def task7_gap_safety() -> dict[str, Any]:
 
 
 def task8_holdout() -> dict[str, Any]:
-    """Verify FINAL_HOLDOUT."""
+    """Verifica FINAL_HOLDOUT."""
     _section("TAREFA 8: HOLDOUT PRESERVATION")
     
     print(f"Temporal splits:")
@@ -321,7 +321,7 @@ def task8_holdout() -> dict[str, Any]:
 
 
 def main() -> int:
-    """Execute reconciliation tasks."""
+    """Executa as tarefas de reconciliação."""
     
     _log("\n" + "="*80)
     _log("DATASET RECONCILIATION")

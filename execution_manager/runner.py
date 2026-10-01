@@ -45,7 +45,7 @@ class ExecutionRunner:
             if proc.returncode != 0:
                 raise RuntimeError("simulated_subprocess_failure")
 
-        # Real execution path (no placeholders): each stage triggers real module code.
+        # Caminho de execução real (sem placeholders): cada etapa aciona código real do módulo.
         if job.stage.startswith("download_"):
             self._run_download(job)
         elif job.stage.startswith("optimizer_"):
@@ -53,8 +53,8 @@ class ExecutionRunner:
         elif job.stage == "validation":
             self._run_validation(job)
         elif job.stage in {"smoke", "research", "analytics", "backup"}:
-            # Keep pipeline stages deterministic while still measuring real elapsed runtime.
-            # These stages consume real persisted outputs created by optimizer/validation.
+            # Mantém as etapas do pipeline determinísticas e, ao mesmo tempo, mede o tempo real decorrido.
+            # Essas etapas consomem resultados reais e persistidos, criados por optimizer/validation.
             sleep(0.01)
             job.processed = job.total
             job.result = {"message": f"{job.name} completed"}
@@ -208,7 +208,7 @@ class ExecutionRunner:
 
         symbol = str(self._last_optimizer_summary.get("symbol") or "BTC/USDT")
         timeframe = str(self._last_optimizer_summary.get("timeframe") or settings.trading.default_timeframe)
-        # Build validation window from available candles to avoid stale optimizer date defaults.
+        # Cria a janela de validação a partir dos candles disponíveis para evitar datas padrão obsoletas do otimizador.
         window = default_validation_window(None, None, symbol=symbol, timeframe=timeframe)
         validator = OptimizationValidator(
             ValidationCriteria(

@@ -24,7 +24,7 @@ export function useTimelineSocket(enabled: boolean) {
       try {
         setData(JSON.parse(event.data) as TimelineTick);
       } catch {
-        // Ignore malformed payloads.
+        // Ignora payloads malformados.
       }
     };
 

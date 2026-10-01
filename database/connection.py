@@ -1,10 +1,10 @@
 ﻿"""
-Database connection management.
+Gerenciamento da conexão com o banco de dados.
 
-Design decision: A `DatabaseConnection` class encapsulates engine creation and
-session factory so the rest of the application never imports SQLAlchemy
-directly for connection concerns.  The `get_session` context manager provides
-automatic commit/rollback semantics.
+Decisão de projeto: a classe `DatabaseConnection` encapsula a criação do
+mecanismo e da fábrica de sessões, para que o restante da aplicação não
+importe SQLAlchemy diretamente para lidar com conexões. O gerenciador de
+contexto `get_session` fornece semântica automática de commit/rollback.
 """
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ logger = get_logger(__name__)
 
 
 def _configure_sqlite_pragmas(engine: Engine) -> None:
-    """Enable WAL mode and foreign keys for SQLite connections."""
+    """Habilita o modo WAL e as chaves estrangeiras nas conexões SQLite."""
 
     @event.listens_for(engine, "connect")
     def set_sqlite_pragma(dbapi_connection: object, _connection_record: object) -> None:
@@ -35,9 +35,9 @@ def _configure_sqlite_pragmas(engine: Engine) -> None:
 
 class DatabaseConnection:
     """
-    Manages the SQLAlchemy engine and session factory lifecycle.
+    Gerencia o ciclo de vida do mecanismo SQLAlchemy e da fábrica de sessões.
 
-    Usage::
+    Uso::
 
         db = DatabaseConnection()
         db.create_tables()
@@ -52,7 +52,7 @@ class DatabaseConnection:
         logger.info("DatabaseConnection initialised - url=%s", self._url.split("@")[-1])
 
     def _build_engine(self) -> Engine:
-        """Create the SQLAlchemy engine with appropriate settings."""
+        """Cria o mecanismo SQLAlchemy com as configurações apropriadas."""
         backend = settings.database.type.strip().lower()
         url_lower = self._url.strip().lower()
         is_sqlite = url_lower.startswith("sqlite")
@@ -81,11 +81,11 @@ class DatabaseConnection:
 
     @property
     def engine(self) -> Engine:
-        """Expose the underlying SQLAlchemy Engine."""
+        """Disponibiliza o Engine SQLAlchemy subjacente."""
         return self._engine
 
     def create_tables(self) -> None:
-        """Create all tables defined in the metadata (idempotent)."""
+        """Cria todas as tabelas definidas nos metadados (operação idempotente)."""
         from database.models import Base  # Evitar circular import at module level
 
         Base.metadata.create_all(self._engine)
@@ -94,10 +94,10 @@ class DatabaseConnection:
     @contextmanager
     def session(self) -> Generator[Session, None, None]:
         """
-        Provide a transactional session scope.
+        Fornece um escopo transacional para a sessão.
 
-        Commits on success, rolls back on any exception, and always closes
-        the session.
+        Efetua commit em caso de sucesso, rollback diante de qualquer exceção
+        e sempre fecha a sessão.
         """
         session: Session = self._Session()
         try:
@@ -110,17 +110,17 @@ class DatabaseConnection:
             session.close()
 
     def dispose(self) -> None:
-        """Release all pooled connections."""
+        """Libera todas as conexões do pool."""
         self._engine.dispose()
         logger.info("Database engine disposed.")
 
 
 def bootstrap_database(database_url: str | None = None) -> None:
     """
-    Backwards-compatible bootstrap helper.
+    Função auxiliar de inicialização compatível com versões anteriores.
 
-    The real bootstrap logic lives in database.bootstrap to keep schema
-    creation and connection management decoupled.
+    A lógica de inicialização propriamente dita fica em database.bootstrap,
+    mantendo desacopladas a criação do esquema e o gerenciamento de conexões.
     """
     from database.bootstrap import bootstrap_database as _bootstrap_database
 
@@ -135,7 +135,7 @@ _db: DatabaseConnection | None = None
 
 
 def get_db() -> DatabaseConnection:
-    """Return the application-wide DatabaseConnection singleton."""
+    """Retorna a instância singleton de DatabaseConnection usada pela aplicação."""
     global _db
     if _db is None:
         _db = DatabaseConnection()
@@ -145,9 +145,9 @@ def get_db() -> DatabaseConnection:
 @contextmanager
 def get_session() -> Generator[Session, None, None]:
     """
-    Convenience context manager that provides a session from the singleton DB.
+    Gerenciador de contexto conveniente que fornece uma sessão do banco singleton.
 
-    Usage::
+    Uso::
 
         with get_session() as session:
             session.add(record)

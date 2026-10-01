@@ -5,7 +5,7 @@ import os
 print("Pipeline Status Monitor")
 print("=" * 60)
 
-# Wait for log to be written
+# Aguarda a gravação do log
 wait_count = 0
 while not os.path.exists('logs/research_pipeline.log') or os.path.getsize('logs/research_pipeline.log') == 0:
     if wait_count > 30:
@@ -15,7 +15,7 @@ while not os.path.exists('logs/research_pipeline.log') or os.path.getsize('logs/
     time.sleep(1)
     wait_count += 1
 
-# Monitor for transitions
+# Monitora as transições
 stage_line_count = 0
 last_check = 0
 
@@ -23,17 +23,17 @@ while True:
     if os.path.exists('logs/research_pipeline.log'):
         lines = open('logs/research_pipeline.log').readlines()
         
-        # Count stage lines
+        # Conta as linhas de etapas
         new_stage_count = sum(1 for l in lines if 'PIPELINE_STAGE:' in l)
         
         if new_stage_count > stage_line_count:
             stage_line_count = new_stage_count
-            # Show all stage lines
+            # Exibe todas as linhas de etapas
             stage_lines = [l.strip() for l in lines if 'PIPELINE_STAGE:' in l]
             for sl in stage_lines[-3:]:
                 print(f"✓ {sl[:100]}")
         
-        # Check for significant updates every 15 lines
+        # Verifica atualizações significativas a cada 15 linhas
         if len(lines) > last_check + 15:
             last_check = len(lines)
             last_line = lines[-1].strip() if lines else ''
@@ -47,12 +47,12 @@ while True:
             elif last_line:
                 print(f"  {last_line[:100]}")
         
-        # Check if cache or discovery started
+        # Verifica se o cache ou a descoberta foi iniciado
         if any('CACHE' in l or 'DISCOVERY' in l for l in lines):
             print("\n✓✓✓ MAJOR MILESTONE: Cache or Discovery phase started!")
             break
         
-        # Break on error
+        # Interrompe ao ocorrer um erro
         if any('FAILED' in l for l in lines):
             print("\n✗ VALIDATION/STAGE FAILURE DETECTED")
             failed_lines = [l.strip() for l in lines if 'FAILED' in l.upper()]

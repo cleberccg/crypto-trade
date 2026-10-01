@@ -24,7 +24,7 @@ export function useNotificationsSocket(enabled: boolean) {
       try {
         setData(JSON.parse(event.data) as NotificationsTick);
       } catch {
-        // Ignore malformed payloads.
+        // Ignora payloads malformados.
       }
     };
 

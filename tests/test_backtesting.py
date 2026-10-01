@@ -1,5 +1,5 @@
 ﻿"""
-Integration tests for the backtesting engine.
+Testes de integração do mecanismo de backtesting.
 """
 from __future__ import annotations
 
@@ -105,7 +105,7 @@ class TestBacktestEngine:
         assert result.metrics.profit_factor >= 0.0
 
     def test_no_trades_on_very_short_data(self) -> None:
-        """Short data that doesn't pass warmup should produce no trades."""
+        """Dados curtos que não passam pelo aquecimento não devem gerar operações."""
         strategy = TrendV1Strategy()
         strategy.initialize()
         engine = BacktestEngine(

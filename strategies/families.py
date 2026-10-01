@@ -9,7 +9,7 @@ class QuantStrategy(BaseStrategy):
     @property
     @abstractmethod
     def family(self) -> str:
-        """Strategy family used by the registry and cross-family reports."""
+        """Família da estratégia usada pelo registro e pelos relatórios entre famílias."""
 
 
 class TrendStrategy(QuantStrategy):

@@ -14,7 +14,7 @@ from strategies.reversao_nextgen_v1 import ReversaoNextGenV1Strategy
 
 
 class OldReversaoStrategy(ReversaoNextGenV1Strategy):
-    """Reference implementation (pre-performance-fix) for equivalence checks."""
+    """Implementação de referência (anterior à correção de desempenho) para verificações de equivalência."""
 
     def calculate(self, df: pd.DataFrame) -> pd.DataFrame:
         self._assert_initialized()
@@ -86,7 +86,7 @@ def load_df(limit_bars: int) -> pd.DataFrame:
 def run_backtest(strategy_cls, params: dict, df: pd.DataFrame):
     strategy = strategy_cls(**params)
     strategy.initialize()
-    # Keep runtime fair with current path (cache-precompute call)
+    # Mantém a comparação de tempo justa com o caminho atual (chamada de pré-cálculo do cache)
     strategy.calculate(df.copy())
     engine = BacktestEngine(strategy, config=BacktestConfig(initial_capital=10_000.0))
     return engine.run(df.copy(), symbol="BTC/USDT")

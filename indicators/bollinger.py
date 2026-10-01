@@ -1,5 +1,5 @@
 ﻿"""
-Bollinger Bands indicator.
+Indicador de Bandas de Bollinger (Bollinger Bands).
 """
 from __future__ import annotations
 
@@ -10,18 +10,18 @@ from indicators.base_indicator import BaseIndicator
 
 class BollingerBands(BaseIndicator):
     """
-    Bollinger Bands - volatility envelope around a Simple Moving Average.
+    Bandas de Bollinger (Bollinger Bands): envelope de volatilidade em torno de uma média móvel simples.
 
-    Bands:
-    - ``middle``: n-period SMA of close.
+    Bandas:
+    - ``middle``: SMA de close com n períodos.
     - ``upper``: middle + (k * std).
     - ``lower``: middle - (k * std).
-    - ``bandwidth``: (upper - lower) / middle - normalised width.
-    - ``percent_b``: position of close within the bands (0 = lower, 1 = upper).
+    - ``bandwidth``: (upper - lower) / middle - largura normalizada.
+    - ``percent_b``: posição de close dentro das bandas (0 = inferior, 1 = superior).
 
-    Args:
-        period: Lookback period for the SMA (default 20).
-        std_dev: Standard deviation multiplier (default 2.0).
+    Argumentos:
+        period: Período retroativo da SMA (padrão 20).
+        std_dev: Multiplicador do desvio padrão (padrão 2.0).
     """
 
     def __init__(self, period: int = 20, std_dev: float = 2.0) -> None:
@@ -38,13 +38,13 @@ class BollingerBands(BaseIndicator):
 
     def calculate(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        Compute Bollinger Band components.
+        Calcula os componentes das Bollinger Bands.
 
-        Args:
-            df: OHLCV DataFrame.
+        Argumentos:
+            df: DataFrame OHLCV.
 
-        Returns:
-            DataFrame with columns [middle, upper, lower, bandwidth, percent_b].
+        Retorno:
+            DataFrame com as colunas [middle, upper, lower, bandwidth, percent_b].
         """
         self._validate_min_length(df, self._period)
 

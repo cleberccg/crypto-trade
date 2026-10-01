@@ -25,7 +25,7 @@ export function useMonitorSocket(enabled: boolean) {
       try {
         setData(JSON.parse(event.data) as MonitorTick);
       } catch {
-        // Ignore malformed messages.
+        // Ignora mensagens malformadas.
       }
     };
 

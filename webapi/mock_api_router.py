@@ -33,7 +33,7 @@ router = APIRouter(tags=["mock-platform"])
 
 
 def _execution_stub() -> dict[str, Any]:
-    """Backward-compatible payload for legacy execution API routes."""
+    """Payload compatível com versões anteriores para rotas legadas da API de execução."""
     return {
         "execution_id": None,
         "status": "idle",

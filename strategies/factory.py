@@ -1,4 +1,4 @@
-"""Strategy factory used by optimizer, validation, backtesting and paper flows."""
+"""Fábrica de estratégias usada nos fluxos de otimização, validação, backtest e paper trading."""
 from __future__ import annotations
 
 from typing import Any

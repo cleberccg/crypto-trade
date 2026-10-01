@@ -1,42 +1,42 @@
-"""Bulk order-book/depth collector using Binance's official historical data
-archive (data.binance.vision).
+"""Coletor em lote de order book/profundidade usando o arquivo histórico oficial
+da Binance (data.binance.vision).
 
-SOURCE AUDIT (see COPILOT_INSTRUCTIONS / session report for full detail):
-- Binance SPOT has NO historical order-book/depth/bookTicker archive at all
-  (data/spot/daily only has aggTrades, klines, trades -- confirmed by listing
-  the official S3 bucket). Only live snapshots via fetch_order_book exist
-  (exchange/binance_client.py, exchange/binance_market_data_client.py), which
-  are NOT historical and NOT bulk.
-- Binance USDⓈ-M FUTURES (data/futures/um/daily/) DOES publish two archives:
-    * bookDepth: aggregated depth at 12 fixed percentage-from-mid bands
-      (-5,-4,-3,-2,-1,-0.2,0.2,1,2,3,4,5), snapshotted every ~30s. Available
-      continuously 2023-01-01 -> present (confirmed). ~0.4-0.6 MB/day/symbol
-      compressed -- small.
-    * bookTicker: full best-bid/ask update stream. Confirmed to exist only
-      as a handful of monthly files around 2023-05 (~2GB compressed for a
-      SINGLE symbol-month) and is NOT continuously published as daily files
-      afterwards (empty listings for 2025-06, 2025-12, 2026-08). Not usable
-      for a continuous multi-year history: this script does NOT collect it.
-- This is FUTURES (perpetual) market data, not SPOT. It is the closest
-  official, continuously-available historical order-book proxy. BID_ASK_
-  SPREAD / MICROPRICE (which need true L1 best bid/ask) are NOT derivable
-  from bookDepth; only depth/imbalance/liquidity features across percentage
-  bands are derivable. This is documented, not invented.
+AUDITORIA DA FONTE (consulte COPILOT_INSTRUCTIONS / o relatório da sessão para obter todos os detalhes):
+- A Binance SPOT NÃO possui nenhum arquivo histórico de order book/profundidade/bookTicker
+    (data/spot/daily contém apenas aggTrades, klines, trades -- confirmado pela listagem
+    do bucket S3 oficial). Existem apenas snapshots ao vivo via fetch_order_book
+    (exchange/binance_client.py, exchange/binance_market_data_client.py), que
+    NÃO são históricos nem em lote.
+- A Binance USDⓈ-M FUTURES (data/futures/um/daily/) publica DOIS arquivos:
+        * bookDepth: profundidade agregada em 12 faixas percentuais fixas em relação ao preço médio
+            (-5,-4,-3,-2,-1,-0.2,0.2,1,2,3,4,5), com snapshots a cada ~30s. Disponível
+            continuamente de 2023-01-01 até o presente (confirmado). ~0.4-0.6 MB/dia/símbolo
+            compactado -- pequeno.
+        * bookTicker: fluxo completo de atualizações do melhor preço de compra/venda. Confirmado que existe apenas
+            em alguns arquivos mensais em torno de 2023-05 (~2GB compactados para um
+            ÚNICO mês de um símbolo) e NÃO é publicado continuamente como arquivos diários
+            depois disso (listagens vazias para 2025-06, 2025-12, 2026-08). Não serve
+            para um histórico contínuo de vários anos: este script NÃO o coleta.
+- Estes são dados de mercado FUTURES (perpétuos), não SPOT. São a aproximação histórica
+    oficial de order book com disponibilidade contínua mais próxima. BID_ASK_
+    SPREAD / MICROPRICE (que exigem o melhor bid/ask L1 real) NÃO podem ser derivados
+    de bookDepth; somente recursos de profundidade/desequilíbrio/liquidez entre faixas
+    percentuais podem ser derivados. Isso é documentado, não inventado.
 
-Storage: partitioned, columnar Parquet (one file per symbol/day):
+Armazenamento: Parquet particionado e colunar (um arquivo por símbolo/dia):
     data/orderbook_depth/{SYMBOL}/{YEAR}/{MONTH}/{SYMBOL}_{YEAR}_{MONTH}_{DAY}.parquet
 
-Restart-safe: manifest (data/orderbook_depth/manifest.json) records one entry
-per partition with VALIDATED=YES only after integrity checks pass; completed
-partitions are never re-downloaded. Protected by a process lock (same
-pattern as collect_aggtrades_bulk.py).
+Seguro para reinicialização: o manifesto (data/orderbook_depth/manifest.json) registra uma entrada
+por partição com VALIDATED=YES somente após a aprovação das verificações de integridade; partições concluídas
+nunca são baixadas novamente. Protegido por bloqueio de processo (mesmo
+padrão de collect_aggtrades_bulk.py).
 
-Disk-safety gate: aborts BEFORE starting a new partition if free disk space
-drops below MIN_FREE_DISK_GB. Each partition is downloaded, parsed, written
-to Parquet, validated, and the temporary zip deleted immediately.
+Proteção de espaço em disco: aborta ANTES de iniciar uma nova partição se o espaço livre
+cair abaixo de MIN_FREE_DISK_GB. Cada partição é baixada, analisada, gravada
+em Parquet, validada e o zip temporário é excluído imediatamente.
 
-Does not touch MySQL / the operational database. Does not touch Paper Live.
-Does not touch BacktestEngine, RiskManager, PositionSizer or ClassicDonchianBreakout.
+Não altera o MySQL / banco de dados operacional. Não altera o Paper Live.
+Não altera BacktestEngine, RiskManager, PositionSizer nem ClassicDonchianBreakout.
 """
 from __future__ import annotations
 
@@ -64,7 +64,7 @@ TMP_DIR = OUT_ROOT / "_tmp"
 
 SYMBOLS = ("BTCUSDT", "ETHUSDT")
 DEFAULT_DATE_START = date(2024, 1, 1)
-MIN_FREE_DISK_GB = 15.0  # same safety margin convention as collect_aggtrades_bulk.py
+MIN_FREE_DISK_GB = 15.0  # Mesma convenção de margem de segurança usada em collect_aggtrades_bulk.py
 BULK_BASE_URL = "https://data.binance.vision/data/futures/um/daily/bookDepth"
 EXPECTED_PERCENTAGES = (-5.0, -4.0, -3.0, -2.0, -1.0, -0.2, 0.2, 1.0, 2.0, 3.0, 4.0, 5.0)
 
@@ -109,7 +109,7 @@ def _save_manifest(manifest: dict[str, Any]) -> None:
 @dataclass(frozen=True)
 class Partition:
     symbol: str
-    period: str  # "2026-08-15" (daily only -- no monthly bookDepth archive exists)
+    period: str  # "2026-08-15" (somente diário — não existe arquivo mensal de bookDepth)
 
     @property
     def key(self) -> str:
@@ -189,11 +189,11 @@ def _validate_partition(df: pd.DataFrame, partition: Partition) -> tuple[bool, l
     dup = df.duplicated(subset=["timestamp", "percentage"]).sum()
     if dup:
         issues.append(f"duplicate_timestamp_percentage={int(dup)}")
-    # crossed-book style sanity check: at a given timestamp, larger |percentage|
-    # away from mid must have >= notional accumulated on the same side than
-    # closer percentages ONLY for cumulative archives; Binance's bookDepth is
-    # per-band (not cumulative), so we instead check bands have plausible
-    # (non-explosive) magnitude relative to the day's median.
+    # Verificação de consistência no estilo crossed-book: no mesmo timestamp, percentuais com maior |percentage|
+    # em relação ao ponto médio devem ter notional acumulado no mesmo lado maior ou igual ao dos
+    # percentuais mais próximos SOMENTE em arquivos cumulativos; o bookDepth da Binance é
+    # organizado por faixa (não cumulativo), então verificamos se as faixas têm uma
+    # magnitude plausível (sem explosões) em relação à mediana do dia.
     median_notional = df["notional"].median()
     if median_notional and (df["notional"] > median_notional * 1000).any():
         issues.append("notional_outlier_suspected")
@@ -211,7 +211,7 @@ def _hash_dataframe(df: pd.DataFrame) -> str:
 
 
 def process_partition(partition: Partition, manifest: dict[str, Any]) -> tuple[str, int, int]:
-    """Returns (result, records, bytes_downloaded)."""
+    """Retorna (result, records, bytes_downloaded) (resultado, registros, bytes baixados)."""
     existing = manifest["partitions"].get(partition.key)
     if existing and existing.get("VALIDATED") == "YES" and partition.output_path.exists():
         return "SKIPPED_ALREADY_VALIDATED", int(existing.get("RECORDS", 0)), 0
@@ -285,7 +285,7 @@ def main() -> int:
             free_gb = _free_disk_gb(OUT_ROOT)
             try:
                 result, records, bytes_downloaded = process_partition(partition, manifest)
-            except Exception as exc:  # noqa: BLE001 - report and stop this pipeline only
+            except Exception as exc:  # noqa: BLE001 - registra o erro e interrompe somente este pipeline
                 errors += 1
                 _log(f"ERRORS: 1 PARTITION={partition.key} REASON={exc}")
                 _save_manifest(manifest)

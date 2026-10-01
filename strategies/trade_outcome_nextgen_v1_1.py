@@ -1,9 +1,9 @@
 """
-TradeOutcomeNextGenV1.1 - first controlled operational improvement (FASE 9.4).
+TradeOutcomeNextGenV1.1 — primeira melhoria operacional controlada (FASE 9.4).
 
-Entry logic is intentionally identical to V1.0.
-Only exit management changes are applied, starting with a time stop based on
-FASE 9.3 audit recommendation.
+A lógica de entrada é intencionalmente idêntica à V1.0.
+Somente o gerenciamento de saída é alterado, começando por um time stop baseado
+na recomendação da auditoria da FASE 9.3.
 """
 from __future__ import annotations
 
@@ -38,7 +38,7 @@ from strategies.registry import register_strategy
     aliases=["trade_outcome_v1_1", "tonextgenv11", "TradeOutcomeNextGenV11"],
 )
 class TradeOutcomeNextGenV11Strategy(QuantStrategy):
-    """V1.1 keeps entry logic unchanged and adds a deterministic time stop."""
+    """A V1.1 mantém a lógica de entrada e adiciona um time stop determinístico."""
 
     def __init__(
         self,
@@ -104,7 +104,7 @@ class TradeOutcomeNextGenV11Strategy(QuantStrategy):
                     "stop_loss": stop_loss,
                     "take_profit": take_profit,
                     "risk_reward_ratio": settings.risk.risk_reward_ratio,
-                    # Only operational change in V1.1
+                    # Única alteração operacional na V1.1
                     "max_holding_minutes": self._time_stop_minutes,
                     "exit_upgrade": "time_stop",
                 },

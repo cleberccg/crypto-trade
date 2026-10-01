@@ -165,15 +165,20 @@ class MarketDataDaemonService:
         else:
             incremental_start = latest_before + step
 
-        if incremental_start <= now:
-            self._download_with_retry(symbol, timeframe, incremental_start, now, cfg)
+        # Persiste somente candles fechados: o armazenamento apenas insere dados, portanto um candle em formação nunca seria corrigido.
+        step_seconds = int(step.total_seconds())
+        last_closed_open = datetime.fromtimestamp(
+            (int(now.timestamp()) // step_seconds) * step_seconds - step_seconds, tz=timezone.utc
+        )
+        if incremental_start <= last_closed_open:
+            self._download_with_retry(symbol, timeframe, incremental_start, last_closed_open, cfg)
 
         total_after = self._count_candles(symbol, timeframe)
         latest_after = self._get_latest_candle_time(symbol, timeframe)
 
         inserted_total = max(0, total_after - total_before)
         if gap_ranges_filled > 0:
-            # Approximation by observed delta in this cycle.
+            # Aproximação com base na variação observada neste ciclo.
             gap_inserted = inserted_total
 
         ctx["candles_inserted"] = int(ctx["candles_inserted"]) + int(inserted_total)

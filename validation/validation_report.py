@@ -1,4 +1,4 @@
-"""Persist validation reports as CSV, JSON and text."""
+"""Persiste relatórios de validação em CSV, JSON e texto."""
 from __future__ import annotations
 
 import csv
@@ -9,7 +9,7 @@ from validation.validation_result import ValidationEntry
 
 
 class ValidationReport:
-    """Outputs validation artifacts into optimization/results."""
+    """Grava artefatos de validação em optimization/results."""
 
     def __init__(self, output_dir: Path | None = None) -> None:
         self._output_dir = output_dir or Path(__file__).parent.parent / "optimization" / "results"

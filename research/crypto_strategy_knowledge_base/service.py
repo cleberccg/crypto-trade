@@ -14,7 +14,7 @@ class CryptoStrategyResearchConfig:
 
 
 class CryptoStrategyKnowledgeBaseService:
-    """FASE 11 - permanent knowledge curation for crypto strategy research."""
+    """FASE 11 - curadoria permanente de conhecimento para pesquisa de estratégias de criptoativos."""
 
     def __init__(self, base_dir: Path) -> None:
         self._base_dir = base_dir

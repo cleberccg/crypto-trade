@@ -1,4 +1,4 @@
-"""Notification center package."""
+"""Pacote do centro de notificações."""
 
 from notifications.notification_service import NotificationService, get_notification_service
 

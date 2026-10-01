@@ -1,4 +1,4 @@
-﻿"""Backward-compatible logger facade delegating to logging_service."""
+﻿"""Interface de logger compatível com versões anteriores que delega para logging_service."""
 from __future__ import annotations
 
 import logging

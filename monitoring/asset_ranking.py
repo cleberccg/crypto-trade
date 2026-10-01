@@ -25,7 +25,7 @@ class AssetRankingRow:
 
 
 class AssetRankingMonitor:
-    """Builds per-symbol operational ranking from closed trades."""
+    """Cria um ranking operacional por ativo a partir de operações fechadas."""
 
     def __init__(
         self,

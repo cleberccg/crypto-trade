@@ -17,13 +17,13 @@ print("=" * 80)
 print(f"PIPELINE STATUS - {time.strftime('%Y-%m-%d %H:%M:%S')}")
 print("=" * 80)
 
-# Main orchestrator log
+# Log principal do orquestrador
 print("\n[ORCHESTRATOR LOG]")
 lines = get_latest_log_lines('logs/research_pipeline_main.log', 10)
 for line in lines[-5:]:
     print(f"  {line[:100]}")
 
-# Check state file
+# Verifica o arquivo de estado
 print("\n[PIPELINE STATE]")
 state_file = 'research_pipeline_state.json'
 if os.path.exists(state_file):
@@ -36,7 +36,7 @@ if os.path.exists(state_file):
 else:
     print(f"  {state_file} not found yet")
 
-# Check feature cache
+# Verifica o cache de características
 print("\n[FEATURE CACHE]")
 cache_dir = 'data/cache_minute_bars_v2'
 if os.path.exists(cache_dir):
@@ -49,7 +49,7 @@ if os.path.exists(cache_dir):
 else:
     print(f"  Cache directory not yet created")
 
-# Check discovery registry
+# Verifica o registro de descoberta
 print("\n[DISCOVERY REGISTRY]")
 registry_file = 'autonomous_discovery_v2_registry.json'
 if os.path.exists(registry_file):
@@ -60,7 +60,7 @@ if os.path.exists(registry_file):
         print(f"  Overall Status: {status}")
         print(f"  Total Hypotheses: {len(hypotheses)}")
         
-        # Count by status
+        # Conta por estado
         status_counts = {}
         for h in hypotheses:
             s = h.get('status', 'UNKNOWN')
@@ -69,7 +69,7 @@ if os.path.exists(registry_file):
         for s, count in sorted(status_counts.items()):
             print(f"    - {s}: {count}")
         
-        # Show candidates
+        # Exibe as candidatas
         candidates = [h for h in hypotheses if h.get('status') == 'CANDIDATE']
         if candidates:
             print(f"\n  CANDIDATES FOUND: {len(candidates)}")
@@ -80,7 +80,7 @@ if os.path.exists(registry_file):
 else:
     print(f"  {registry_file} not yet created")
 
-# Check disk space
+# Verifica o espaço em disco
 print("\n[DISK SPACE]")
 import shutil
 stat = shutil.disk_usage('D:/')
@@ -91,7 +91,7 @@ print(f"  Free: {free_gb:.1f} GB")
 print(f"  Used: {used_gb:.1f} GB")
 print(f"  Total: {total_gb:.1f} GB")
 
-# Check processes
+# Verifica os processos
 print("\n[PROCESSES]")
 result = subprocess.run(['tasklist', '/FI', 'ImageName eq python.exe'], 
                        capture_output=True, text=True)
@@ -99,7 +99,7 @@ lines = result.stdout.split('\n')
 proc_lines = [l for l in lines if 'python' in l.lower() and 'PID' not in l]
 print(f"  Python processes: {len(proc_lines)}")
 
-# Check locks
+# Verifica os bloqueios
 print("\n[LOCKS]")
 locks = ['data/aggtrades_bulk.lock', 'research_pipeline.lock']
 for lock in locks:

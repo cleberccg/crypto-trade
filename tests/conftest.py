@@ -1,5 +1,5 @@
 ﻿"""
-Shared pytest fixtures used across all test modules.
+Fixtures compartilhadas do pytest usadas em todos os módulos de teste.
 """
 from __future__ import annotations
 
@@ -24,16 +24,16 @@ def make_ohlcv(
     seed: int = 42,
 ) -> pd.DataFrame:
     """
-    Generate synthetic OHLCV data for testing.
+    Gera dados OHLCV sintéticos para testes.
 
     Args:
-        n: Number of bars.
-        base_price: Starting close price.
-        trend: Per-bar multiplicative drift.
-        seed: Random seed for reproducibility.
+        n: Número de candles.
+        base_price: Preço de fechamento inicial.
+        trend: Deriva multiplicativa por candle.
+        seed: Semente aleatória para reprodutibilidade.
 
     Returns:
-        Normalised OHLCV DataFrame with a UTC DatetimeIndex.
+        DataFrame OHLCV normalizado com índice DatetimeIndex em UTC.
     """
     rng = np.random.default_rng(seed)
     prices = [base_price]
@@ -64,25 +64,25 @@ def make_ohlcv(
 
 @pytest.fixture
 def ohlcv_df() -> pd.DataFrame:
-    """Standard 200-bar OHLCV DataFrame."""
+    """DataFrame OHLCV padrão com 200 candles."""
     return make_ohlcv(n=200)
 
 
 @pytest.fixture
 def uptrend_df() -> pd.DataFrame:
-    """OHLCV DataFrame with a clear uptrend."""
+    """DataFrame OHLCV com tendência de alta clara."""
     return make_ohlcv(n=200, trend=0.003)
 
 
 @pytest.fixture
 def downtrend_df() -> pd.DataFrame:
-    """OHLCV DataFrame with a clear downtrend."""
+    """DataFrame OHLCV com tendência de baixa clara."""
     return make_ohlcv(n=200, trend=-0.003)
 
 
 @pytest.fixture
 def trend_v1() -> TrendV1Strategy:
-    """Initialised TrendV1 strategy."""
+    """Estratégia TrendV1 inicializada."""
     strategy = TrendV1Strategy()
     strategy.initialize()
     return strategy

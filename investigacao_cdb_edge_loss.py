@@ -375,7 +375,7 @@ def _attach_entry_features(trades: pd.DataFrame, candles_by_ctx: dict[tuple[str,
             tolerance=pd.Timedelta("3D"),
         )
 
-        # Keep trade identity columns stable after asof merge.
+        # Mantém estáveis as colunas de identificação da negociação após o merge asof.
         if "symbol_x" in merged.columns:
             merged["symbol"] = merged["symbol_x"]
         if "timeframe_x" in merged.columns:
@@ -644,7 +644,7 @@ def _classify_regimes(df: pd.DataFrame) -> pd.DataFrame:
     bbw_low = bbw.quantile(0.30)
 
     trend = np.where(adx >= adx_strong, "tendencia_forte", np.where(adx <= adx_weak, "lateral", "tendencia_fraca"))
-    # Use ema slope sign to split weak/strong direction when available.
+    # Usa o sinal da inclinação da EMA para separar direções fracas e fortes, quando disponível.
     trend = np.where((trend == "tendencia_forte") & (slope < 0), "tendencia_forte_baixa", trend)
     trend = np.where((trend == "tendencia_forte") & (slope >= 0), "tendencia_forte_alta", trend)
 

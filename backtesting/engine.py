@@ -1,10 +1,11 @@
 ﻿"""
-Backtesting engine.
+Mecanismo de backtesting.
 
-Design decision: A pure-Python event-driven engine rather than delegating to
-the `backtesting.py` library gives us full control over risk management
-integration (trailing stops, dynamic position sizing) and allows the same
-strategies to run in paper trading and live trading without any adaptation.
+Decisão de projeto: um mecanismo orientado a eventos, implementado em Python
+puro, em vez de delegar à biblioteca `backtesting.py`, oferece controle total
+sobre a integração do gerenciamento de risco (stops móveis, dimensionamento
+dinâmico de posições) e permite executar as mesmas estratégias em paper trading
+e em operações ao vivo sem adaptações.
 """
 from __future__ import annotations
 
@@ -31,7 +32,7 @@ _EXEC_DIAG_PATH = Path(__file__).parent / "results" / "execution_diagnostic.txt"
 
 @dataclass
 class BacktestConfig:
-    """Configuration parameters for a single backtest run."""
+    """Parâmetros de configuração para uma única execução de backtest."""
 
     initial_capital: float = 10_000.0
     fee_pct: float = _DEFAULT_FEE_PCT
@@ -43,7 +44,7 @@ class BacktestConfig:
 
 @dataclass
 class _Position:
-    """Tracks an open simulated position during the backtest."""
+    """Acompanha uma posição simulada aberta durante o backtest."""
 
     entry_price: float
     quantity: float
@@ -62,12 +63,13 @@ class _Position:
 
 class BacktestEngine:
     """
-    Event-driven backtesting engine.
+    Mecanismo de backtesting orientado a eventos.
 
-    Iterates bar by bar over historical OHLCV data, applying a strategy's
-    entry/exit signals and simulating trade execution with configurable fees.
+    Percorre barra a barra os dados históricos OHLCV, aplica os sinais de
+    entrada/saída de uma estratégia e simula a execução de operações com taxas
+    configuráveis.
 
-    Usage::
+    Uso::
 
         strategy = TrendV1Strategy()
         strategy.initialize()
@@ -136,14 +138,14 @@ class BacktestEngine:
 
     def run(self, df: pd.DataFrame, symbol: str = "UNKNOWN", timeframe: str | None = None) -> "BacktestResult":
         """
-        Execute a full backtest over *df*.
+        Executa um backtest completo sobre *df*.
 
-        Args:
-            df: OHLCV DataFrame with DatetimeIndex (must be pre-sorted).
-            symbol: Symbol label used in logging.
+        Argumentos:
+            df: DataFrame OHLCV com DatetimeIndex (deve estar pré-ordenado).
+            symbol: Identificador do ativo usado nos logs.
 
-        Returns:
-            BacktestResult containing trades, equity curve, and metrics.
+        Retorno:
+            BacktestResult com operações, curva de patrimônio e métricas.
         """
         validate_positive_float(self._config.initial_capital, "initial_capital")
 
@@ -420,7 +422,7 @@ class BacktestEngine:
             # --- Record equity ---
             _record_equity_once()
 
-            # --- Progress logging every 5 000 bars ---
+            # --- Registra o progresso a cada 5.000 barras ---
             _bt_done = i - self._config.warmup_bars + 1
             interval = max(1, int(self._config.progress_log_interval_bars))
             if _bt_done % interval == 0:
@@ -474,7 +476,7 @@ class BacktestEngine:
 
 @dataclass
 class BacktestResult:
-    """Container for all backtesting outputs."""
+    """Contêiner de todos os resultados do backtesting."""
 
     strategy_name: str
     symbol: str

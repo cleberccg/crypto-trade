@@ -1,22 +1,22 @@
 """
-Smoke test for ReversaoNextGenV1 strategy integration.
+Teste rápido de integração da estratégia ReversaoNextGenV1.
 
-Tests:
-1. Strategy imports successfully
-2. Registry discovers the strategy
-3. Factory can create instances
-4. Strategy methods are callable
-5. No regressions in existing strategies
+Testa:
+1. Se a estratégia pode ser importada com sucesso
+2. Se o registro descobre a estratégia
+3. Se a fábrica pode criar instâncias
+4. Se os métodos da estratégia podem ser chamados
+5. Se não há regressões nas estratégias existentes
 """
 
 import sys
 from pathlib import Path
 
-# Add repo to path
+# Adiciona o repositório ao caminho
 sys.path.insert(0, str(Path(__file__).parent))
 
 def test_reversao_import():
-    """Test that ReversaoNextGenV1 imports without error."""
+    """Verifica se ReversaoNextGenV1 é importada sem erros."""
     try:
         from strategies.reversao_nextgen_v1 import ReversaoNextGenV1Strategy
         print("[OK] Import successful: ReversaoNextGenV1Strategy")
@@ -27,13 +27,13 @@ def test_reversao_import():
 
 
 def test_registry_discovery():
-    """Test that registry discovers ReversaoNextGenV1."""
+    """Verifica se o registro descobre ReversaoNextGenV1."""
     try:
         from strategies.registry import discover_strategies, lookup_strategy
         
         discover_strategies()
         
-        # Try multiple names/aliases
+        # Testa vários nomes/aliases
         for name in ["ReversaoNextGenV1", "h27", "reversao_v1", "reversaov1"]:
             entry = lookup_strategy(name)
             if entry:
@@ -48,7 +48,7 @@ def test_registry_discovery():
 
 
 def test_factory_creation():
-    """Test that Factory can create ReversaoNextGenV1 instances."""
+    """Verifica se Factory consegue criar instâncias de ReversaoNextGenV1."""
     try:
         from strategies.factory import create_strategy
         
@@ -74,7 +74,7 @@ def test_factory_creation():
 
 
 def test_strategy_lifecycle():
-    """Test strategy initialization and basic methods."""
+    """Verifica a inicialização da estratégia e seus métodos básicos."""
     try:
         from strategies.reversao_nextgen_v1 import ReversaoNextGenV1Strategy
         import pandas as pd
@@ -86,7 +86,7 @@ def test_strategy_lifecycle():
         strategy.initialize()
         print(f"✓ Strategy initialization successful: {strategy.name}")
         
-        # Create dummy OHLCV data
+        # Cria dados OHLCV fictícios
         dates = pd.date_range("2026-01-01", periods=100, freq="1h", tz="UTC")
         df = pd.DataFrame({
             "open": np.random.uniform(100, 110, 100),
@@ -121,7 +121,7 @@ def test_strategy_lifecycle():
 
 
 def test_existing_strategies():
-    """Ensure no regression in existing strategies."""
+    """Garante que não haja regressões nas estratégias existentes."""
     try:
         from strategies.factory import create_strategy
         
@@ -138,7 +138,7 @@ def test_existing_strategies():
 
 
 def run_all_tests():
-    """Run all smoke tests."""
+    """Executa todos os testes rápidos."""
     print("\n" + "="*70)
     print("FASE 5.5 — SMOKE TESTS: ReversaoNextGenV1 Strategy")
     print("="*70 + "\n")

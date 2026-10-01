@@ -1,1 +1,1 @@
-"""Web API package for dashboard integration."""
+"""Pacote da API Web para integração com o painel."""

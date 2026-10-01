@@ -1,4 +1,4 @@
-"""Classic public strategies reimplemented with the platform standard interface."""
+"""Estratégias clássicas públicas reimplementadas com a interface padrão da plataforma."""
 from __future__ import annotations
 
 from datetime import datetime

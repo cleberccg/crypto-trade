@@ -1,5 +1,5 @@
 ﻿"""
-Exponential Moving Average (EMA) indicator.
+Indicador de média móvel exponencial (Exponential Moving Average, EMA).
 """
 from __future__ import annotations
 
@@ -10,10 +10,10 @@ from indicators.base_indicator import BaseIndicator
 
 class EMA(BaseIndicator):
     """
-    Exponential Moving Average.
+    Média móvel exponencial.
 
-    Args:
-        period: Number of periods for the EMA calculation.
+    Argumentos:
+        period: Número de períodos do cálculo da EMA.
     """
 
     def __init__(self, period: int = 20) -> None:
@@ -27,13 +27,13 @@ class EMA(BaseIndicator):
 
     def calculate(self, df: pd.DataFrame) -> pd.Series:
         """
-        Compute EMA on the closing price series.
+        Calcula a EMA na série de preços de fechamento.
 
-        Args:
-            df: OHLCV DataFrame.
+        Argumentos:
+            df: DataFrame OHLCV.
 
-        Returns:
-            Series named ``ema_<period>`` containing EMA values.
+        Retorno:
+            Series chamada ``ema_<period>`` com os valores da EMA.
         """
         self._validate_min_length(df, self._period)
         series = df["close"].ewm(span=self._period, adjust=False).mean()

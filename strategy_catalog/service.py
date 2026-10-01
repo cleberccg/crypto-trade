@@ -43,7 +43,7 @@ class StrategyCatalogCycleConfig:
 
 
 class StrategyCatalogCycleService:
-    """Runs a permanent scientific cycle across catalog/discovered/experimental strategies."""
+    """Executa um ciclo científico permanente com estratégias do catálogo, descobertas e experimentais."""
 
     def __init__(self, base_dir: Path) -> None:
         self._base_dir = base_dir
@@ -466,7 +466,7 @@ class StrategyCatalogCycleService:
         engine = BacktestEngine(strategy, config=BacktestConfig(initial_capital=cfg.initial_capital))
         bt = engine.run(df, symbol=cfg.symbol, timeframe=cfg.timeframe)
 
-        # 2) Optimizer (small controlled budget)
+        # 2) Otimizador (orçamento pequeno e controlado)
         optimizer = StrategyOptimizer(output_dir=self._results_dir)
         opt_cfg = OptimizerRunConfig(
             symbol=cfg.symbol,
@@ -519,7 +519,7 @@ class StrategyCatalogCycleService:
         # 4) Scientific robustness (internal standardized score)
         robustness_score = self._robustness_score(cfg, strategy_name, start_dt, end_dt)
 
-        # 5) Trade outcome evaluation (internal standardized score)
+        # 5) Avaliação dos resultados das negociações (pontuação interna padronizada)
         trade_outcome_score = self._trade_outcome_score(bt.metrics.to_dict())
 
         # 6) Paper trading qualification
@@ -531,7 +531,7 @@ class StrategyCatalogCycleService:
             and trade_outcome_score >= 50.0
         )
 
-        # 7) Ranking score (single unified ranking)
+        # 7) Pontuação de classificação (classificação única e unificada)
         ranking_score = self._ranking_score(bt.metrics.to_dict(), robustness_score, trade_outcome_score, paper_qualified)
 
         row = {
@@ -635,7 +635,7 @@ class StrategyCatalogCycleService:
         return round(score, 4)
 
     def _robustness_score(self, cfg: StrategyCatalogCycleConfig, strategy_name: str, start_dt: datetime, end_dt: datetime) -> float:
-        # Split into 3 equal windows and measure PF stability
+        # Divide em 3 janelas iguais e mede a estabilidade do PF
         span = (end_dt - start_dt) / 3
         windows = [
             (start_dt, start_dt + span),
@@ -663,7 +663,7 @@ class StrategyCatalogCycleService:
         if avg <= 1e-9:
             return 0.0
         cv = pstdev(pfs) / avg if len(pfs) > 1 else 0.0
-        # Higher PF and lower CV => higher robustness in [0,1]
+        # PF maior e CV menor => robustez maior em [0,1]
         score = max(0.0, min(1.0, (avg / (avg + 1.0)) * (1.0 - min(1.0, cv))))
         return round(score, 4)
 

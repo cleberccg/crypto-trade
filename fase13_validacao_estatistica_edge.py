@@ -110,7 +110,7 @@ def _cohens_d(win: np.ndarray, loss: np.ndarray) -> float:
 def _cliffs_delta(win: np.ndarray, loss: np.ndarray) -> float:
     if win.size == 0 or loss.size == 0:
         return 0.0
-    # O(n*m) is acceptable for this dataset size.
+    # O(n*m) é aceitável para este tamanho de conjunto de dados.
     greater = 0
     lower = 0
     for w in win:
@@ -240,7 +240,7 @@ def _win_loss_ci_effects(df: pd.DataFrame, features: list[str], n_iter: int, see
 
         diff = w_mean - l_mean if (w.size and l.size) else np.nan
 
-        # Bootstrap CI for mean difference.
+        # Intervalo de confiança bootstrap para a diferença entre médias.
         if w.size and l.size:
             iw = rng.integers(0, w.size, size=(n_iter, w.size))
             il = rng.integers(0, l.size, size=(n_iter, l.size))
@@ -309,7 +309,7 @@ def _overfitting_check(
     rolling_all: pd.DataFrame,
     asset_tf: pd.DataFrame,
 ) -> dict[str, Any]:
-    # Split check
+    # Verificação da divisão
     ordered = df.sort_values("exit_time").reset_index(drop=True)
     mid = len(ordered) // 2
     first = ordered.iloc[:mid]
@@ -326,7 +326,7 @@ def _overfitting_check(
     m_first = metrics(first)
     m_second = metrics(second)
 
-    # Consistency with bootstrap CI.
+    # Consistência com o intervalo de confiança bootstrap.
     b_pf = bootstrap_summary.loc[bootstrap_summary["metric"] == "profit_factor"].iloc[0]
     b_wr = bootstrap_summary.loc[bootstrap_summary["metric"] == "win_rate"].iloc[0]
     b_ex = bootstrap_summary.loc[bootstrap_summary["metric"] == "expectancy"].iloc[0]
@@ -338,7 +338,7 @@ def _overfitting_check(
         "exp_inside_ci95": bool(b_ex["ci95_low"] <= full["exp"] <= b_ex["ci95_high"]),
     }
 
-    # Rolling trend: slope of expectancy by end index for each window.
+    # Tendência móvel: inclinação da expectativa pelo índice final de cada janela.
     trend_rows: list[dict[str, Any]] = []
     for w, part in rolling_all.groupby("window"):
         if len(part) < 3:
@@ -355,7 +355,7 @@ def _overfitting_check(
     trend_df = pd.DataFrame(trend_rows)
     deteriorating = bool((trend_df["expectancy_slope"] < 0).sum() >= max(1, len(trend_df) // 2))
 
-    # Asset-level check for prior conclusion.
+    # Verificação por ativo da conclusão anterior.
     asset_summary = (
         asset_tf.groupby("symbol", as_index=False)
         .agg(

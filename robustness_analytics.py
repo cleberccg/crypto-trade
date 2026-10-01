@@ -172,7 +172,7 @@ def _ci95_lower(values: list[float]) -> float | None:
         return mu
     sigma = pstdev(values)
     se = sigma / math.sqrt(n)
-    # Normal approximation for objective, data-only confidence bound.
+    # Aproximação normal para o limite de confiança objetivo baseado somente nos dados.
     return mu - 1.96 * se
 
 
@@ -807,7 +807,7 @@ def _build_executive(
             if today.isoformat() in line:
                 errors_today += 1
 
-    # Campaign artifacts currently do not expose host utilization fields.
+    # Atualmente, os artefatos da campanha não expõem campos de utilização do host.
     machine_utilization_avg_pct = None
     machine_utilization_data_available = False
 

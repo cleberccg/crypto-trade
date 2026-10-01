@@ -1,4 +1,4 @@
-"""Tests for optimizer event publishing and listener fanout."""
+"""Testa a publicação de eventos do otimizador e sua distribuição aos listeners."""
 from __future__ import annotations
 
 from core.events import EventBus, EventType, OptimizationEvent

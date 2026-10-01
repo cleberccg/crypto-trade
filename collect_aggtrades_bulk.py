@@ -1,23 +1,23 @@
-"""Bulk aggTrades collector using Binance's official historical data archive
-(data.binance.vision) instead of paginated REST calls -- orders of magnitude
-faster for multi-year backfills. REST (BinanceMarketDataClient) is reserved
-for gaps/very recent days not yet published as bulk files.
+"""Coletor em lote de aggTrades usando o arquivo histórico oficial da Binance
+(data.binance.vision) em vez de chamadas REST paginadas -- ordens de magnitude
+mais rápido para cargas retroativas de vários anos. O REST (BinanceMarketDataClient) fica reservado
+para lacunas/dias muito recentes ainda não publicados como arquivos em lote.
 
-Storage: partitioned, columnar, compressed Parquet (not one giant gzip):
+Armazenamento: Parquet particionado, colunar e compactado (não um único gzip enorme):
     data/aggtrades/{SYMBOL}/{YEAR}/{MONTH}/{SYMBOL}_{YEAR}_{MONTH}.parquet
     data/aggtrades/{SYMBOL}/{YEAR}/{MONTH}/{SYMBOL}_{YEAR}_{MONTH}_DD.parquet  (daily, current month)
 
-Restart-safe: a manifest (data/aggtrades/manifest.json) records one entry per
-partition with VALIDATED=YES only after integrity checks pass; completed
-partitions are never re-downloaded. Protected by a process lock (same
-pattern as collect_aggtrades.py).
+Seguro para reinicialização: um manifesto (data/aggtrades/manifest.json) registra uma entrada por
+partição com VALIDATED=YES somente após a aprovação das verificações de integridade; partições concluídas
+nunca são baixadas novamente. Protegido por bloqueio de processo (mesmo
+padrão de collect_aggtrades.py).
 
-Disk-safety gate: aborts BEFORE starting a new partition if free disk space
-drops below MIN_FREE_DISK_GB. Each partition is downloaded, parsed, written
-to Parquet, validated, and the temporary zip is deleted immediately -- peak
-extra disk usage per partition is ~1 zip, not the whole dataset.
+Proteção de espaço em disco: aborta ANTES de iniciar uma nova partição se o espaço livre
+cair abaixo de MIN_FREE_DISK_GB. Cada partição é baixada, analisada, gravada
+em Parquet, validada e o zip temporário é excluído imediatamente -- o uso extra
+máximo de disco por partição é de aproximadamente 1 zip, não do conjunto de dados inteiro.
 
-Does not touch MySQL / the operational database. Does not touch Paper Live.
+Não altera o MySQL / banco de dados operacional. Não altera o Paper Live.
 """
 from __future__ import annotations
 
@@ -46,7 +46,7 @@ TMP_DIR = OUT_ROOT / "_tmp"
 
 SYMBOLS = ("BTCUSDT", "ETHUSDT")
 DATE_START = date(2024, 1, 1)
-MIN_FREE_DISK_GB = 15.0  # hard abort threshold; user's own past incident was disk exhaustion
+MIN_FREE_DISK_GB = 15.0  # Limite para interrupção imediata; um incidente anterior do usuário foi causado pelo esgotamento do disco
 BULK_BASE_URL = "https://data.binance.vision/data/spot"
 COLUMNS = ["a", "p", "q", "f", "l", "T", "m", "M"]
 
@@ -89,7 +89,7 @@ def _save_manifest(manifest: dict[str, Any]) -> None:
 @dataclass(frozen=True)
 class Partition:
     symbol: str
-    period: str  # "2024-01" (monthly) or "2026-08-15" (daily)
+    period: str  # "2024-01" (mensal) ou "2026-08-15" (diário)
     granularity: str  # "monthly" | "daily"
 
     @property
@@ -138,8 +138,8 @@ def _download(url: str, dest: Path) -> int:
 
 
 def _discover_partitions() -> list[Partition]:
-    """Monthly files for fully-elapsed months; daily files to fill the
-    current (possibly incomplete) month up to the latest published day."""
+    """Arquivos mensais para meses totalmente encerrados; arquivos diários para preencher o
+    mês atual (possivelmente incompleto) até o dia mais recente publicado."""
     today = datetime.now(timezone.utc).date()
     current_month_start = date(today.year, today.month, 1)
     partitions: list[Partition] = []
@@ -171,9 +171,9 @@ def _parse_aggtrades_zip(zip_path: Path) -> pd.DataFrame:
     df["p"] = pd.to_numeric(df["p"], errors="coerce")
     df["q"] = pd.to_numeric(df["q"], errors="coerce")
     df["m"] = df["m"].astype(bool)
-    # Binance bulk archives switched aggTrades timestamps from milliseconds to
-    # microseconds at some point in 2025-2026; normalize to milliseconds so
-    # this dataset is comparable with the earlier REST-collected 2025-01 data.
+    # Em algum momento de 2025–2026, os arquivos em lote da Binance mudaram os timestamps de aggTrades de milissegundos para
+    # microssegundos; normalize-os para milissegundos para que
+    # este conjunto de dados seja comparável aos dados de 2025-01 coletados anteriormente via REST.
     if len(df) and int(df["T"].iloc[0]) > 10**14:
         df["T"] = df["T"] // 1000
     return df
@@ -266,7 +266,7 @@ def main() -> int:
             free_gb = _free_disk_gb(OUT_ROOT)
             try:
                 result = process_partition(partition, manifest)
-            except Exception as exc:  # noqa: BLE001 - report and stop this pipeline only
+            except Exception as exc:  # noqa: BLE001 - registra o erro e interrompe somente este pipeline
                 errors += 1
                 _log(f"ERRORS: 1 PARTITION={partition.key} REASON={exc}")
                 _save_manifest(manifest)

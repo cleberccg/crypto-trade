@@ -1,4 +1,4 @@
-"""Backtest diagnostics report generation."""
+"""Geração de relatórios de diagnóstico de backtests."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -18,7 +18,7 @@ _RESULTS_DIR = Path(__file__).parent / "results"
 
 
 class BacktestDiagnosticReporter:
-    """Builds and saves detailed diagnostic reports for a backtest run."""
+    """Gera e salva relatórios detalhados de diagnóstico de uma execução de backtest."""
 
     def __init__(self, output_dir: Path | None = None) -> None:
         self._output_dir = output_dir or _RESULTS_DIR

@@ -1,5 +1,5 @@
 ﻿"""
-Crypto Trading Bot - Configuration Package
+Bot de negociação de criptomoedas - pacote de configuração
 """
 from config.settings import settings
 

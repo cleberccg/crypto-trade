@@ -1,10 +1,10 @@
 ﻿"""
-Abstract base class for all trading strategies.
+Classe base abstrata de todas as estratégias de negociação.
 
-Design decision: Enforcing a fixed interface (initialize / calculate /
-entry_signal / exit_signal / score) means every strategy is interchangeable
-within the backtesting engine and paper/live trader without any conditional
-logic in the caller.
+Decisão de projeto: impor uma interface fixa (initialize / calculate /
+entry_signal / exit_signal / score) permite que todas as estratégias sejam
+intercambiáveis no mecanismo de backtest e no trader paper/live, sem lógica
+condicional no código chamador.
 """
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ import pandas as pd
 
 
 class SignalType(str, Enum):
-    """Possible signal values a strategy can emit."""
+    """Valores de sinal que uma estratégia pode emitir."""
 
     BUY = "BUY"
     SELL = "SELL"
@@ -29,17 +29,17 @@ class SignalType(str, Enum):
 @dataclass
 class StrategySignal:
     """
-    Encapsulates a strategy's output for a single evaluation.
+    Encapsula a saída de uma estratégia para uma única avaliação.
 
-    Attributes:
-        signal: BUY, SELL, or HOLD.
-        price: Reference price at the moment the signal is generated.
-        timestamp: UTC time of the signal.
-        score: Numeric confidence/strength value in [0, 1].
-        stop_loss: Suggested stop-loss price (absolute).
-        take_profit: Suggested take-profit price (absolute).
-        trailing_stop_pct: Optional trailing stop as a fraction of price.
-        metadata: Arbitrary extra data for logging/debugging.
+    Atributos:
+        signal: BUY, SELL ou HOLD.
+        price: Preço de referência no momento em que o sinal é gerado.
+        timestamp: Horário UTC do sinal.
+        score: Valor numérico de confiança/força no intervalo [0, 1].
+        stop_loss: Preço sugerido de stop-loss (absoluto).
+        take_profit: Preço sugerido de take-profit (absoluto).
+        trailing_stop_pct: Stop móvel opcional como fração do preço.
+        metadata: Dados adicionais arbitrários para registro/depuração.
     """
 
     signal: SignalType
@@ -54,7 +54,7 @@ class StrategySignal:
 
 class BaseStrategy(ABC):
     """
-    Interface all strategy implementations must satisfy.
+    Interface que todas as implementações de estratégia devem satisfazer.
 
     Lifecycle::
 
@@ -65,73 +65,73 @@ class BaseStrategy(ABC):
             if open trade:
                 signal = strategy.exit_signal(df, entry_price)
 
-    Subclasses define their own indicator parameters in ``__init__``.
+    As subclasses definem seus próprios parâmetros de indicadores em ``__init__``.
     """
 
     @property
     @abstractmethod
     def name(self) -> str:
-        """Unique strategy identifier used in logs and database records."""
+        """Identificador exclusivo da estratégia usado nos logs e nos registros do banco de dados."""
 
     @abstractmethod
     def initialize(self) -> None:
         """
-        One-time setup: instantiate indicators, load any required state.
+        Configuração única: instancia os indicadores e carrega qualquer estado necessário.
 
-        Called once before the strategy starts processing data.
+        Chamado uma vez antes de a estratégia começar a processar dados.
         """
 
     @abstractmethod
     def calculate(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        Enrich *df* with all indicator columns required by this strategy.
+        Enriquece *df* com todas as colunas de indicadores exigidas por esta estratégia.
 
-        Args:
-            df: Raw OHLCV DataFrame.
+        Argumentos:
+            df: DataFrame OHLCV bruto.
 
-        Returns:
-            New DataFrame (a copy of *df*) with added indicator columns.
-            Must not mutate the input.
+        Retorna:
+            Novo DataFrame (uma cópia de *df*) com as colunas de indicadores adicionadas.
+            Não deve modificar a entrada.
         """
 
     @abstractmethod
     def entry_signal(self, df: pd.DataFrame) -> StrategySignal:
         """
-        Evaluate whether to open a new position based on the enriched *df*.
+        Avalia se deve abrir uma nova posição com base em *df* enriquecido.
 
-        Args:
-            df: Output of ``calculate()``.
+        Argumentos:
+            df: Saída de ``calculate()``.
 
-        Returns:
-            StrategySignal with BUY, SELL (for short), or HOLD.
+        Retorna:
+            StrategySignal com BUY, SELL (para posição vendida) ou HOLD.
         """
 
     @abstractmethod
     def exit_signal(self, df: pd.DataFrame, entry_price: float) -> StrategySignal:
         """
-        Evaluate whether to close an existing position.
+        Avalia se deve fechar uma posição existente.
 
-        Args:
-            df: Output of ``calculate()``.
-            entry_price: Price at which the position was opened.
+        Argumentos:
+            df: Saída de ``calculate()``.
+            entry_price: Preço pelo qual a posição foi aberta.
 
-        Returns:
-            StrategySignal with SELL (close long), BUY (close short), or HOLD.
+        Retorna:
+            StrategySignal com SELL (fechar posição comprada), BUY (fechar posição vendida) ou HOLD.
         """
 
     @abstractmethod
     def score(self, df: pd.DataFrame) -> float:
         """
-        Return a confidence score in [0, 1] for the current setup.
+        Retorna uma pontuação de confiança no intervalo [0, 1] para a configuração atual.
 
-        Higher values indicate stronger conviction.  Scores are used for
-        position sizing and trade filtering.
+        Valores maiores indicam maior convicção. As pontuações são usadas para
+        dimensionar posições e filtrar operações.
 
-        Args:
-            df: Output of ``calculate()``.
+        Argumentos:
+            df: Saída de ``calculate()``.
 
-        Returns:
-            Float in [0, 1].
+        Retorna:
+            Número de ponto flutuante no intervalo [0, 1].
         """
 
     def prepare_dataset(
@@ -142,10 +142,10 @@ class BaseStrategy(ABC):
         timeframe: str | None = None,
     ) -> pd.DataFrame:
         """
-        Pre-compute and cache all features required by this strategy for *df*.
+        Pré-calcula e armazena em cache todas as características exigidas por esta estratégia para *df*.
 
-        The default implementation computes the enriched dataset once and reuses
-        it while the dataset and strategy parameters remain unchanged.
+        A implementação padrão calcula o conjunto de dados enriquecido uma vez e o reutiliza
+        enquanto o conjunto de dados e os parâmetros da estratégia não forem alterados.
         """
 
         cache_key = self._build_dataset_cache_key(df, symbol=symbol, timeframe=timeframe)
@@ -162,14 +162,14 @@ class BaseStrategy(ABC):
         return prepared
 
     def invalidate_prepared_dataset(self) -> None:
-        """Clear cached prepared dataset and any auxiliary execution caches."""
+        """Limpa o conjunto de dados preparado em cache e quaisquer caches auxiliares de execução."""
 
         self._prepared_dataset_cache_key = None
         self._prepared_dataset_cache = None
         self._prepared_dataset_aux_cache = {}
 
     def cache_payload(self, name: str, payload: Any) -> None:
-        """Store a reusable execution payload tied to the current dataset cache."""
+        """Armazena uma carga útil de execução reutilizável vinculada ao cache atual do conjunto de dados."""
 
         aux = getattr(self, "_prepared_dataset_aux_cache", None)
         if aux is None:
@@ -178,7 +178,7 @@ class BaseStrategy(ABC):
         aux[str(name)] = payload
 
     def cached_payload(self, name: str, default: Any = None) -> Any:
-        """Read a reusable execution payload tied to the current dataset cache."""
+        """Lê uma carga útil de execução reutilizável vinculada ao cache atual do conjunto de dados."""
 
         aux = getattr(self, "_prepared_dataset_aux_cache", None)
         if aux is None:
@@ -187,7 +187,7 @@ class BaseStrategy(ABC):
 
     def execution_cache_signature(self) -> tuple[tuple[str, Any], ...]:
         """
-        Return a stable signature of scalar strategy parameters for cache invalidation.
+        Retorna uma assinatura estável dos parâmetros escalares da estratégia para invalidar o cache.
         """
 
         signature: list[tuple[str, Any]] = []

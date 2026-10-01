@@ -1,5 +1,5 @@
 ﻿"""
-Average True Range (ATR) indicator.
+Indicador de amplitude verdadeira média (Average True Range, ATR).
 """
 from __future__ import annotations
 
@@ -10,14 +10,14 @@ from indicators.base_indicator import BaseIndicator
 
 class ATR(BaseIndicator):
     """
-    Average True Range - measures market volatility.
+    Amplitude verdadeira média (Average True Range): mede a volatilidade do mercado.
 
-    Commonly used to:
-    - Set dynamic stop-loss distances.
-    - Size positions proportionally to current volatility.
+    Usado com frequência para:
+    - Definir distâncias dinâmicas de stop-loss.
+    - Dimensionar posições proporcionalmente à volatilidade atual.
 
-    Args:
-        period: Smoothing period (default 14).
+    Argumentos:
+        period: Período de suavização (padrão 14).
     """
 
     def __init__(self, period: int = 14) -> None:
@@ -31,15 +31,15 @@ class ATR(BaseIndicator):
 
     def calculate(self, df: pd.DataFrame) -> pd.Series:
         """
-        Compute ATR using Wilder's smoothing method.
+        Calcula o ATR usando o método de suavização de Wilder.
 
         True Range = max(high - low, |high - prev_close|, |low - prev_close|)
 
-        Args:
-            df: OHLCV DataFrame (must contain high, low, close).
+        Argumentos:
+            df: DataFrame OHLCV (deve conter high, low e close).
 
-        Returns:
-            Series named ``atr_<period>`` with ATR values.
+        Retorno:
+            Series chamada ``atr_<period>`` com os valores de ATR.
         """
         self._validate_min_length(df, self._period + 1)
 

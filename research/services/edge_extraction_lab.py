@@ -172,7 +172,7 @@ def _compute_indicators(candles: pd.DataFrame) -> pd.DataFrame:
     vol_mean = volume.rolling(20, min_periods=10).mean()
     df["relative_volume"] = volume / vol_mean.replace(0.0, pd.NA)
 
-    # Regime label
+    # Rótulo do regime
     bullish = (df["ema50"] > df["ema200"]) & (df["ema200_slope"] > 0.0)
     bearish = (df["ema50"] < df["ema200"]) & (df["ema200_slope"] < 0.0)
     df["market_regime"] = "sideways"
@@ -369,7 +369,7 @@ def _rank_attributes(trades: pd.DataFrame) -> list[dict[str, Any]]:
             }
         )
 
-    # Categorical contexts as candidate filters with lift
+    # Contextos categóricos como filtros candidatos com lift
     for column in ["market_regime"]:
         if column not in trades.columns:
             continue
@@ -430,7 +430,7 @@ def _build_filter_candidates(
     rows: list[dict[str, Any]] = []
     total_trades = len(trades)
 
-    # Numeric thresholds from strongest numeric attributes
+    # Limiares numéricos derivados dos atributos numéricos mais fortes
     numeric_ranked = [row for row in ranking if row.get("attribute_type") == "numeric"]
     numeric_ranked = numeric_ranked[:12]
     for node in numeric_ranked:
@@ -490,7 +490,7 @@ def _build_filter_candidates(
                     }
                 )
 
-    # Categorical direct filters from ranking levels
+    # Filtros categóricos diretos derivados dos níveis de classificação
     cat_ranked = [row for row in ranking if row.get("attribute_type") == "categorical"]
     for node in cat_ranked:
         attribute = str(node.get("attribute"))
@@ -894,7 +894,7 @@ class EdgeExtractionLabService:
                 }
             )
 
-        # Add missing priorities if they are registered even if absent from backlog.
+        # Adiciona prioridades ausentes se estiverem registradas, mesmo que não apareçam no backlog.
         for priority in cfg.prioritized_strategies:
             key = _canon(priority)
             canonical = alias_map.get(key)

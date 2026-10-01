@@ -1,8 +1,8 @@
-"""PILOT_EXPLORATORY_ONLY -- exact repeat of explore_orderbook_pilot_richer.py
-with FROZEN rules (same features, same quantiles 0.90/0.10, same entry-metrics
-gate) over the expanded ~30-day window collected by collect_orderbook_depth_bulk.py
-(EXPAND_30D). Only the date range and data loaders change (monthly vs daily
-aggTrades partitioning). No new collection here.
+"""PILOT_EXPLORATORY_ONLY -- repetição exata de explore_orderbook_pilot_richer.py
+com regras FROZEN (mesmos recursos, mesmos quantis 0.90/0.10, mesmo critério de
+aprovação de métricas de entrada) na janela expandida de ~30 dias coletada por collect_orderbook_depth_bulk.py
+(EXPAND_30D). Somente o intervalo de datas e os carregadores de dados mudam (particionamento mensal versus diário
+de aggTrades). Nenhuma nova coleta é feita aqui.
 """
 from __future__ import annotations
 
@@ -36,7 +36,7 @@ OUT_JSON = BASE_DIR / "explore_orderbook_30d_repeat_latest.json"
 SYMBOLS = ("BTCUSDT", "ETHUSDT")
 
 # bookDepth (futures) covers 2026-07-26..2026-08-24 (60/60 VALIDATED).
-# aggTrades (spot) has no 2026-08-24 file yet -> matched window ends 08-23.
+# aggTrades (spot) ainda não tem arquivo de 2026-08-24 -> a janela correspondente termina em 08-23.
 BOOKDEPTH_START = date(2026, 7, 26)
 BOOKDEPTH_END = date(2026, 8, 24)
 AGGTRADES_END = date(2026, 8, 23)
@@ -61,8 +61,8 @@ def _load_bookdepth(symbol: str, days: list[str]) -> pd.DataFrame:
 
 
 def _load_aggtrades(symbol: str, days: list[str]) -> pd.DataFrame:
-    """Reads either the monthly (fully-elapsed month) or the daily partitions,
-    matching the file layout written by collect_aggtrades_bulk.py."""
+    """Lê as partições mensais (de meses totalmente encerrados) ou as diárias,
+    de acordo com a estrutura de arquivos gravada por collect_aggtrades_bulk.py."""
     by_month: dict[str, list[str]] = {}
     for day in days:
         year, month, _dd = day.split("-")
@@ -146,7 +146,7 @@ def main() -> int:
     spot_features: dict[str, pd.DataFrame] = {}
 
     for symbol in SYMBOLS:
-        bd = _load_bookdepth(symbol, MATCHED_DAYS)  # book features restricted to matched window for a fair comparison
+        bd = _load_bookdepth(symbol, MATCHED_DAYS)  # Restringe as características do livro à janela correspondente para uma comparação justa
         wide = _pivot_bands(bd)
         mid = _mid_price_proxy(wide)
         futures_ohlc[symbol] = _futures_ohlc_1m(mid)

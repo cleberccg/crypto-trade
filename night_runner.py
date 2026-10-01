@@ -1,8 +1,8 @@
-"""Night runner orchestration for long unattended optimization sessions.
+"""Orquestração do executor noturno para sessões longas de otimização sem supervisão.
 
-This module prepares and executes a complete overnight workflow with
-pre-flight checks, incremental downloads, smoke test, full optimization
-sequence, backups, resume support, and final reporting.
+Este módulo prepara e executa um fluxo noturno completo, com verificações
+pré-execução, downloads incrementais, teste smoke, sequência completa de otimização,
+backups, suporte à retomada e relatório final.
 """
 from __future__ import annotations
 
@@ -395,7 +395,7 @@ class NightRunner:
         if proc.returncode != 0:
             raise RuntimeError("Smoke optimize failed")
 
-        # Validation runs inside optimize command; if optimize succeeded smoke is approved for continuity.
+        # A validação é executada dentro do comando optimize; se a otimização for bem-sucedida, o smoke test é aprovado para continuidade.
         self.total_optimizations += 1
         self.total_validations += 1
         self.total_combinations += SMOKE_MAX_COMBINATIONS
@@ -454,7 +454,7 @@ class NightRunner:
                 if latest_failed_exec:
                     state.setdefault("last_execution_id", {})[stage_key] = latest_failed_exec
                     self._save_state(state)
-                # Continue to next stage by requirement.
+                # Continua para a próxima etapa conforme o requisito.
                 continue
 
             self.total_optimizations += 1

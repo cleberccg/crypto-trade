@@ -60,7 +60,7 @@ class Phase131AuditConfig:
 
 
 class Phase131AuditStrengtheningService:
-    """FASE 13.1 audit and hardening layer for the Continuous Strategy Factory."""
+    """Camada de auditoria e fortalecimento da Fábrica Contínua de Estratégias da FASE 13.1."""
 
     def __init__(self, base_dir: Path) -> None:
         self._base_dir = base_dir

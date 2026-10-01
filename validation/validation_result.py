@@ -1,4 +1,4 @@
-"""Validation result models for optimization statistical analysis."""
+"""Modelos de resultados de validação para análise estatística da otimização."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -7,7 +7,7 @@ from typing import Any
 
 @dataclass
 class ValidationEntry:
-    """Stores the train/validation metrics and validation decision for one configuration."""
+    """Armazena as métricas de treinamento/validação e a decisão de validação de uma configuração."""
 
     rank: int
     parameters: dict[str, Any]

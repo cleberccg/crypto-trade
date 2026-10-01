@@ -1,10 +1,10 @@
 """
-TrendV2 - evidence-driven trend strategy.
+TrendV2 — estratégia de tendência orientada por evidências.
 
-TrendV2 keeps the TrendV1 interface but strengthens regime selection:
-- adds a third EMA to confirm a broader trend structure;
-- filters out low-volatility / lateral regimes using Bollinger bandwidth and ATR;
-- keeps the same risk wiring so it remains compatible with the existing engine.
+A TrendV2 mantém a interface da TrendV1, mas reforça a seleção de regime:
+- adiciona uma terceira EMA para confirmar uma estrutura de tendência mais ampla;
+- filtra regimes de baixa volatilidade/laterais usando a largura das Bandas de Bollinger e o ATR;
+- mantém a mesma integração de risco para continuar compatível com o mecanismo existente.
 """
 from __future__ import annotations
 
@@ -58,7 +58,7 @@ logger = get_logger(__name__)
     },
 )
 class TrendV2Strategy(TrendV1Strategy):
-    """TrendV1 successor with a stronger regime filter and trend confirmation."""
+    """Sucessora da TrendV1, com filtro de regime mais forte e confirmação de tendência."""
 
     def __init__(
         self,

@@ -1,5 +1,5 @@
 ﻿"""
-MACD (Moving Average Convergence Divergence) indicator.
+Indicador MACD (convergência e divergência de médias móveis; Moving Average Convergence Divergence).
 """
 from __future__ import annotations
 
@@ -10,17 +10,17 @@ from indicators.base_indicator import BaseIndicator
 
 class MACD(BaseIndicator):
     """
-    MACD - trend-following momentum indicator.
+    MACD: indicador de momentum que acompanha tendências.
 
-    Components:
+    Componentes:
     - ``macd``: fast_ema - slow_ema
-    - ``signal``: EMA of MACD line
+    - ``signal``: EMA da linha MACD
     - ``histogram``: MACD - signal
 
-    Args:
-        fast_period: Fast EMA period (default 12).
-        slow_period: Slow EMA period (default 26).
-        signal_period: Signal line EMA period (default 9).
+    Argumentos:
+        fast_period: Período rápido da EMA (padrão 12).
+        slow_period: Período lento da EMA (padrão 26).
+        signal_period: Período da EMA da linha de sinal (padrão 9).
     """
 
     def __init__(
@@ -43,13 +43,13 @@ class MACD(BaseIndicator):
 
     def calculate(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        Compute MACD components.
+        Calcula os componentes do MACD.
 
-        Args:
-            df: OHLCV DataFrame.
+        Argumentos:
+            df: DataFrame OHLCV.
 
-        Returns:
-            DataFrame with columns [macd, signal, histogram].
+        Retorno:
+            DataFrame com as colunas [macd, signal, histogram].
         """
         self._validate_min_length(df, self._slow + self._signal)
 

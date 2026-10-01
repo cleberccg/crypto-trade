@@ -1,4 +1,4 @@
-"""Independent strategy optimizer that runs many backtests in isolation."""
+"""Otimizador independente de estratégias que executa vários backtests de forma isolada."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -37,7 +37,7 @@ except Exception:  # pragma: no cover
 
 @dataclass(frozen=True)
 class OptimizerRunConfig:
-    """Execution settings for a single optimization session."""
+    """Configurações de execução para uma única sessão de otimização."""
 
     symbol: str
     timeframe: str
@@ -61,7 +61,7 @@ class OptimizerRunConfig:
 
 @dataclass(frozen=True)
 class OptimizationSummary:
-    """High level summary for reporting."""
+    """Resumo de alto nível para relatórios."""
 
     combinations_tested: int
     combinations_discarded: int
@@ -129,7 +129,7 @@ def _evaluate_parameters(parameters: dict[str, Any]) -> _EvaluationPayload:
         strategy = create_strategy(_WORKER_STRATEGY_NAME, **strategy_params)
         strategy.initialize()
 
-        # Prepare the full dataset once so the engine reuses precomputed features.
+        # Prepara o conjunto de dados completo uma única vez para que o mecanismo reutilize as características pré-calculadas.
         strategy.prepare_dataset(_WORKER_DF.copy(), symbol=_WORKER_SYMBOL)
         engine = BacktestEngine(
             strategy,
@@ -149,14 +149,14 @@ def _evaluate_parameters(parameters: dict[str, Any]) -> _EvaluationPayload:
             metrics["ema_trend"] = _safe_number(parameters["ema_trend"])
         return _EvaluationPayload(parameters=parameters, metrics=metrics, error=None)
     except KeyboardInterrupt:
-        # Absorb the signal so the optimizer loop can continue with remaining combinations
+            # Consome o sinal para que o loop do otimizador possa continuar com as combinações restantes
         return _EvaluationPayload(parameters=parameters, metrics={}, error="KeyboardInterrupt")
     except Exception as exc:  # pragma: no cover - defensive guard
         return _EvaluationPayload(parameters=parameters, metrics={}, error=str(exc))
 
 
 class StrategyOptimizer:
-    """Run large parameter sweeps over TrendV1 using isolated backtests."""
+    """Executa varreduras amplas de parâmetros em TrendV1 usando backtests isolados."""
 
     def __init__(
         self,
@@ -180,7 +180,7 @@ class StrategyOptimizer:
         )
 
     def resume_execution(self, execution_id: str) -> str:
-        """Return execution id for external listener-driven resume logic."""
+        """Retorna o ID de execução para lógica de retomada externa acionada por listener."""
         return execution_id
 
     def _load_dataframe(

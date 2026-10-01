@@ -1,4 +1,4 @@
-"""FASE 9.4 - First controlled operational improvement (V1.1)."""
+"""FASE 9.4 - Primeira melhoria operacional controlada (V1.1)."""
 from __future__ import annotations
 
 import csv

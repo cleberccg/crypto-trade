@@ -160,7 +160,7 @@ def _write_validation_outputs(results_dir: Path, payload: dict[str, Any]) -> Non
     )
     html_path.write_text(html, encoding="utf-8")
 
-    # Minimal valid PDF bytes placeholder so the file exists in pipeline artifacts without extra deps.
+    # Bytes mínimos de um PDF válido como placeholder, para que o arquivo exista nos artefatos do pipeline sem dependências adicionais.
     pdf_path.write_bytes(b"%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n")
 
     val_500 = payload.get("execution_500", {})

@@ -1,1 +1,1 @@
-"""Activation/readiness package for post-optimizer go-live steps."""
+"""Orquestração de ativação e prontidão da aplicação."""

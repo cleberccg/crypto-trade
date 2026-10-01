@@ -1,8 +1,8 @@
 """
-Binance Spot market-data client (live, public, read-only).
+Cliente de dados de mercado da Binance Spot (ao vivo, público e somente leitura).
 
-This adapter is dedicated to historical/public data collection so research
-pipelines are independent from execution/testnet settings.
+Este adaptador é dedicado à coleta de dados históricos/públicos, mantendo os
+pipelines de pesquisa independentes das configurações de execução/testnet.
 """
 from __future__ import annotations
 
@@ -22,13 +22,13 @@ logger = get_logger(__name__)
 
 
 class BinanceMarketDataClient(BaseExchange):
-    """Read-only Binance Spot client using live public endpoints."""
+    """Cliente somente leitura da Binance Spot que usa endpoints públicos ao vivo."""
 
     def __init__(self) -> None:
         self._exchange: ccxt.binance | None = None
 
     def connect(self) -> None:
-        # Public OHLCV/ticker endpoints do not require API keys.
+        # Os endpoints públicos de OHLCV/ticker não exigem chaves de API.
         self._exchange = ccxt.binance(
             {
                 "enableRateLimit": True,
@@ -113,7 +113,7 @@ class BinanceMarketDataClient(BaseExchange):
         from_id: int | None = None,
         limit: int = 1000,
     ) -> list[dict[str, Any]]:
-        """Fetch one deterministic page of Binance Spot aggregated trades."""
+        """Busca uma página determinística de operações agregadas da Binance Spot."""
         symbol = validate_symbol(symbol)
         params: dict[str, Any] = {"symbol": symbol.replace("/", ""), "limit": min(1000, max(1, int(limit)))}
         if from_id is not None:
@@ -140,10 +140,11 @@ class BinanceMarketDataClient(BaseExchange):
         start: datetime,
         end: datetime,
     ) -> pd.DataFrame:
-        """Fetch Binance Spot klines including trade-flow fields.
+        """Busca klines da Binance Spot, incluindo campos de fluxo de operações.
 
-        The response is still candle-based and uses only closed klines. The
-        extra fields are quote volume, trade count and taker-buy volumes.
+        A resposta continua baseada em candles e usa somente klines fechados.
+        Os campos adicionais são o volume em moeda de cotação, a contagem de
+        operações e os volumes de compra taker.
         """
         symbol = validate_symbol(symbol)
         timeframe = validate_timeframe(timeframe)

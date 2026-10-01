@@ -1,4 +1,4 @@
-"""Specialized paper-trading validation for context-restricted operational edge."""
+"""Validação especializada em paper trading para vantagem operacional restrita a contexto."""
 from __future__ import annotations
 
 import csv
@@ -81,7 +81,7 @@ class SpecializedPaperValidationConfig:
 
 
 class SpecializedPaperValidationService:
-    """Runs specialized context-only paper validation and compares against expected baselines."""
+    """Executa validação especializada em paper trading, limitada ao contexto, e compara com os valores de referência esperados."""
 
     def __init__(self, base_dir: Path) -> None:
         self._base_dir = base_dir

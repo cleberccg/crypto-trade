@@ -1,9 +1,9 @@
 ﻿"""
-Application settings loaded exclusively from environment variables.
+Configurações da aplicação carregadas exclusivamente de variáveis de ambiente.
 
-Design decision: a single Settings class centralizes all operational
-configuration and validation. The rest of the project consumes the exported
-`settings` instance instead of reading .env directly.
+Decisão de projeto: uma única classe Settings centraliza toda a configuração
+operacional e sua validação. O restante do projeto utiliza a instância
+`settings` exportada, em vez de ler o arquivo .env diretamente.
 """
 from __future__ import annotations
 
@@ -25,14 +25,14 @@ load_dotenv(BASE_DIR / ".env")
 
 
 def _as_bool(value: str | None, default: bool = False) -> bool:
-    """Convert common truthy/falsey string values to bool."""
+    """Converte valores textuais comuns de verdadeiro/falso para bool."""
     if value is None:
         return default
     return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
 def _as_float(value: str | None, default: float) -> float:
-    """Safe float parsing with default fallback."""
+    """Converte texto para float com segurança e usa um valor padrão em caso de falha."""
     if value is None:
         return default
     try:
@@ -42,7 +42,7 @@ def _as_float(value: str | None, default: float) -> float:
 
 
 def _percent_to_fraction(raw: str | None, default: float) -> float:
-    """Accept both 0.02 and 2 styles; return fraction."""
+    """Aceita os formatos 0.02 e 2; retorna a fração."""
     value = _as_float(raw, default)
     if value > 1:
         return value / 100.0
@@ -50,7 +50,7 @@ def _percent_to_fraction(raw: str | None, default: float) -> float:
 
 
 def _normalize_symbol(symbol: str) -> str:
-    """Normalize BTCUSDT to BTC/USDT and keep BTC/USDT unchanged."""
+    """Normaliza BTCUSDT para BTC/USDT e mantém BTC/USDT inalterado."""
     symbol = symbol.strip().upper()
     if "/" in symbol:
         return symbol
@@ -63,7 +63,7 @@ def _normalize_symbol(symbol: str) -> str:
 
 @dataclass(frozen=True)
 class BinanceConfig:
-    """Binance API connection settings."""
+    """Configurações de conexão com a API da Binance."""
 
     api_key: str
     api_secret: str
@@ -73,7 +73,7 @@ class BinanceConfig:
 
 @dataclass(frozen=True)
 class DatabaseConfig:
-    """Database connection settings."""
+    """Configurações de conexão com o banco de dados."""
 
     type: str
     url: str
@@ -82,7 +82,7 @@ class DatabaseConfig:
 
 @dataclass(frozen=True)
 class TradingConfig:
-    """Trading parameters used by runtime modules."""
+    """Parâmetros de negociação usados pelos módulos em tempo de execução."""
 
     exchange: str
     mode: str
@@ -103,7 +103,7 @@ class TradingConfig:
 
 @dataclass(frozen=True)
 class OptimizerConfig:
-    """Strategy optimizer runtime settings."""
+    """Configurações do otimizador de estratégias em tempo de execução."""
 
     enabled: bool
     workers: int
@@ -113,7 +113,7 @@ class OptimizerConfig:
 
 @dataclass(frozen=True)
 class ValidationConfig:
-    """Post-optimization statistical validation thresholds."""
+    """Limiares de validação estatística após a otimização."""
 
     min_trades: int
     min_profit_factor: float
@@ -125,7 +125,7 @@ class ValidationConfig:
 
 @dataclass(frozen=True)
 class RiskConfig:
-    """Risk management parameters."""
+    """Parâmetros de gerenciamento de risco."""
 
     risk_percent: float
     max_daily_loss_percent: float
@@ -140,7 +140,7 @@ class RiskConfig:
 
 @dataclass(frozen=True)
 class LoggingConfig:
-    """Logging configuration."""
+    """Configuração de logs."""
 
     level: str
     log_dir: Path
@@ -149,7 +149,7 @@ class LoggingConfig:
 
 @dataclass(frozen=True)
 class BacktestConfig:
-    """Backtesting runtime defaults."""
+    """Valores padrão do backtesting em tempo de execução."""
 
     initial_capital: float
     commission: float
@@ -158,7 +158,7 @@ class BacktestConfig:
 
 @dataclass(frozen=True)
 class N8nConfig:
-    """n8n integration settings."""
+    """Configurações de integração com o n8n."""
 
     webhook_url: str
     api_key: str
@@ -166,7 +166,7 @@ class N8nConfig:
 
 @dataclass(frozen=True)
 class TelegramConfig:
-    """Telegram notification and command settings."""
+    """Configurações de notificações e comandos do Telegram."""
 
     enabled: bool
     bot_token: str
@@ -180,7 +180,7 @@ class TelegramConfig:
 
 
 class Settings:
-    """Centralized settings object for the whole application."""
+    """Objeto centralizado de configurações de toda a aplicação."""
 
     def __init__(self) -> None:
         self.app_name = os.getenv("APP_NAME", "CryptoBot")
@@ -317,7 +317,7 @@ class Settings:
         return self.paper_trading
 
     def validate(self) -> None:
-        """Validate mandatory startup configuration and fail fast."""
+        """Valida as configurações obrigatórias de inicialização e falha imediatamente se necessário."""
         errors: list[str] = []
 
         if not self.binance.api_key:
@@ -346,7 +346,7 @@ class Settings:
             raise ValueError("Configuration validation failed:\n- " + "\n- ".join(errors))
 
     def validate_database_access(self) -> None:
-        """Validate that the configured database is reachable."""
+        """Valida se o banco de dados configurado está acessível."""
         engine = create_engine(self.database.url, future=True)
         try:
             with engine.connect() as connection:
@@ -355,7 +355,7 @@ class Settings:
             engine.dispose()
 
     def startup_summary(self) -> str:
-        """Return a startup banner with key runtime settings."""
+        """Retorna um cabeçalho de inicialização com as principais configurações de execução."""
         return "\n".join(
             [
                 "========================================",

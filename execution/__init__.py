@@ -1,5 +1,5 @@
 ﻿"""
-Execution Package - live order execution (disabled until PAPER_TRADING=false).
+Pacote de execução: envio de ordens ao vivo (desabilitado até PAPER_TRADING=false).
 """
 from execution.live_risk_service import LiveRiskExecutionResult, LiveRiskService
 from execution.live_trading_service import LiveTradingConfig, LiveTradingService

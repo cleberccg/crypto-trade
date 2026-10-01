@@ -1,30 +1,30 @@
 ﻿"""
-TrendV1 - first production strategy.
+TrendV1 — primeira estratégia de produção.
 
-Logic overview
---------------
-Entry (BUY) conditions (all must be true):
-1. EMA_20 > EMA_50 (bullish trend alignment)
-2. Price above EMA_20
-3. RSI_14 between 45 and 65 (momentum without extreme overbought)
-4. MACD histogram is positive and increasing
-5. Price above the Bollinger middle band
+Visão geral da lógica
+---------------------
+Condições de entrada (BUY; todas devem ser verdadeiras):
+1. EMA_20 > EMA_50 (alinhamento de tendência de alta)
+2. Preço acima da EMA_20
+3. RSI_14 entre 45 e 65 (momentum sem sobrecompra extrema)
+4. Histograma MACD positivo e crescente
+5. Preço acima da banda média de Bollinger
 
-Exit (SELL) conditions (any triggers exit):
-1. EMA_20 crosses below EMA_50
-2. RSI_14 > 70 (overbought - take profit)
-3. MACD histogram turns negative
-4. Price drops below lower Bollinger Band
+Condições de saída (SELL; qualquer uma aciona a saída):
+1. EMA_20 cruza para baixo da EMA_50
+2. RSI_14 > 70 (sobrecompra — realização de lucro)
+3. Histograma MACD fica negativo
+4. Preço cai abaixo da banda inferior de Bollinger
 
 Stop-loss / Take-profit
 -----------------------
-- Stop-loss: entry - (ATR × ATR_STOP_MULTIPLIER)
-- Risk: entry - stop_loss
-- Reward: risk × RISK_REWARD_RATIO
-- Take-profit: entry + reward
-- Trailing stop: default_trailing_stop_pct below the running high
+- Stop-loss: entrada - (ATR × ATR_STOP_MULTIPLIER)
+- Risco: entrada - stop_loss
+- Retorno: risco × RISK_REWARD_RATIO
+- Take-profit: entrada + retorno
+- Trailing stop: default_trailing_stop_pct abaixo da máxima móvel
 
-This ensures that the realized RR = configured RISK_REWARD_RATIO.
+Isso garante que o RR realizado corresponda ao RISK_REWARD_RATIO configurado.
 """
 from __future__ import annotations
 
@@ -85,16 +85,16 @@ logger = get_logger(__name__)
 )
 class TrendV1Strategy(TrendStrategy):
     """
-    Trend-following strategy using EMA, RSI, MACD, and Bollinger Bands.
+    Estratégia de acompanhamento de tendência que usa EMA, RSI, MACD e Bandas de Bollinger.
 
-    Stop-loss and take-profit are calculated to honor the configured risk/reward ratio.
-    This ensures compatibility with RiskManager validation.
+    Stop-loss e take-profit são calculados para respeitar a relação risco/retorno configurada.
+    Isso garante compatibilidade com a validação do RiskManager.
 
-    Args:
-        ema_fast: Fast EMA period (default 20).
-        ema_slow: Slow EMA period (default 50).
-        rsi_period: RSI period (default 14).
-        atr_period: ATR period for stop-loss calculation (default 14).
+    Argumentos:
+        ema_fast: período da EMA rápida (padrão: 20).
+        ema_slow: período da EMA lenta (padrão: 50).
+        rsi_period: período do RSI (padrão: 14).
+        atr_period: período do ATR usado no cálculo do stop-loss (padrão: 14).
     """
 
     def __init__(
@@ -121,7 +121,7 @@ class TrendV1Strategy(TrendStrategy):
         self._score_min = score_min
         self._volume_multiplier_min = volume_multiplier_min
 
-        # Initialised in initialize()
+        # Inicializado em initialize()
         self._ema_fast: EMA | None = None
         self._ema_slow: EMA | None = None
         self._rsi: RSI | None = None
@@ -138,7 +138,7 @@ class TrendV1Strategy(TrendStrategy):
     # ------------------------------------------------------------------
 
     def initialize(self) -> None:
-        """Instantiate all indicator objects."""
+        """Inicializa todos os objetos dos indicadores."""
         self._ema_fast = EMA(period=self._ema_fast_period)
         self._ema_slow = EMA(period=self._ema_slow_period)
         self._rsi = RSI(period=self._rsi_period)
@@ -148,14 +148,14 @@ class TrendV1Strategy(TrendStrategy):
         logger.info("%s - initialized.", self.name)
 
     # ------------------------------------------------------------------
-    # Calculation
+    # Cálculo
     # ------------------------------------------------------------------
 
     def calculate(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        Add all indicator columns to a copy of *df*.
+        Adiciona todas as colunas de indicadores a uma cópia de *df*.
 
-        Columns added: ema_fast, ema_slow, rsi, macd, signal, histogram,
+        Colunas adicionadas: ema_fast, ema_slow, rsi, macd, signal, histogram,
         bb_middle, bb_upper, bb_lower, bb_bandwidth, bb_percent_b, atr.
         """
         self._assert_initialized()
@@ -184,7 +184,7 @@ class TrendV1Strategy(TrendStrategy):
     # ------------------------------------------------------------------
 
     def entry_signal(self, df: pd.DataFrame) -> StrategySignal:
-        """Generate a BUY signal when all trend conditions align."""
+        """Gera um sinal BUY quando todas as condições de tendência estão alinhadas."""
         self._assert_initialized()
 
         last = df.iloc[-1]
@@ -217,10 +217,10 @@ class TrendV1Strategy(TrendStrategy):
         )
 
         if conditions_met:
-            # Calculate stop-loss using ATR multiplier from configuration
+            # Calcula o stop-loss usando o multiplicador ATR da configuração
             stop_loss = price - self._atr_stop_multiplier * atr
             
-            # Calculate risk and then reward based on configured RR ratio
+            # Calcula o risco e, em seguida, a recompensa com base na razão RR configurada
             risk = price - stop_loss
             rr_ratio = self._risk_reward_ratio
             reward = risk * rr_ratio
@@ -277,17 +277,17 @@ class TrendV1Strategy(TrendStrategy):
         )
 
     def exit_signal(self, df: pd.DataFrame, entry_price: float) -> StrategySignal:
-        """Generate a SELL signal when any exit condition is triggered."""
+        """Gera um sinal SELL quando qualquer condição de saída é acionada."""
         self._assert_initialized()
+    """
+    Calcula uma pontuação composta de confiança entre 0 e 1.
 
-        last = df.iloc[-1]
-        prev = df.iloc[-2] if len(df) >= 2 else last
-        price = float(last["close"])
-        timestamp = last.name.to_pydatetime()  # type: ignore[union-attr]
-
-        ema_fast_col = self._ema_fast.name  # type: ignore[union-attr]
-        ema_slow_col = self._ema_slow.name  # type: ignore[union-attr]
-
+    Fatores:
+    - Alinhamento das EMAs (0.25)
+    - RSI na faixa ideal de 50–60 (0.25)
+    - Força do histograma MACD (0.25)
+    - Posição do %B de Bollinger (0.25)
+    """
         # --- Condicoes de saida ---
         ema_bearish_cross = (
             float(last[ema_fast_col]) < float(last[ema_slow_col])
@@ -340,13 +340,13 @@ class TrendV1Strategy(TrendStrategy):
 
     def score(self, df: pd.DataFrame) -> float:
         """
-        Compute a composite confidence score from 0 to 1.
+        Calcula uma pontuação composta de confiança entre 0 e 1.
 
-        Factors:
-        - EMA alignment (0.25)
-        - RSI in optimal zone 50â€“60 (0.25)
-        - MACD histogram strength (0.25)
-        - Bollinger %B position (0.25)
+        Fatores:
+        - Alinhamento das EMA (0.25)
+        - RSI na faixa ideal de 50â€“60 (0.25)
+        - Força do histograma MACD (0.25)
+        - Posição do %B de Bollinger (0.25)
         """
         self._assert_initialized()
         last = df.iloc[-1]
@@ -377,7 +377,7 @@ class TrendV1Strategy(TrendStrategy):
     # ------------------------------------------------------------------
 
     def _assert_initialized(self) -> None:
-        """Raise RuntimeError if initialize() was not called."""
+        """Lança RuntimeError se initialize() não tiver sido chamado."""
         if self._ema_fast is None:
             raise RuntimeError(
                 f"{self.name}: call initialize() before using the strategy."

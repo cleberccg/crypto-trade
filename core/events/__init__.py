@@ -1,4 +1,4 @@
-"""Event infrastructure for decoupled optimizer orchestration."""
+"""Infraestrutura de eventos para orquestração desacoplada do otimizador."""
 
 from core.events.event_bus import EventBus
 from core.events.events import EventType, OptimizationEvent

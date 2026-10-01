@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-COMPREHENSIVE DATASET INTEGRITY AUDIT
-Before allowing FEATURE_CACHE or DISCOVERY stage.
-NO DATA MODIFICATIONS - READ-ONLY AUDIT ONLY.
+AUDITORIA ABRANGENTE DA INTEGRIDADE DO CONJUNTO DE DADOS
+Antes de permitir as etapas FEATURE_CACHE ou DISCOVERY.
+NENHUMA MODIFICAÇÃO DE DADOS - SOMENTE AUDITORIA DE LEITURA.
 """
 
 import os
@@ -19,17 +19,17 @@ print(f"Audit Time: {datetime.utcnow().isoformat()}Z")
 print()
 
 # ============================================================================
-# SECTION 1: EXPECTED PARTITIONS CALCULATION
+# SEÇÃO 1: CÁLCULO DAS PARTIÇÕES ESPERADAS
 # ============================================================================
 print("\n[1] CALCULATING EXPECTED PARTITIONS (2024-01 → 2026-08)")
 print("-" * 80)
 
 def get_expected_partitions():
-    """Generate list of expected monthly partitions for BTC & ETH"""
+    """Gera a lista das partições mensais esperadas para BTC e ETH."""
     expected = []
     
-    # Monthly partitions: 2024-01 through 2026-08
-    # Note: Feb 2026 is expected but will be marked as KNOWN_GAP later
+    # Partições mensais: 2024-01 a 2026-08
+    # Observação: fevereiro de 2026 é esperado, mas será marcado depois como KNOWN_GAP
     start_year, start_month = 2024, 1
     end_year, end_month = 2026, 8
     
@@ -39,13 +39,13 @@ def get_expected_partitions():
         expected.append(("BTCUSDT", period))
         expected.append(("ETHUSDT", period))
         
-        # Next month
+        # Próximo mês
         month += 1
         if month > 12:
             month = 1
             year += 1
     
-    # Daily partitions for Aug 2026 (already in monthly, but note they're daily)
+    # Partições diárias de agosto de 2026 (já incluídas nas mensais, mas estas são diárias)
     for day in range(1, 32):  # Attempt days 1-31
         period = f"2026-08-{day:02d}"
         expected.append(("BTCUSDT", period))
@@ -56,14 +56,14 @@ def get_expected_partitions():
 expected_list = get_expected_partitions()
 print(f"Expected total partition combinations: {len(expected_list)}")
 
-# Group by symbol
+# Agrupa por símbolo
 expected_btc = sorted([p for p in expected_list if p[0] == "BTCUSDT"])
 expected_eth = sorted([p for p in expected_list if p[0] == "ETHUSDT"])
 print(f"  BTCUSDT: {len(expected_btc)}")
 print(f"  ETHUSDT: {len(expected_eth)}")
 
 # ============================================================================
-# SECTION 2: MANIFEST PARTITIONS
+# SEÇÃO 2: PARTIÇÕES DO MANIFESTO
 # ============================================================================
 print("\n[2] READING MANIFEST")
 print("-" * 80)
@@ -77,7 +77,7 @@ manifest = json.load(open(manifest_file))
 manifest_partitions = manifest.get("partitions", {})
 print(f"Total partitions in manifest: {len(manifest_partitions)}")
 
-# Parse manifest partitions
+# Analisa as partições do manifesto
 manifest_btc = {}
 manifest_eth = {}
 manifest_validated = {}
@@ -108,7 +108,7 @@ print(f"  VALIDATED=YES: {len(manifest_validated)}")
 print(f"  VALIDATED!=YES: {len(manifest_invalid)}")
 
 # ============================================================================
-# SECTION 3: FILES ON DISK
+# SEÇÃO 3: ARQUIVOS NO DISCO
 # ============================================================================
 print("\n[3] SCANNING FILES ON DISK")
 print("-" * 80)
@@ -143,7 +143,7 @@ print(f"  BTCUSDT with files: {len(btc_files)}")
 print(f"  ETHUSDT with files: {len(eth_files)}")
 
 # ============================================================================
-# SECTION 4: COMPARISON
+# SEÇÃO 4: COMPARAÇÃO
 # ============================================================================
 print("\n[4] COMPARING MANIFEST vs FILES ON DISK")
 print("-" * 80)
@@ -169,7 +169,7 @@ if extra_files:
 print(f"Partitions in both: {len(both)}")
 
 # ============================================================================
-# SECTION 5: INVESTIGATE BTCUSDT|2026-02
+# SEÇÃO 5: INVESTIGA BTCUSDT|2026-02
 # ============================================================================
 print("\n[5] INVESTIGATING BTCUSDT|2026-02")
 print("-" * 80)
@@ -190,7 +190,7 @@ if btc_2026_02_in_manifest:
 else:
     print(f"✓ Not in manifest (was removed)")
 
-# Check logs for download history
+# Verifica nos logs o histórico de downloads
 print(f"\nSearching logs for BTCUSDT|2026-02 download history...")
 retry_log = Path("logs/collect_aggtrades_bulk_retry.log")
 if retry_log.exists():
@@ -204,12 +204,12 @@ if retry_log.exists():
         print("  No entries found in retry log")
 
 # ============================================================================
-# SECTION 6: IDENTIFY DISCREPANCIES
+# SEÇÃO 6: IDENTIFICA DISCREPÂNCIAS
 # ============================================================================
 print("\n[6] DISCREPANCY ANALYSIS")
 print("-" * 80)
 
-# Missing partitions (expected but not in manifest)
+# Partições ausentes (esperadas, mas não presentes no manifesto)
 expected_keys = {f"{s}|{p}": (s, p) for s, p in expected_list}
 missing = {}
 extra = {}
@@ -218,12 +218,12 @@ invalid_manifest = {}
 
 for exp_key in expected_keys:
     if exp_key not in manifest_partitions and exp_key != "BTCUSDT|2026-02":
-        # Special check: daily vs monthly for Aug 2026
+        # Verificação especial: partições diárias versus mensais de agosto de 2026
         symbol, period = expected_keys[exp_key]
-        if period.startswith("2026-08") and "-" in period:  # Daily format
+        if period.startswith("2026-08") and "-" in period:  # Formato diário
             monthly_key = f"{symbol}|2026-08"
             if monthly_key in manifest_partitions:
-                # This is expected - may have monthly + daily
+                # Isso é esperado: podem existir partições mensais e diárias
                 continue
         missing[exp_key] = expected_keys[exp_key]
 
@@ -242,15 +242,15 @@ if extra:
     for key in sorted(extra):
         print(f"  {key}")
 
-# Check for invalid entries
+# Verifica se há entradas inválidas
 print(f"\nManifest entries with VALIDATED != YES: {len(manifest_invalid)}")
 for key in sorted(manifest_invalid.keys()):
     entry = manifest_invalid[key]
-    if key != "BTCUSDT|2026-02":  # This is expected
+    if key != "BTCUSDT|2026-02":  # Isso é esperado
         print(f"  {key}: {entry.get('VALIDATED')} - Issues: {entry.get('ISSUES', [])}")
 
 # ============================================================================
-# SECTION 7: VALIDATE TEMPORAL SPLITS
+# SEÇÃO 7: VALIDA DIVISÕES TEMPORAIS
 # ============================================================================
 print("\n[7] TEMPORAL SPLIT VALIDATION")
 print("-" * 80)
@@ -266,19 +266,19 @@ print(f"VALIDATION: {DEV_END} → {VALIDATION_END}")
 print(f"OOS: {VALIDATION_END} → {OOS_END}")
 print(f"FINAL_HOLDOUT: {FINAL_HOLDOUT_START} → (locked)")
 
-# Check temporal coherence
+# Verifica a coerência temporal
 dev_end_dt = datetime.strptime(DEV_END, "%Y-%m-%d")
 val_end_dt = datetime.strptime(VALIDATION_END, "%Y-%m-%d")
 oos_end_dt = datetime.strptime(OOS_END, "%Y-%m-%d")
 
 print(f"\n✓ Splits are ordered: {dev_end_dt < val_end_dt < oos_end_dt}")
 
-# Check that no partition falls across DEV→VALIDATION boundary inconsistently
-# (Note: 2026-02 is special - it's in VALIDATION set but has data quality issue)
+# Verifica se nenhuma partição cruza de forma inconsistente o limite entre DEV e VALIDATION
+# (Observação: 2026-02 é um caso especial — está no conjunto VALIDATION, mas tem um problema de qualidade dos dados.)
 print(f"\n✓ FINAL_HOLDOUT locked at {FINAL_HOLDOUT_START}")
 
 # ============================================================================
-# SECTION 8: CHECK FOR STALE CACHES
+# SEÇÃO 8: VERIFICAÇÃO DE CACHES DESATUALIZADOS
 # ============================================================================
 print("\n[8] CHECKING FOR STALE CACHES")
 print("-" * 80)
@@ -295,7 +295,7 @@ if cache_dir.exists():
             print(f"  Cache: {subdir.name}")
             print(f"    Files: {len(files)}")
             
-            # These caches are potentially stale after manifest change
+            # Esses caches podem estar desatualizados após a alteração do manifesto
             stale_artifacts.extend([str(f) for f in files])
 else:
     print("  Cache directory does not exist yet (expected for first run)")
@@ -307,19 +307,19 @@ else:
     print("✓ No stale caches found")
 
 # ============================================================================
-# SECTION 9: VERIFY KNOWN GAP HANDLING
+# SEÇÃO 9: VERIFICA O TRATAMENTO DE LACUNAS CONHECIDAS
 # ============================================================================
 print("\n[9] KNOWN GAP HANDLING")
 print("-" * 80)
 
-# Check if pipeline code can handle gaps (2026-01 → 2026-03 skip)
+# Verifica se o código do pipeline consegue lidar com lacunas (salto de 2026-01 para 2026-03)
 print("Expected gap: BTCUSDT|2026-02 (data quality issue)")
 print("  Previous month (2026-01): Should be in data")
 print("  Next month (2026-03): Should be in data")
 print("  Rolling features must NOT interpolate across gap")
 print("  Forward returns must NOT interpolate across gap")
 
-# Verify 2026-01 and 2026-03 are available
+# Verifica se 2026-01 e 2026-03 estão disponíveis
 btc_2026_01 = "BTCUSDT|2026-01" in manifest_partitions
 btc_2026_03 = "BTCUSDT|2026-03" in manifest_partitions
 print(f"\n  2026-01 present: {btc_2026_01}")
@@ -331,14 +331,14 @@ else:
     print("  ✗ Gap not properly bounded")
 
 # ============================================================================
-# SECTION 10: CROSS-ASSET COVERAGE
+# SEÇÃO 10: COBERTURA ENTRE ATIVOS
 # ============================================================================
 print("\n[10] CROSS-ASSET COVERAGE ANALYSIS")
 print("-" * 80)
 
-# Get all validated BTC periods
+# Obtém todos os períodos validados de BTC
 btc_validated = {period for key, (status, _) in manifest_btc.items() if status == "YES"}
-# Get all validated ETH periods
+# Obtém todos os períodos validados de ETH
 eth_validated = {period for key, (status, _) in manifest_eth.items() if status == "YES"}
 
 common_coverage = btc_validated & eth_validated
@@ -361,21 +361,21 @@ else:
     print("\n✓ Perfect coverage alignment")
 
 # ============================================================================
-# SECTION 11: CALCULATE DATASET MANIFEST HASH
+# SEÇÃO 11: CALCULA O HASH DO MANIFESTO DO CONJUNTO DE DADOS
 # ============================================================================
 print("\n[11] DATASET MANIFEST HASH CALCULATION")
 print("-" * 80)
 
-# Hash is computed from validated partitions ONLY
+# O hash é calculado SOMENTE a partir das partições validadas
 # In order: BTCUSDT periods, then ETHUSDT periods
 def compute_manifest_hash():
     hash_input = []
     
-    # Add all validated partitions in sorted order
+    # Adiciona todas as partições validadas em ordem
     for key in sorted(manifest_partitions.keys()):
         entry = manifest_partitions[key]
         if entry.get("VALIDATED") == "YES":
-            # Use the hash recorded in manifest
+            # Usa o hash registrado no manifesto
             partition_hash = entry.get("HASH", "")
             hash_input.append(f"{key}:{partition_hash}")
     

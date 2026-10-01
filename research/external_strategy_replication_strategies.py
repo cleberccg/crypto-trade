@@ -1,26 +1,26 @@
-"""External strategy replication: reproduce published trend-following specs
-(BTC 4H SMA200, Apex No-Pyramid, Quattro Donchian, 5 EMA Weekly Filter,
-Multi-Asset Vol-Normalized Trend) and gate them through DEV -> Validation ->
-OOS on our own Binance Spot dataset.
+"""Replicação de estratégias externas: reproduz especificações publicadas de
+seguimento de tendência (BTC 4H SMA200, Apex No-Pyramid, Quattro Donchian,
+5 EMA Weekly Filter, Multi-Asset Vol-Normalized Trend) e as avalia no fluxo
+DEV -> Validation -> OOS usando nosso conjunto de dados Binance Spot.
 
-Reuses, unmodified:
+Reutiliza, sem modificações:
 - BacktestEngine / BacktestConfig (backtesting/engine.py)
-- RiskManager defaults (risk/risk_manager.py) -- not touched, not subclassed
+- padrões de RiskManager (risk/risk_manager.py) -- não alterado nem estendido por subclassing
 - compute_metrics (backtesting/metrics.py)
-- CandleRepository (database/repositories.py) over the existing MySQL candles
-- FINAL_HOLDOUT convention already used elsewhere in this repo: rows with
-  timestamp >= 2026-06-01 are NEVER loaded here (structurally, not just
-  filtered after the fact).
+- CandleRepository (database/repositories.py) sobre os candles MySQL existentes
+- convenção FINAL_HOLDOUT já usada em outras partes deste repositório: linhas com
+    timestamp >= 2026-06-01 NUNCA são carregadas aqui (por construção, não apenas
+    filtradas posteriormente).
 
-Does not touch Paper Live, CDB (ClassicDonchianBreakout), RiskManager or
-PositionSizer. New strategy classes are plain BaseStrategy subclasses defined
-below (not registered in strategies/registry.py), so they are invisible to
-the optimizer/paper-live strategy catalog.
+Não altera Paper Live, CDB (ClassicDonchianBreakout), RiskManager nem
+PositionSizer. As novas classes de estratégia são subclasses diretas de
+BaseStrategy definidas abaixo (não registradas em strategies/registry.py) e,
+portanto, não aparecem no catálogo de estratégias do otimizador/paper-live.
 
-Base OHLCV granularity: 15m (longest common history per symbol in the DB),
-resampled with standard OHLCV aggregation to 4h/1D/1W-MON as each strategy
-requires. This is NOT new data collection -- it is a deterministic
-aggregation of candles already validated and stored by this project.
+Granularidade OHLCV de base: 15m (o histórico comum mais longo por ativo no
+banco de dados), reamostrado com agregação OHLCV padrão para 4h/1D/1W-MON,
+conforme exigido por cada estratégia. Isso NÃO é uma nova coleta de dados --
+é uma agregação determinística de candles já validados e armazenados pelo projeto.
 """
 from __future__ import annotations
 
@@ -46,18 +46,18 @@ BASE_DIR = Path(__file__).resolve().parent
 OUT_JSON = BASE_DIR / "external_strategy_replication_latest.json"
 
 FINAL_HOLDOUT_START = pd.Timestamp("2026-06-01T00:00:00Z")
-BASE_FEE = 0.001      # 0.1% per side, project baseline (backtesting/engine.py _DEFAULT_FEE_PCT)
-STRESS_FEE = 0.0015   # 0.15% per side, same convention as run_autonomous_strategy_research_v3.py
-SLIPPAGE_BPS = 2.0    # extra one-way stress cost, same convention as run_autonomous_strategy_research_v3.py
+BASE_FEE = 0.001      # 0,1% por lado, valor-base do projeto (backtesting/engine.py _DEFAULT_FEE_PCT)
+STRESS_FEE = 0.0015   # 0,15% por lado, mesma convenção de run_autonomous_strategy_research_v3.py
+SLIPPAGE_BPS = 2.0    # custo adicional de estresse em uma direção, mesma convenção de run_autonomous_strategy_research_v3.py
 CAPITAL = 10_000.0
 BASE_TIMEFRAME = "15m"
 
-# Neutralize the engine's built-in stop/TP/percentage-trailing when a strategy's
-# published spec has no such mechanism (or implements its own via exit_signal).
-# Values are chosen so they are, for all practical purposes, never reached.
-NEVER_STOP_FRACTION = 0.01     # stop_loss = entry * 0.01  (99% adverse move)
+# Neutraliza o stop/TP/trailing percentual integrado ao mecanismo quando a
+# especificação publicada da estratégia não prevê esse mecanismo (ou implementa o próprio via exit_signal).
+# Os valores são escolhidos para, na prática, nunca serem atingidos.
+NEVER_STOP_FRACTION = 0.01     # stop_loss = entry * 0.01 (movimento adverso de 99%)
 NEVER_TP_MULTIPLE = 100.0      # take_profit = entry * 100
-NEVER_TRAILING_PCT = 0.99      # 99% pullback from peak
+NEVER_TRAILING_PCT = 0.99      # Recuo de 99% em relação ao pico
 
 TARGET_CANDIDATES = 1
 CANDIDATE_MIN_NET_PF = 1.20
@@ -76,11 +76,11 @@ def _ts(value: object) -> datetime:
 
 
 # ---------------------------------------------------------------------------
-# Data: load 15m candles from the existing DB, resample, split, holdout-lock
+# Dados: carrega candles de 15m do banco existente, reamostra, divide e bloqueia o holdout
 # ---------------------------------------------------------------------------
 
 def load_base_candles(symbol: str) -> pd.DataFrame:
-    """15m candles up to (but excluding) FINAL_HOLDOUT_START. Never loads the holdout."""
+    """Candles de 15m até (mas sem incluir) FINAL_HOLDOUT_START. Nunca carrega o holdout."""
     with get_session() as session:
         repo = CandleRepository(session)
         start = datetime(2015, 1, 1, tzinfo=timezone.utc)
@@ -97,7 +97,7 @@ def load_base_candles(symbol: str) -> pd.DataFrame:
     return df
 
 
-_RESAMPLE_RULE = {"4h": "4h", "1d": "1D", "1w": "1W-MON"}
+_RESAMPLE_RULE = {"1h": "1h", "4h": "4h", "1d": "1D", "1w": "1W-MON"}
 
 
 def resample_ohlcv(df: pd.DataFrame, timeframe: str) -> pd.DataFrame:
@@ -114,7 +114,7 @@ class Split:
 
 
 def dev_val_oos_split(df: pd.DataFrame) -> list[Split]:
-    """60/20/20 by bar count, temporal (no shuffling), FINAL_HOLDOUT already excluded upstream."""
+    """Divisão 60/20/20 pela quantidade de candles, em ordem temporal (sem embaralhamento); FINAL_HOLDOUT já foi excluído anteriormente."""
     n = len(df)
     dev_end = int(n * 0.60)
     val_end = int(n * 0.80)
@@ -126,13 +126,14 @@ def dev_val_oos_split(df: pd.DataFrame) -> list[Split]:
 
 
 # ---------------------------------------------------------------------------
-# Strategy 1 -- BTC 4H SMA200 TREND (iolufemi/crypto-trend-research)
+# Estratégia 1 -- tendência SMA200 de BTC em 4h (iolufemi/crypto-trend-research)
 # ---------------------------------------------------------------------------
 
 class Sma200TrendStrategy(BaseStrategy):
-    """Long/flat: long while close > SMA200, flat while close < SMA200.
-    No fixed take-profit, no trailing (published spec has none); engine's
-    stop/TP/trailing are neutralized so the SMA flip is the only exit."""
+    """Comprada/sem posição: mantém posição comprada enquanto close > SMA200 e
+    fica sem posição quando close < SMA200. Não há take-profit fixo nem trailing
+    (a especificação publicada não prevê esses mecanismos); stop/TP/trailing do
+    mecanismo são neutralizados para que a inversão da SMA seja a única saída."""
 
     def __init__(self, sma_period: int = 200) -> None:
         self._period = int(sma_period)
@@ -179,10 +180,11 @@ class Sma200TrendStrategy(BaseStrategy):
 
 
 class Sma200VolTargetStrategy(Sma200TrendStrategy):
-    """Simple SMA200 flip, but score (=position-size multiplier via RiskManager)
-    is scaled inversely to realized volatility (20-bar stdev of returns),
-    approximating the original vol-targeting overlay without touching
-    RiskManager/PositionSizer -- only the strategy's own `score` output."""
+    """Inversão simples da SMA200, mas score (=multiplicador do tamanho da
+    posição via RiskManager) é escalado inversamente à volatilidade realizada
+    (desvio padrão dos retornos em 20 candles), aproximando o overlay original
+    de vol-targeting sem alterar RiskManager/PositionSizer -- somente a saída
+    `score` da própria estratégia."""
 
     def __init__(self, sma_period: int = 200, vol_window: int = 20, target_vol: float = 0.02) -> None:
         super().__init__(sma_period)
@@ -218,9 +220,9 @@ class Sma200VolTargetStrategy(Sma200TrendStrategy):
 
 
 def compute_adx(df: pd.DataFrame, period: int = 14) -> pd.Series:
-    """Wilder ADX, causal (ewm only looks backward). Shared by regime-gated
-    strategies and diagnose_oos_failure.py -- single implementation, no
-    duplication."""
+    """ADX de Wilder, causal (ewm considera apenas dados anteriores). Compartilhado
+    pelas estratégias com filtro de regime e por diagnose_oos_failure.py -- uma
+    única implementação, sem duplicação."""
     high, low, close = df["high"], df["low"], df["close"]
     up_move = high.diff()
     down_move = -low.diff()
@@ -236,12 +238,12 @@ def compute_adx(df: pd.DataFrame, period: int = 14) -> pd.Series:
 
 
 class Sma200RegimeGatedStrategy(Sma200TrendStrategy):
-    """Experimental regime gate on top of the UNCHANGED SMA200 rule: long is
-    only permitted while regime == TRENDING_BULL (close>SMA200 AND SMA200
-    rising AND ADX(14)>=adx_threshold); every other regime -> CASH (flat).
-    No change to entry/exit price logic, no parameter optimization -- this is
-    a gate on top of the same signal, causal (ADX via ewm, slope via diff),
-    no lookahead."""
+    """Filtro experimental de regime aplicado à regra SMA200 INALTERADA: a
+    posição comprada só é permitida quando regime == TRENDING_BULL
+    (close>SMA200 AND SMA200 rising AND ADX(14)>=adx_threshold); qualquer outro
+    regime -> CASH (sem posição). Não altera a lógica de preço de entrada/saída
+    nem otimiza parâmetros -- apenas filtra o mesmo sinal, de forma causal (ADX via
+    ewm, inclinação via diff), sem lookahead."""
 
     def __init__(self, sma_period: int = 200, adx_period: int = 14, adx_threshold: float = 20.0, slope_lookback: int = 20) -> None:
         super().__init__(sma_period)
@@ -285,12 +287,13 @@ class Sma200RegimeGatedStrategy(Sma200TrendStrategy):
 
 
 class RegimeAdaptiveStrategy(BaseStrategy):
-    """TRENDING_BULL -> SMA200 (unchanged rule); SIDEWAYS (ADX<20, not bull) ->
-    delegate to the existing, unmodified MeanReversionV1Strategy; anything else
-    (TRENDING_BEAR / uncertain) -> CASH. Only tested if regime-gating alone
-    (Sma200RegimeGatedStrategy) already showed a clear improvement (etapa 5
-    gate). Reuses MeanReversionV1Strategy as-is (not registered, not modified,
-    not selected among several -- exactly one mean-reversion strategy)."""
+    """TRENDING_BULL -> SMA200 (regra inalterada); SIDEWAYS (ADX<20, não bull) ->
+    delega para a MeanReversionV1Strategy existente e inalterada; qualquer outro
+    regime (TRENDING_BEAR / incerto) -> CASH. Só é testada se o filtro de regime
+    isolado (Sma200RegimeGatedStrategy) já tiver mostrado uma melhora clara
+    (critério de aprovação da etapa 5). Reutiliza MeanReversionV1Strategy tal
+    como está (não registrada, não modificada nem escolhida entre várias -- é
+    exatamente uma estratégia de reversão à média)."""
 
     def __init__(self, sma_period: int = 200, adx_period: int = 14, adx_threshold: float = 20.0, slope_lookback: int = 20) -> None:
         self._period = int(sma_period)
@@ -352,10 +355,11 @@ class RegimeAdaptiveStrategy(BaseStrategy):
 
 
 class SimpleBollingerRsiMeanReversionStrategy(BaseStrategy):
-    """Public mean-reversion template: buy when close is below the lower
-    Bollinger Band and RSI is oversold; exit on reversion to the middle band
-    or RSI overbought. No trend, volume, ML, short, leverage, order-book, or
-    optimized filters."""
+    """Modelo público de reversão à média: compra quando close está abaixo da
+    banda inferior de Bollinger e o RSI está sobrevendido; sai quando o preço
+    retorna à banda do meio ou o RSI fica sobrecomprado. Sem filtros de
+    tendência, volume, ML, posição vendida, alavancagem, livro de ofertas ou
+    otimização."""
 
     def __init__(
         self,
@@ -432,8 +436,9 @@ class SimpleBollingerRsiMeanReversionStrategy(BaseStrategy):
 
 
 class ZScoreMeanReversionStrategy(BaseStrategy):
-    """Public z-score mean reversion: buy when close is two rolling standard
-    deviations below its moving average; exit when price reverts to the mean."""
+    """Reversão à média pública por z-score: compra quando close está duas
+    unidades de desvio padrão móvel abaixo da média móvel; sai quando o preço
+    retorna à média."""
 
     def __init__(self, lookback: int = 20, entry_z: float = -2.0, exit_z: float = 0.0) -> None:
         self._lookback = int(lookback)
@@ -486,8 +491,8 @@ class ZScoreMeanReversionStrategy(BaseStrategy):
 
 
 class MovingAverageDeviationReversalStrategy(BaseStrategy):
-    """Public deviation-from-moving-average reversal: buy when close is at
-    least 5% below the 50-period SMA; exit when price returns to the SMA."""
+    """Reversão pública por desvio da média móvel: compra quando close está pelo
+    menos 5% abaixo da SMA de 50 períodos; sai quando o preço retorna à SMA."""
 
     def __init__(self, ma_period: int = 50, entry_deviation: float = -0.05, exit_deviation: float = 0.0) -> None:
         self._ma_period = int(ma_period)
@@ -538,19 +543,129 @@ class MovingAverageDeviationReversalStrategy(BaseStrategy):
 
 
 # ---------------------------------------------------------------------------
-# Strategy 2 -- APEX NO-PYRAMID (EstebanSP23/crypto_systematic_research)
+# Candidatas de 1h (públicas, regras congeladas, somente posições compradas no mercado spot)
+# ---------------------------------------------------------------------------
+
+class _FrozenRuleStrategy(BaseStrategy):
+    """Colunas booleanas de entrada/saída calculadas causalmente em calculate();
+    stop/TP/trailing do mecanismo são neutralizados para que somente a regra de
+    saída publicada encerre a posição."""
+
+    _label = "FrozenRule"
+
+    @property
+    def name(self) -> str:
+        return self._label
+
+    def initialize(self) -> None:
+        return None
+
+    def entry_signal(self, df: pd.DataFrame) -> StrategySignal:
+        last = df.iloc[-1]
+        price = float(last["close"])
+        if bool(last.get("entry_ok", False)):
+            return StrategySignal(
+                SignalType.BUY, price, _ts(last.name), score=1.0,
+                stop_loss=price * NEVER_STOP_FRACTION,
+                take_profit=price * NEVER_TP_MULTIPLE,
+                trailing_stop_pct=NEVER_TRAILING_PCT,
+                metadata={"entry_reason": self._label},
+            )
+        return StrategySignal(SignalType.HOLD, price, _ts(last.name), score=0.0)
+
+    def exit_signal(self, df: pd.DataFrame, entry_price: float) -> StrategySignal:
+        last = df.iloc[-1]
+        price = float(last["close"])
+        if bool(last.get("exit_ok", False)):
+            return StrategySignal(SignalType.SELL, price, _ts(last.name), metadata={"exit_reason": f"{self._label}_exit"})
+        return StrategySignal(SignalType.HOLD, price, _ts(last.name))
+
+    def score(self, df: pd.DataFrame) -> float:
+        return 1.0 if bool(df.iloc[-1].get("entry_ok", False)) else 0.0
+
+
+def _wilder_rsi(close: pd.Series, period: int) -> pd.Series:
+    delta = close.diff()
+    gain = delta.clip(lower=0.0).ewm(alpha=1.0 / period, adjust=False, min_periods=period).mean()
+    loss = (-delta.clip(upper=0.0)).ewm(alpha=1.0 / period, adjust=False, min_periods=period).mean()
+    rs = gain / loss.replace(0.0, np.nan)
+    return (100.0 - 100.0 / (1.0 + rs)).fillna(100.0)
+
+
+class ConnorsRsi2Strategy(_FrozenRuleStrategy):
+    """RSI(2) de Connors & Alvarez: compra quando close>SMA200 e RSI(2)<10; sai quando close>SMA5."""
+
+    _label = "ConnorsRsi2"
+
+    def __init__(self, trend_period: int = 200, rsi_period: int = 2, rsi_entry: float = 10.0, exit_period: int = 5) -> None:
+        self._trend_period = int(trend_period)
+        self._rsi_period = int(rsi_period)
+        self._rsi_entry = float(rsi_entry)
+        self._exit_period = int(exit_period)
+
+    def calculate(self, df: pd.DataFrame) -> pd.DataFrame:
+        out = df.copy()
+        trend = out["close"].rolling(self._trend_period).mean()
+        exit_ma = out["close"].rolling(self._exit_period).mean()
+        rsi = _wilder_rsi(out["close"], self._rsi_period)
+        out["entry_ok"] = (out["close"] > trend) & (rsi < self._rsi_entry)
+        out["exit_ok"] = out["close"] > exit_ma
+        return out
+
+
+class DonchianTurtleS1Strategy(_FrozenRuleStrategy):
+    """Turtle System 1: compra quando close supera a máxima anterior de 20 candles; sai quando close fica abaixo da mínima anterior de 10 candles."""
+
+    _label = "DonchianTurtleS1"
+
+    def __init__(self, entry_period: int = 20, exit_period: int = 10) -> None:
+        self._entry_period = int(entry_period)
+        self._exit_period = int(exit_period)
+
+    def calculate(self, df: pd.DataFrame) -> pd.DataFrame:
+        out = df.copy()
+        upper = out["high"].rolling(self._entry_period).max().shift(1)
+        lower = out["low"].rolling(self._exit_period).min().shift(1)
+        out["entry_ok"] = out["close"] > upper
+        out["exit_ok"] = out["close"] < lower
+        return out
+
+
+class IbsMeanReversionStrategy(_FrozenRuleStrategy):
+    """Reversão por Internal Bar Strength: compra quando IBS<0.2; sai quando IBS>0.8."""
+
+    _label = "IbsMeanReversion"
+
+    def __init__(self, entry_ibs: float = 0.2, exit_ibs: float = 0.8) -> None:
+        self._entry_ibs = float(entry_ibs)
+        self._exit_ibs = float(exit_ibs)
+
+    def calculate(self, df: pd.DataFrame) -> pd.DataFrame:
+        out = df.copy()
+        rng = (out["high"] - out["low"]).replace(0.0, np.nan)
+        ibs = (out["close"] - out["low"]) / rng
+        out["entry_ok"] = ibs < self._entry_ibs
+        out["exit_ok"] = ibs > self._exit_ibs
+        return out
+
+
+# ---------------------------------------------------------------------------
+# Estratégia 2 -- APEX sem pirâmide (EstebanSP23/crypto_systematic_research)
 # ---------------------------------------------------------------------------
 
 class ApexNoPyramidStrategy(BaseStrategy):
-    """4h breakout of ~6-month high, SMA50>SMA200 trend filter, volume>1.5x avg.
-    DEVIATION FROM PUBLISHED SPEC (documented, not silently simplified): the
-    platform's BacktestEngine tracks a single full position per symbol with no
-    partial-close support, so the published '50% scale-out at 2R + trail rest
-    by 20-bar low' cannot be reproduced exactly. We approximate with a single
-    full exit on a 20-bar-low trailing stop (the trailing component of the
-    original rule), which is the closest faithful behavior the engine allows.
-    No pyramiding is structurally guaranteed (engine never opens a 2nd
-    position while one is open), matching 'SEM pyramiding' exactly.
+    """Rompimento em 4h da máxima de aproximadamente 6 meses, filtro de
+    tendência SMA50>SMA200 e volume>1.5x da média.
+    DESVIO DA ESPECIFICAÇÃO PUBLICADA (documentado, não simplificado em
+    silêncio): o BacktestEngine da plataforma mantém uma única posição integral
+    por ativo e não permite fechamentos parciais; portanto, não é possível
+    reproduzir exatamente a regra publicada 'reduzir 50% da posição em 2R +
+    aplicar trailing no restante pela mínima de 20 candles'. Aproximamos com
+    uma única saída integral por trailing stop da mínima de 20 candles (o
+    componente trailing da regra original), o
+    comportamento mais fiel permitido pelo mecanismo. A ausência de pirâmide é
+    garantida estruturalmente (o mecanismo nunca abre uma segunda posição
+    enquanto já existe uma), correspondendo exatamente à regra de operar sem pirâmide.
     """
 
     def __init__(self, breakout_bars: int = 1095, sma_fast: int = 50, sma_slow: int = 200, volume_window: int = 20, volume_multiple: float = 1.5, trail_bars: int = 20) -> None:
@@ -611,18 +726,19 @@ class ApexNoPyramidStrategy(BaseStrategy):
 
 
 # ---------------------------------------------------------------------------
-# Strategy 3 -- QUATTRO DONCHIAN (EstebanSP23/crypto_systematic_research)
+# Estratégia 3 -- QUATTRO DONCHIAN (EstebanSP23/crypto_systematic_research)
 # ---------------------------------------------------------------------------
 
 class QuattroDonchianStrategy(BaseStrategy):
-    """BTC 4h Donchian(20) breakout, daily EMA200 rising filter, ATR(14),
-    2xATR chandelier trailing stop, 5% catastrophe stop.
-    DEVIATION FROM PUBLISHED SPEC (documented): the original strategy pyramids
-    up to 4 units at +0.5N intervals. The platform's engine supports exactly
-    one open position per symbol (no adding to a position), so pyramiding is
-    NOT reproduced -- this tests the single-unit base case only. This does
-    not require leverage/perpetuals; it runs as a plain long/flat spot
-    position, so no leverage distortion is introduced.
+    """Rompimento Donchian(20) em BTC 4h, filtro de alta da EMA200 diária,
+    ATR(14), trailing stop chandelier de 2xATR e stop de emergência de 5%.
+    DESVIO DA ESPECIFICAÇÃO PUBLICADA (documentado): a estratégia original
+    adiciona até 4 unidades em intervalos de +0.5N. O mecanismo da plataforma
+    aceita exatamente uma posição aberta por ativo (sem adicionar à posição),
+    portanto a pirâmide NÃO é reproduzida -- este teste cobre somente o caso
+    básico de uma unidade. Não exige alavancagem nem contratos perpétuos; opera
+    como uma posição spot simples, comprada ou sem posição, sem distorção por
+    alavancagem.
     """
 
     def __init__(self, donchian_window: int = 20, atr_period: int = 14, atr_multiple: float = 2.0, catastrophe_stop_pct: float = 0.05) -> None:
@@ -646,8 +762,8 @@ class QuattroDonchianStrategy(BaseStrategy):
         prev_close = close.shift(1)
         tr = pd.concat([(high - low).abs(), (high - prev_close).abs(), (low - prev_close).abs()], axis=1).max(axis=1)
         out["atr"] = tr.ewm(alpha=1.0 / self._atr_period, adjust=False, min_periods=self._atr_period).mean()
-        # Daily EMA200 filter, computed on this symbol's own daily resample of the
-        # SAME already-loaded candles (no new data), merged causally (as-of, no lookahead).
+        # Filtro EMA200 diário, calculado a partir da reamostragem diária deste símbolo dos
+        # MESMOS candles já carregados (sem dados novos), combinado causalmente (as-of, sem olhar para o futuro).
         daily = out[["open", "high", "low", "close", "volume"]].resample("1D", label="left", closed="left").agg(
             {"open": "first", "high": "max", "low": "min", "close": "last", "volume": "sum"}
         ).dropna()
@@ -695,12 +811,13 @@ class QuattroDonchianStrategy(BaseStrategy):
 
 
 # ---------------------------------------------------------------------------
-# Strategy 4 -- 5 EMA TREND FILTER (weekly)
+# Estratégia 4 -- filtro de tendência com EMA 5 (semanal)
 # ---------------------------------------------------------------------------
 
 class FiveEmaWeeklyFilterStrategy(BaseStrategy):
-    """BTC weekly close > EMA5 (weekly), AND daily EMA200 rising vs 20 days ago.
-    Long/flat, exits when the weekly condition ceases. Low frequency by design."""
+    """Em BTC, close semanal > EMA5 semanal E EMA200 diária em alta em relação
+    a 20 dias antes. Opera comprada ou sem posição e sai quando a condição
+    semanal deixa de ser satisfeita. A baixa frequência é intencional."""
 
     def __init__(self, weekly_ema_period: int = 5, daily_ema_period: int = 200, daily_lookback: int = 20) -> None:
         self._weekly_ema_period = int(weekly_ema_period)
@@ -715,8 +832,8 @@ class FiveEmaWeeklyFilterStrategy(BaseStrategy):
         return None
 
     def calculate(self, df: pd.DataFrame) -> pd.DataFrame:
-        # df here is already the WEEKLY frame (see prepare_weekly_frame below);
-        # "daily_ema200_rising" is pre-merged as a column before this call.
+        # df aqui já é o dataframe SEMANAL (consulte prepare_weekly_frame abaixo);
+        # "daily_ema200_rising" é combinado previamente como coluna antes desta chamada.
         out = df.copy()
         out["weekly_ema5"] = out["close"].ewm(span=self._weekly_ema_period, adjust=False).mean()
         return out
@@ -766,20 +883,22 @@ def prepare_weekly_frame(base_15m: pd.DataFrame, daily_ema_period: int, daily_lo
 
 
 # ---------------------------------------------------------------------------
-# Strategy 5 -- MULTI-ASSET VOLATILITY-NORMALIZED TREND
+# Estratégia 5 -- tendência multiativo normalizada por volatilidade
 # ---------------------------------------------------------------------------
 
 class VolNormalizedTrendStrategy(BaseStrategy):
-    """Daily SMA50/SMA200 trend-following, position score inversely scaled to
-    20-day realized volatility (vol-normalized sizing proxy via `score`).
-    NOTE: the original public spec ('medias moveis / trend following',
-    'sizing de portfolio', 'walk-forward') does not give exact MA periods; we
-    use the standard 50/200 golden-cross convention and document this choice
-    explicitly rather than guessing undocumented parameters. Portfolio-level
-    capital allocation across BTC/ETH/BNB/ADA is NOT natively supported by the
-    single-symbol BacktestEngine; each asset is run independently and results
-    are pooled/aggregated afterwards as an approximation of the portfolio
-    mechanism -- documented, not silently presented as identical."""
+    """Seguimento de tendência com SMA50/SMA200 diária; o score da posição é
+    escalado inversamente à volatilidade realizada de 20 dias (proxy de
+    dimensionamento normalizado por volatilidade via `score`).
+    NOTA: a especificação pública original ('medias moveis / trend following',
+    'sizing de portfolio', 'walk-forward') não informa os períodos exatos das
+    médias; usamos a convenção padrão de cruzamento dourado 50/200 e
+    documentamos explicitamente essa escolha, em vez de supor parâmetros não
+    especificados. O BacktestEngine de ativo único NÃO oferece alocação de
+    capital em nível de portfólio entre BTC/ETH/BNB/ADA; cada ativo é executado
+    independentemente e os resultados são agrupados/agregados depois como
+    aproximação do mecanismo de portfólio -- isso é documentado, sem apresentar
+    silenciosamente a aproximação como idêntica ao original."""
 
     def __init__(self, sma_fast: int = 50, sma_slow: int = 200, vol_window: int = 20, target_vol: float = 0.02) -> None:
         self._fast = int(sma_fast)

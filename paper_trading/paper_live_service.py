@@ -1,4 +1,4 @@
-"""Continuous paper trading operation with version management and operational reports."""
+"""Operação contínua de paper trading com gerenciamento de versões e relatórios operacionais."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -53,7 +53,7 @@ class PaperLiveConfig:
 
 
 class StrategyVersionManager:
-    """Persistent strategy version registry and comparison service."""
+    """Registro persistente de versões de estratégias e serviço de comparação."""
 
     def __init__(self, session: Session) -> None:
         self._session = session
@@ -260,7 +260,7 @@ class StrategyVersionManager:
 
 
 class PaperOperationalReportingService:
-    """Generates operation, hourly, daily, weekly and monthly reports."""
+    """Gera relatórios de operação por hora, dia, semana e mês."""
 
     def __init__(self, session: Session, base_dir: Path) -> None:
         self._session = session
@@ -513,7 +513,7 @@ class PaperOperationalReportingService:
 
 
 class PaperLiveService:
-    """Runs continuous paper trading by monitoring new candles in DB."""
+    """Executa paper trading contínuo monitorando novos candles no banco de dados."""
 
     def __init__(self, base_dir: Path) -> None:
         self._base_dir = base_dir
@@ -609,7 +609,7 @@ class PaperLiveService:
         last_open_time = self._state_datetime(state.get("last_open_time"))
         is_new_execution = not bool(state)
         if is_new_execution:
-            # Historical candles warm indicators only; Paper starts at the next closed candle.
+            # Candles históricos servem apenas para aquecer os indicadores; o Paper começa no próximo candle fechado.
             last_open_time = frame.index[-1].to_pydatetime()
             process_start_index = len(frame)
         else:
@@ -935,7 +935,7 @@ class PaperLiveService:
                     return max(0, idx)
             return len(frame)
 
-        # First run: replay only a recent window to keep startup practical.
+        # Na primeira execução: reproduz somente uma janela recente para manter a inicialização prática.
         return max(50, len(frame) - max(60, int(replay_bars)))
 
     @staticmethod

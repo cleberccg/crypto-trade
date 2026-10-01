@@ -1,4 +1,4 @@
-"""Default listeners for optimizer events (history, logs, metrics)."""
+"""Listeners padrão para eventos do otimizador (histórico, logs, métricas)."""
 from __future__ import annotations
 
 import json
@@ -29,7 +29,7 @@ class ResumeState:
 
 
 class HistoryListener(EventListener):
-    """Persists optimizer lifecycle events using repository/service layer."""
+    """Persiste eventos do ciclo de vida do otimizador usando a camada de repositórios/serviços."""
 
     def __init__(self, checkpoint_interval: int = 50) -> None:
         self._checkpoint_interval = max(1, checkpoint_interval)
@@ -211,7 +211,7 @@ class HistoryListener(EventListener):
 
 
 class LogListener(EventListener):
-    """Simple observability listener logging every event."""
+    """Listener simples de observabilidade que registra todos os eventos em log."""
 
     def handle(self, event: OptimizationEvent) -> None:
         logger.info(
@@ -223,7 +223,7 @@ class LogListener(EventListener):
 
 
 class MetricsListener(EventListener):
-    """In-memory real-time aggregate metrics for dashboards."""
+    """Métricas agregadas em tempo real, mantidas em memória, para painéis."""
 
     def __init__(self) -> None:
         self._state: dict[str, Any] = {

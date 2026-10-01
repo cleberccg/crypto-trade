@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Quick post-reconciliation audit verification.
+Verificação rápida da auditoria após a reconciliação.
 """
 import json
 from pathlib import Path
@@ -67,7 +67,7 @@ print(f"\n  Expected files: 107 (53 BTC, 54 ETH)")
 print(f"  Actual files: {total_files}")
 print(f"  Match: {'YES' if total_files == 107 else 'NO'}")
 
-# Check manifest vs files
+# Compara o manifesto com os arquivos
 print(f"\nManifestat vs Files check:")
 manifest_no_file = 0
 for symbol in ["BTCUSDT", "ETHUSDT"]:
@@ -91,7 +91,7 @@ if manifest_no_file == 0:
 else:
     print(f"  ERROR: {manifest_no_file} mismatches found")
 
-# Final status
+# Estado final
 print(f"\n" + "="*80)
 if (len(partitions) == 109 and 
     validated_yes == 107 and 

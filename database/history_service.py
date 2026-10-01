@@ -1,4 +1,4 @@
-"""High level persistence service for system history and checkpoints."""
+"""Serviço de alto nível para persistência do histórico do sistema e de checkpoints."""
 from __future__ import annotations
 
 import json
@@ -54,7 +54,7 @@ class PersistenceBatchResult:
 
 
 class HistoryPersistenceService:
-    """Persist execution history without requiring changes to core engines."""
+    """Persiste o histórico de execução sem exigir alterações nos mecanismos centrais."""
 
     def __init__(self, session: Session) -> None:
         self._session = session
@@ -534,8 +534,8 @@ class HistoryPersistenceService:
         last_error: Exception | None = None
         for attempt in range(2):
             try:
-                # Keepalive ping so long-running campaigns detect stale connections
-                # before trying to persist the checkpoint row.
+                # Ping de keepalive para que campanhas longas detectem conexões obsoletas
+                # antes de tentar persistir o registro de checkpoint.
                 self._session.execute(text("SELECT 1"))
 
                 checkpoint = ExecutionCheckpoint(
@@ -567,7 +567,7 @@ class HistoryPersistenceService:
                     exc,
                 )
 
-                # Retry with a fresh DB session to survive dropped MySQL connections.
+                # Tenta novamente com uma nova sessão de banco de dados para suportar desconexões do MySQL.
                 if attempt == 0:
                     from database.connection import get_session
 

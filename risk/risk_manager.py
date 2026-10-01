@@ -1,9 +1,9 @@
 ﻿"""
-Risk Manager - trade validation and stop/TP level computation.
+Gerenciador de risco — validação de operações e cálculo dos níveis de stop/TP.
 
-Design decision: The RiskManager is the single gate through which every
-potential trade must pass.  It enforces portfolio-level limits and enriches
-each trade with stop-loss, take-profit, and trailing stop levels.
+Decisão de projeto: o RiskManager é a única barreira pela qual toda operação
+potencial deve passar. Ele aplica limites no nível da carteira e adiciona a cada
+operação os níveis de stop-loss, take-profit e trailing stop.
 """
 from __future__ import annotations
 
@@ -20,18 +20,18 @@ logger = get_logger(__name__)
 @dataclass
 class TradeRiskParams:
     """
-    Risk parameters computed for a single potential trade.
+    Parâmetros de risco calculados para uma única operação potencial.
 
-    Attributes:
-        quantity: Position size in base currency.
-        stake_amount: Capital committed in quote currency.
-        stop_loss: Absolute stop-loss price.
-        take_profit: Absolute take-profit price.
-        trailing_stop_pct: Trailing stop as a fraction of price (optional).
-        risk_amount: Maximum monetary loss if stop is hit.
-        risk_pct: Maximum loss as a fraction of portfolio.
-        reward_amount: Potential profit if take-profit is hit.
-        risk_reward_ratio: reward / risk ratio.
+    Atributos:
+        quantity: Tamanho da posição na moeda-base.
+        stake_amount: Capital comprometido na moeda de cotação.
+        stop_loss: Preço absoluto do stop-loss.
+        take_profit: Preço absoluto do take-profit.
+        trailing_stop_pct: Trailing stop como fração do preço (opcional).
+        risk_amount: Perda monetária máxima caso o stop seja acionado.
+        risk_pct: Perda máxima como fração da carteira.
+        reward_amount: Lucro potencial caso o take-profit seja atingido.
+        risk_reward_ratio: Relação retorno / risco.
     """
 
     quantity: float
@@ -51,9 +51,9 @@ class TradeRiskParams:
 
 class RiskManager:
     """
-    Validates trades and computes risk parameters.
+    Valida operações e calcula parâmetros de risco.
 
-    All decisions are logged so every risk check is fully auditable.
+    Todas as decisões são registradas para que cada verificação de risco seja auditável.
     """
 
     def __init__(self, sizer: PositionSizer | None = None) -> None:
@@ -61,7 +61,7 @@ class RiskManager:
 
     @staticmethod
     def resolve_min_risk_reward_ratio(strategy: object | None) -> float | None:
-        """Return strategy-declared RR when available; otherwise None (use global)."""
+        """Retorna o RR declarado pela estratégia, se disponível; caso contrário, None (usa o global)."""
         if strategy is None:
             return None
         raw_value = getattr(strategy, "_risk_reward_ratio", None)
@@ -79,7 +79,7 @@ class RiskManager:
         stop_loss: float | None,
         take_profit: float | None,
     ) -> float | None:
-        """Infer RR from signal levels when strategy-level RR is unavailable."""
+        """Infere o RR pelos níveis do sinal quando o RR da estratégia não está disponível."""
         if entry_price is None or stop_loss is None or take_profit is None:
             return None
         try:
@@ -108,25 +108,26 @@ class RiskManager:
         min_risk_reward_ratio: float | None = None,
     ) -> TradeRiskParams:
         """
-        Compute and validate risk parameters for a potential long trade.
+        Calcula e valida os parâmetros de risco de uma possível operação comprada.
 
-        Stop-loss / take-profit defaults are loaded from application settings
-        when not supplied by the strategy.  Position size is always
-        risk-based when a stop is available, otherwise fixed-fractional.
+        Os valores padrão de stop-loss / take-profit são carregados das configurações
+        da aplicação quando não fornecidos pela estratégia. O tamanho da posição
+        sempre é baseado no risco quando há um stop disponível; caso contrário,
+        usa fração fixa.
 
-        Args:
-            portfolio_value: Current total portfolio value (quote currency).
-            entry_price: Planned entry price.
-            stop_loss: Optional absolute stop-loss price.
-            take_profit: Optional absolute take-profit price.
-            trailing_stop_pct: Optional trailing stop fraction.
-            strategy_score: Confidence score [0, 1] from the strategy.
+        Argumentos:
+            portfolio_value: Valor total atual da carteira (moeda de cotação).
+            entry_price: Preço planejado de entrada.
+            stop_loss: Preço absoluto opcional do stop-loss.
+            take_profit: Preço absoluto opcional do take-profit.
+            trailing_stop_pct: Fração opcional do trailing stop.
+            strategy_score: Pontuação de confiança [0, 1] da estratégia.
 
-        Returns:
-            TradeRiskParams with all computed values.
+        Retorna:
+            TradeRiskParams com todos os valores calculados.
 
-        Raises:
-            ValueError: If the trade fails a risk validation check.
+        Exceções:
+            ValueError: Se a operação não passar em uma validação de risco.
         """
         portfolio_value = validate_positive_float(portfolio_value, "portfolio_value")
         entry_price = validate_positive_float(entry_price, "entry_price")
@@ -196,7 +197,7 @@ class RiskManager:
             quantity,
         )
 
-        # Scale size by strategy confidence (but keep at least min size)
+        # Ajusta o tamanho pela confiança da estratégia (mas mantém pelo menos o tamanho mínimo)
         quantity = quantity * max(strategy_score, 0.5)
         quantity_suggested = quantity
         stake_amount = quantity * entry_price
@@ -207,7 +208,7 @@ class RiskManager:
             stake_amount,
         )
 
-        # --- Guard: NUNCA envie more than stake_amount_pct of portfolio ---
+        # --- Proteção: NUNCA envie mais que stake_amount_pct do portfólio ---
         max_stake = portfolio_value * settings.trading.stake_amount_pct
         was_capped = False
         if stake_amount > max_stake:
@@ -279,18 +280,18 @@ class RiskManager:
         trailing_stop_pct: float,
     ) -> bool:
         """
-        Return True if the trailing stop has been triggered.
+        Retorna True se o trailing stop tiver sido acionado.
 
-        The trailing stop level is: highest_price * (1 - trailing_stop_pct).
+        O nível do trailing stop é: highest_price * (1 - trailing_stop_pct).
 
-        Args:
-            entry_price: Original entry price (used only for logging).
-            current_price: Latest market price.
-            highest_price: Highest price reached since entry.
-            trailing_stop_pct: Trailing stop as a fraction (e.g. 0.015).
+        Argumentos:
+            entry_price: Preço original de entrada (usado apenas no registro).
+            current_price: Preço de mercado mais recente.
+            highest_price: Preço mais alto atingido desde a entrada.
+            trailing_stop_pct: Trailing stop como fração (por exemplo, 0.015).
 
-        Returns:
-            True if current_price <= trailing stop level.
+        Retorna:
+            True se current_price <= nível do trailing stop.
         """
         trailing_level = highest_price * (1.0 - trailing_stop_pct)
         triggered = current_price <= trailing_level

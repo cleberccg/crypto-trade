@@ -1,8 +1,9 @@
 ﻿"""
-General-purpose helper functions.
+Funções auxiliares de uso geral.
 
-Design decision: Stateless pure functions only. No side effects, no global
-state. Each helper focuses on a single transformation or validation.
+Decisão de projeto: somente funções puras e sem estado. Sem efeitos colaterais
+ou estado global. Cada função auxiliar se concentra em uma única transformação
+ou validação.
 """
 from __future__ import annotations
 
@@ -22,32 +23,32 @@ F = TypeVar("F", bound=Callable[..., Any])
 
 
 def utc_now() -> datetime:
-    """Return the current UTC datetime (timezone-aware)."""
+    """Retorna a data/hora atual em UTC (com fuso horário)."""
     return datetime.now(tz=timezone.utc)
 
 
 def timestamp_to_datetime(ts_ms: int) -> datetime:
     """
-    Convert a Unix timestamp in milliseconds to a UTC datetime.
+    Converte um timestamp Unix em milissegundos para uma data/hora UTC.
 
     Args:
-        ts_ms: Unix timestamp in milliseconds.
+        ts_ms: Timestamp Unix em milissegundos.
 
     Returns:
-        Timezone-aware UTC datetime.
+        Data/hora UTC com fuso horário.
     """
     return datetime.fromtimestamp(ts_ms / 1000, tz=timezone.utc)
 
 
 def datetime_to_timestamp_ms(dt: datetime) -> int:
     """
-    Convert a datetime to a Unix timestamp in milliseconds.
+    Converte uma data/hora em um timestamp Unix em milissegundos.
 
     Args:
-        dt: Datetime object (naive datetimes are treated as UTC).
+        dt: Objeto de data/hora (datas sem fuso são tratadas como UTC).
 
     Returns:
-        Unix timestamp in milliseconds.
+        Timestamp Unix em milissegundos.
     """
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=timezone.utc)
@@ -61,13 +62,13 @@ def datetime_to_timestamp_ms(dt: datetime) -> int:
 
 def validate_ohlcv_dataframe(df: pd.DataFrame) -> None:
     """
-    Assert that a DataFrame has the required OHLCV columns.
+    Verifica se um DataFrame contém as colunas OHLCV obrigatórias.
 
     Args:
-        df: DataFrame to validate.
+        df: DataFrame a validar.
 
     Raises:
-        ValueError: If any required column is missing.
+        ValueError: se alguma coluna obrigatória estiver ausente.
     """
     required_columns = {"open", "high", "low", "close", "volume"}
     missing = required_columns - set(df.columns)
@@ -77,18 +78,18 @@ def validate_ohlcv_dataframe(df: pd.DataFrame) -> None:
 
 def normalize_ohlcv_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Normalize an OHLCV DataFrame to ensure consistent types and index.
+    Normaliza um DataFrame OHLCV para garantir tipos e índice consistentes.
 
-    - Converts the index to UTC-aware DatetimeIndex.
-    - Casts OHLCV columns to float64.
-    - Sorts by timestamp ascending.
-    - Drops duplicate indices.
+    - Converte o índice para DatetimeIndex com fuso horário UTC.
+    - Converte as colunas OHLCV para float64.
+    - Ordena os timestamps em ordem crescente.
+    - Remove índices duplicados.
 
     Args:
-        df: Raw OHLCV DataFrame.
+        df: DataFrame OHLCV bruto.
 
     Returns:
-        Normalized copy of the DataFrame.
+        Cópia normalizada do DataFrame.
     """
     df = df.copy()
 
@@ -114,7 +115,7 @@ def normalize_ohlcv_dataframe(df: pd.DataFrame) -> pd.DataFrame:
 
 def timeit(func: F) -> F:
     """
-    Decorator that logs the execution time of the decorated function.
+    Decorador que registra em log o tempo de execução da função decorada.
 
     Usage::
 
@@ -150,11 +151,11 @@ def timeit(func: F) -> F:
 
 def retry(max_attempts: int = 3, delay_seconds: float = 1.0) -> Callable[[F], F]:
     """
-    Decorator that retries the decorated function on exception.
+    Decorador que tenta novamente executar a função decorada em caso de exceção.
 
     Args:
-        max_attempts: Maximum number of attempts before re-raising.
-        delay_seconds: Seconds to wait between attempts.
+        max_attempts: Número máximo de tentativas antes de propagar novamente a exceção.
+        delay_seconds: Segundos de espera entre as tentativas.
 
     Usage::
 
