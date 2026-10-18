@@ -360,18 +360,6 @@ def scanner_list(
     return _empty_paginated(page, page_size)
 
 
-@router.get("/observability", tags=["observability"])
-def observability_snapshot(
-    _user: dict[str, str] = Depends(require_user),
-    session: Session = Depends(get_db_session),
-) -> dict[str, Any]:
-    monitor = get_monitor_snapshot(session)
-    return {
-        "status": "ok",
-        "monitor": monitor,
-    }
-
-
 @router.get("/observability", tags=["monitor"])
 def observability_snapshot(
     _user: dict[str, str] = Depends(require_user),
@@ -401,25 +389,22 @@ async def ws_monitor(websocket: WebSocket) -> None:
 
 @router.websocket("/ws/observability")
 async def ws_observability(websocket: WebSocket) -> None:
-    # Canal websocket de compatibilidade esperado por algumas telas do frontend.
-    await ws_monitor(websocket)
-
-
-@router.websocket("/ws/observability")
-async def ws_observability(websocket: WebSocket) -> None:
     token = websocket.query_params.get("token")
     if not token:
         await websocket.close(code=1008)
         return
 
     try:
-        require_user(token)
+        from fastapi.security import HTTPAuthorizationCredentials
+        from webapi.security import get_current_user
+        get_current_user(HTTPAuthorizationCredentials(scheme="Bearer", credentials=token))
     except HTTPException:
         await websocket.close(code=1008)
         return
 
     await websocket.accept()
-    session = next(get_db_session())
+    session_scope = get_db_session()
+    session = next(session_scope)
     try:
         while True:
             payload = get_observability_snapshot(session)
@@ -434,4 +419,4 @@ async def ws_observability(websocket: WebSocket) -> None:
     except WebSocketDisconnect:
         return
     finally:
-        session.close()
+        session_scope.close()

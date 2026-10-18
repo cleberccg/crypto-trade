@@ -11,13 +11,10 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 JWT_SECRET = os.getenv("API_JWT_SECRET", "change-me-in-production-please-use-32-plus-chars")
 JWT_ALGORITHM = os.getenv("API_JWT_ALGORITHM", "HS256")
 JWT_EXPIRE_MINUTES = int(os.getenv("API_JWT_EXPIRE_MINUTES", "480"))
-API_USER = os.getenv("API_USER", "admin")
+# Single personal dashboard account; preserve the existing administrator password.
+API_USER = "admin"
 API_PASSWORD = os.getenv("API_PASSWORD", "admin")
-API_ROLE = os.getenv("API_ROLE", "administrator")
-API_OPERATOR_USER = os.getenv("API_OPERATOR_USER", "operator")
-API_OPERATOR_PASSWORD = os.getenv("API_OPERATOR_PASSWORD", "operator")
-API_VIEWER_USER = os.getenv("API_VIEWER_USER", "viewer")
-API_VIEWER_PASSWORD = os.getenv("API_VIEWER_PASSWORD", "viewer")
+API_ROLE = "administrator"
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
@@ -36,10 +33,6 @@ def create_access_token(subject: str, role: str) -> str:
 def authenticate(username: str, password: str) -> dict[str, str] | None:
     if username == API_USER and password == API_PASSWORD:
         return {"username": username, "role": API_ROLE}
-    if username == API_OPERATOR_USER and password == API_OPERATOR_PASSWORD:
-        return {"username": username, "role": "operator"}
-    if username == API_VIEWER_USER and password == API_VIEWER_PASSWORD:
-        return {"username": username, "role": "read-only"}
     return None
 
 
@@ -63,7 +56,7 @@ def get_current_user(
 
     username = payload.get("sub")
     role = payload.get("role", "read-only")
-    if not username:
+    if username != API_USER or role != API_ROLE:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token subject",

@@ -86,7 +86,9 @@ class OrderExecutor:
             Objeto ORM Order persistido.
         """
         logger.warning(
-            "Compra executada (envio de ordem) - symbol=%s qty=%.6f ~price=%.4f",
+            "Solicitação de COMPRA | preparando envio à Binance; execução ainda não confirmada | "
+            "trade_id=%s symbol=%s qty_solicitada=%.12f preço_referência=%.8f",
+            getattr(trade, "id", "UNKNOWN"),
             symbol,
             quantity,
             price,
@@ -122,7 +124,9 @@ class OrderExecutor:
             Objeto ORM Order persistido.
         """
         logger.warning(
-            "Saida de posicao (stop/take/manual) - symbol=%s qty=%.6f ~price=%.4f",
+            "Solicitação de VENDA | preparando envio à Binance; execução ainda não confirmada | "
+            "trade_id=%s symbol=%s qty_solicitada=%.12f preço_referência=%.8f",
+            getattr(trade, "id", "UNKNOWN"),
             symbol,
             quantity,
             price,
@@ -150,6 +154,7 @@ class OrderExecutor:
     ) -> OrderExecution:
         exchange_order_id = str(raw_order.get("id") or "")
         status = str(raw_order.get("status") or "unknown").upper()
+        side_label = "COMPRA" if side.upper() == "BUY" else "VENDA" if side.upper() == "SELL" else side
         fills = self._normalize_fills(raw_order, symbol, quantity, fallback_price)
         filled_quantity = sum(fill.quantity for fill in fills)
         priced_fills = [fill for fill in fills if fill.quantity > 0.0]
@@ -200,14 +205,32 @@ class OrderExecutor:
         fee_currency = next(iter(fee_currencies)) if len(fee_currencies) == 1 else "MULTIPLE" if fee_currencies else None
         base_fee_quantity = sum(fill.base_fee_quantity for fill in fills)
 
+        fee_text = f"{fee_usdt:.10f} USDT" if fee_usdt is not None else "DESCONHECIDA"
+        original_fee_text = (
+            f"{fee:.12f} {fee_currency}"
+            if fee is not None and fee_currency is not None
+            else "DESCONHECIDA"
+        )
+        compatibility_marker = ""
+        if filled_quantity > 0.0:
+            compatibility_marker = " | Compra executada" if side.upper() == "BUY" else " | Venda executada"
         logger.info(
-            "Order persisted - side=%s exchange_id=%s fills=%d executed=%.12f fee_usdt=%s source=%s",
-            side,
+            "ORDEM_CONFIRMADA | lado=%s trade_id=%s order_id=%s symbol=%s "
+            "qty_solicitada=%.12f qty_executada=%.12f preço_médio=%.10f "
+            "fills=%d taxa_original=%s taxa_usdt=%s origem_taxa=%s status=%s%s",
+            side_label,
+            trade_id,
             exchange_order_id,
-            len(priced_fills),
+            symbol,
+            quantity,
             filled_quantity,
-            f"{fee_usdt:.10f}" if fee_usdt is not None else "UNKNOWN",
+            fill_price,
+            len(priced_fills),
+            original_fee_text,
+            fee_text,
             fee_source,
+            status,
+            compatibility_marker,
         )
         return OrderExecution(
             exchange_order_id=exchange_order_id,

@@ -1,0 +1,7 @@
+{
+  "backtesting/engine.py": "bf45dbc216258a5329bacc2cfd5e6378eb9a462ab1ec0adb1b33310ba51db74e",
+  "risk/risk_manager.py": "cf2cb219b670aed82c7ab6305c04c8a90c3d09b8644181d68392967b3901fcbb",
+  "risk/position_sizer.py": "e1548396d7447f5e12f2abd4d047ac62d4408fbf2d6c5eabe5a36a33bef60d2d",
+  "strategies/sma200_regime_gated.py": "34683c94039c257566f911badc759ea519d43dfcb58e51462232cb2aa20b652b",
+  "research/external_strategy_replication_strategies.py": "021c74fc5bc4263138ee151826a05576ea07a203b08750aedab4367f24d71238"
+}

@@ -5,6 +5,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { AUTH_REQUIRED_EVENT, isAuthenticated } from "./api/client";
 
 import { AppLayout } from "./layout/AppLayout";
+import { LiveHistoryPage } from "./pages/LiveHistoryPage";
 import { LoginPage } from "./pages/LoginPage";
 
 const DashboardPage = lazy(() => import("./pages/DashboardPage").then((m) => ({ default: m.DashboardPage })));
@@ -62,6 +63,13 @@ export function App() {
   if (!authenticated) {
     return <LoginPage onAuthenticated={() => setAuthenticated(true)} />;
   }
+
+  if (import.meta.env.VITE_LIVE_MONITOR_ONLY === "1") return (
+    <Suspense fallback={<RouteLoader />}><Routes><Route path="/" element={<AppLayout />}>
+      <Route index element={<DashboardPage/>}/><Route path="trades" element={<LiveHistoryPage/>}/>
+      <Route path="*" element={<Navigate to="/" replace/>}/>
+    </Route></Routes></Suspense>
+  );
 
   return (
     <Suspense fallback={<RouteLoader />}>

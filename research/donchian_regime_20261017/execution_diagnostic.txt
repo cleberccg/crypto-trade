@@ -1,0 +1,279 @@
+========================================
+EXECUTION DIAGNOSTIC
+========================================
+BUY Signals Gerados: 128
+BUY Recebidos pelo Engine: 128
+BUY Aceitos: 0
+BUY Rejeitados: 128
+Posicoes Criadas: 0
+Posicoes Fechadas: 0
+Trades Registrados: 0
+========================================
+REJECTION REASONS
+========================================
+quantidade_zero: 0
+saldo_insuficiente: 0
+lote_minimo: 0
+posicao_existente: 0
+risk_manager_rejeitou: 128
+erro_interno: 0
+validacao_desconhecida: 0
+========================================
+FLOW LOG
+========================================
+BUY recebido pelo engine | price=71020.080000 score=1.0000 stop=69599.6784 take=73860.8832 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=70543.510000 score=1.0000 stop=69132.6496 take=73365.2608 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=70748.600000 score=1.0000 stop=69333.62800000001 take=73578.544 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=70923.900000 score=1.0000 stop=69505.41219999999 take=73760.84560000002 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=71245.330000 score=1.0000 stop=69820.4234 take=74095.1432 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=71478.320000 score=1.0000 stop=70048.75360000001 take=74337.4528 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=71870.290000 score=1.0000 stop=70432.8744 take=74745.0912 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=67121.010000 score=1.0000 stop=65778.58979999999 take=69805.85040000001 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=67893.920000 score=1.0000 stop=66536.0416 take=70609.6768 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=67775.480000 score=1.0000 stop=66419.97039999999 take=70486.4992 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=67933.310000 score=1.0000 stop=66574.64379999999 take=70650.64240000001 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=67738.000000 score=1.0000 stop=66383.2302 take=70447.5096 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=67776.040000 score=1.0000 stop=66420.5192 take=70487.08159999999 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=68454.000000 score=1.0000 stop=67084.9298 take=71192.17039999999 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=68585.980000 score=1.0000 stop=67214.2506 take=71329.4088 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=68859.770000 score=1.0000 stop=67482.5746 take=71614.1608 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=69209.370000 score=1.0000 stop=67825.1826 take=71977.74479999999 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=67167.000000 score=1.0000 stop=65823.66 take=69853.68 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=67170.210000 score=1.0000 stop=65826.8156 take=69857.0288 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=67239.960000 score=1.0000 stop=65895.1706 take=69929.56880000001 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=67383.160000 score=1.0000 stop=66035.49680000001 take=70078.4864 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=67500.000000 score=1.0000 stop=66149.9902 take=70199.98960000002 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=67964.310000 score=1.0000 stop=66605.0238 take=70682.8824 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=68338.430000 score=1.0000 stop=66971.6614 take=71071.96719999998 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=68599.990000 score=1.0000 stop=67227.9902 take=71343.98960000002 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=68804.330000 score=1.0000 stop=67428.25319999999 take=71556.5136 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=69234.560000 score=1.0000 stop=67849.8688 take=72003.9424 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=69633.590000 score=1.0000 stop=68240.9182 take=72418.93359999999 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=69932.870000 score=1.0000 stop=68534.2224 take=72730.19520000002 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=69968.870000 score=1.0000 stop=68569.4926 take=72767.62479999999 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=70074.760000 score=1.0000 stop=68673.26479999999 take=72877.7504 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=70129.860000 score=1.0000 stop=68727.2628 take=72935.05440000001 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=69107.650000 score=1.0000 stop=67725.4872 take=71871.94559999999 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=69011.290000 score=1.0000 stop=67631.0642 take=71771.7416 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=69438.170000 score=1.0000 stop=68049.3968 take=72215.6864 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=69981.180000 score=1.0000 stop=68581.5466 take=72780.41679999999 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=70289.990000 score=1.0000 stop=68884.1902 take=73101.58960000002 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=70761.790000 score=1.0000 stop=69346.5444 take=73592.2512 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=71514.100000 score=1.0000 stop=70083.8082 take=74374.65359999999 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=72753.270000 score=1.0000 stop=71298.2046 take=75663.40080000002 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=71855.740000 score=1.0000 stop=70418.62520000001 take=74729.9696 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=72071.950000 score=1.0000 stop=70630.511 take=74954.828 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=72626.370000 score=1.0000 stop=71173.84259999999 take=75531.42480000001 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=72075.740000 score=1.0000 stop=70634.235 take=74958.78 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=72481.250000 score=1.0000 stop=71031.6152 take=75380.48960000002 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=72709.310000 score=1.0000 stop=71255.1336 take=75617.69280000002 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=72969.980000 score=1.0000 stop=71510.58039999999 take=75888.7792 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=72858.950000 score=1.0000 stop=71401.78080000001 take=75773.3184 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=72907.120000 score=1.0000 stop=71448.9678 take=75823.3944 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=73107.540000 score=1.0000 stop=71645.37939999999 take=76031.83120000002 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=73463.430000 score=1.0000 stop=71994.1516 take=76401.9568 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=74775.030000 score=1.0000 stop=73279.5196 take=77766.02080000001 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=75188.500000 score=1.0000 stop=73684.73 take=78196.04000000001 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=75525.940000 score=1.0000 stop=74015.4212 take=78546.97760000001 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=75573.990000 score=1.0000 stop=74062.5102 take=78596.9496 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=75855.080000 score=1.0000 stop=74337.9784 take=78889.28319999999 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=74542.330000 score=1.0000 stop=73051.47360000001 take=77524.0128 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=74742.660000 score=1.0000 stop=73247.79699999999 take=77732.356 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=74975.500000 score=1.0000 stop=73475.99 take=77974.51999999999 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=75339.330000 score=1.0000 stop=73832.53360000001 take=78352.8928 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=75780.380000 score=1.0000 stop=74264.7724 take=78811.59520000001 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=75902.830000 score=1.0000 stop=74384.7636 take=78938.93280000001 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=76284.960000 score=1.0000 stop=74759.2608 take=79336.35840000001 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=76909.990000 score=1.0000 stop=75371.7902 take=79986.38960000001 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=77340.110000 score=1.0000 stop=75793.3176 take=80433.7248 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=77983.120000 score=1.0000 stop=76423.46740000001 take=81102.4552 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=78161.610000 score=1.0000 stop=76598.38759999999 take=81288.08480000001 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=76352.150000 score=1.0000 stop=74825.1168 take=79406.2464 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=76458.780000 score=1.0000 stop=74929.6044 take=79517.1312 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=76507.210000 score=1.0000 stop=74977.06580000001 take=79567.4984 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=77239.570000 score=1.0000 stop=75694.76879999999 take=80329.14240000001 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=77604.700000 score=1.0000 stop=76052.6158 take=80708.89840000002 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=78258.530000 score=1.0000 stop=76693.3594 take=81388.8712 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=78314.650000 score=1.0000 stop=76748.3472 take=81447.22559999999 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=78429.850000 score=1.0000 stop=76861.25300000001 take=81567.044 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=78616.920000 score=1.0000 stop=77044.59139999999 take=81761.6072 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=78840.940000 score=1.0000 stop=77264.1212 take=81994.57760000002 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=79057.810000 score=1.0000 stop=77476.6538 take=82220.1224 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=79279.920000 score=1.0000 stop=77694.3216 take=82451.1168 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=78180.780000 score=1.0000 stop=76617.15460000001 take=81308.0008 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=78386.880000 score=1.0000 stop=76819.1522 take=81522.3656 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=78389.220000 score=1.0000 stop=76821.42580000001 take=81524.7784 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=79309.000000 score=1.0000 stop=77722.428 take=82480.94400000002 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=78178.380000 score=1.0000 stop=76614.8026 take=81305.5048 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=77763.040000 score=1.0000 stop=76207.77919999999 take=80873.5616 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=77959.080000 score=1.0000 stop=76399.8984 take=81077.4432 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=78344.370000 score=1.0000 stop=76777.4924 take=81478.15520000001 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=78737.260000 score=1.0000 stop=77162.505 take=81886.73999999999 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=78487.670000 score=1.0000 stop=76917.9166 take=81627.1768 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=78546.000000 score=1.0000 stop=76975.0702 take=81687.82960000001 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=78806.670000 score=1.0000 stop=77230.54639999999 take=81958.9472 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=78346.650000 score=1.0000 stop=76779.71699999999 take=81480.516 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=78717.100000 score=1.0000 stop=77142.7482 take=81865.77359999999 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=78856.790000 score=1.0000 stop=77279.664 take=82011.072 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=78921.680000 score=1.0000 stop=77343.2562 take=82078.5576 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=79007.790000 score=1.0000 stop=77427.63419999999 take=82168.10160000001 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=79769.430000 score=1.0000 stop=78174.04139999999 take=82960.2072 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=79932.690000 score=1.0000 stop=78334.0362 take=83129.9976 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=80163.870000 score=1.0000 stop=78560.59259999999 take=83370.42480000001 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=80216.150000 score=1.0000 stop=78611.8368 take=83424.8064 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=80809.040000 score=1.0000 stop=79192.869 take=84041.412 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=80910.540000 score=1.0000 stop=79292.3292 take=84146.9616 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=81222.910000 score=1.0000 stop=79598.442 take=84471.81599999999 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=81307.680000 score=1.0000 stop=79681.52639999999 take=84559.9872 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=81621.990000 score=1.0000 stop=79989.56 take=84886.88 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=81700.000000 score=1.0000 stop=80066.0098 take=84968.01039999998 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=82191.510000 score=1.0000 stop=80547.6798 take=85479.17039999999 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=82250.000000 score=1.0000 stop=80605.0098 take=85540.01039999998 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=82417.550000 score=1.0000 stop=80769.19900000001 take=85714.252 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=82684.000000 score=1.0000 stop=81030.32979999999 take=85991.3704 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=81369.700000 score=1.0000 stop=79742.306 take=84624.488 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=81438.620000 score=1.0000 stop=79809.8378 take=84696.15440000001 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=81656.750000 score=1.0000 stop=80023.615 take=84923.01999999999 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=81040.530000 score=1.0000 stop=79419.72919999999 take=84282.1616 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=81477.800000 score=1.0000 stop=79848.244 take=84736.912 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=81887.880000 score=1.0000 stop=80250.12240000001 take=85163.3952 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=82400.000000 score=1.0000 stop=80752.0 take=85696.0 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=77526.680000 score=1.0000 stop=75976.1464 take=80627.74719999998 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=77510.010000 score=1.0000 stop=75959.80979999999 take=80610.41040000001 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=77980.540000 score=1.0000 stop=76420.9292 take=81099.76159999998 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=76984.700000 score=1.0000 stop=75445.01580000001 take=80064.0984 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=77713.990000 score=1.0000 stop=76159.72 take=80822.56 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=77229.740000 score=1.0000 stop=75685.155 take=80318.94 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=77505.210000 score=1.0000 stop=75955.1058 take=80605.41840000001 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=77958.400000 score=1.0000 stop=76399.23199999999 take=81076.736 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=73940.000000 score=1.0000 stop=72461.2098 take=76897.61039999999 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=74048.280000 score=1.0000 stop=72567.3046 take=77010.2008 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection
+BUY recebido pelo engine | price=74137.990000 score=1.0000 stop=72655.2302 take=77103.5096 atr=n/a cash=28.00
+BUY rejeitado | motivo=risk_manager_rejeitou | detalhe=Exchange minimum/lot rejection

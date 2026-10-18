@@ -100,7 +100,7 @@ def _seed_minimum_data(db: DatabaseConnection) -> str:
     return execution_id
 
 
-def test_webapi_roles_and_backtest_detail(tmp_path: Path, monkeypatch) -> None:
+def test_webapi_admin_only_and_backtest_detail(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setenv("API_USER", "admin")
     monkeypatch.setenv("API_PASSWORD", "admin")
     monkeypatch.setenv("API_ROLE", "administrator")
@@ -127,15 +127,14 @@ def test_webapi_roles_and_backtest_detail(tmp_path: Path, monkeypatch) -> None:
 
         client = TestClient(create_app())
 
-        login_viewer = client.post("/api/v1/auth/login", json={"username": "viewer", "password": "viewer"})
-        assert login_viewer.status_code == 200
-        viewer_token = login_viewer.json()["access_token"]
+        for removed_user in ("viewer", "operator"):
+            assert client.post("/api/v1/auth/login", json={"username":removed_user,"password":removed_user}).status_code == 401
+        login_admin = client.post("/api/v1/auth/login", json={"username":"admin","password":"admin"})
+        assert login_admin.status_code == 200
+        assert login_admin.json()["role"] == "administrator"
+        viewer_token = login_admin.json()["access_token"]
         viewer_headers = {"Authorization": f"Bearer {viewer_token}"}
-
-        login_operator = client.post("/api/v1/auth/login", json={"username": "operator", "password": "operator"})
-        assert login_operator.status_code == 200
-        operator_token = login_operator.json()["access_token"]
-        operator_headers = {"Authorization": f"Bearer {operator_token}"}
+        operator_headers = viewer_headers
 
         dashboard_response = client.get("/api/v1/dashboard", headers=viewer_headers)
         assert dashboard_response.status_code == 200
@@ -161,7 +160,7 @@ def test_webapi_roles_and_backtest_detail(tmp_path: Path, monkeypatch) -> None:
         assert len(payload["trades"]) == 2
 
         viewer_update = client.put("/api/v1/settings", json={"workers": 20}, headers=viewer_headers)
-        assert viewer_update.status_code == 403
+        assert viewer_update.status_code == 200
 
         operator_update = client.put(
             "/api/v1/settings",

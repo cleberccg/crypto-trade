@@ -1,0 +1,26 @@
+{
+  "passed": true,
+  "checks": [
+    "pullback prefix invariance 300",
+    "pullback prefix invariance 800",
+    "pullback prefix invariance 1200",
+    "pullback execution only at current open",
+    "reversion prefix invariance 300",
+    "reversion prefix invariance 800",
+    "reversion prefix invariance 1200",
+    "reversion execution only at current open",
+    "baseline prefix invariance 300",
+    "baseline prefix invariance 800",
+    "baseline prefix invariance 1200",
+    "baseline execution only at current open",
+    "BTCUSDT 28.25577283 USDT minimum-notional rejection",
+    "ETHUSDT 28.25577283 USDT minimum-notional rejection",
+    "SOLUSDT 28.25577283 USDT minimum-notional rejection",
+    "BNBUSDT 28.25577283 USDT minimum-notional rejection",
+    "80 experiment rows present",
+    "all trade counts reconciled",
+    "all net PnL reconciled",
+    "all modeled costs reconciled",
+    "all positions liquidated at split end"
+  ]
+}

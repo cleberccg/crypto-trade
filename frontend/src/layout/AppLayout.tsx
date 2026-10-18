@@ -1,7 +1,7 @@
-import { Box, Chip, Divider, Drawer, List, ListItemButton, ListItemText, Toolbar, Typography } from "@mui/material";
+import { Button, Stack, Box, Chip, Divider, Drawer, List, ListItemButton, ListItemText, Toolbar, Typography } from "@mui/material";
 import { Link, Outlet, useLocation } from "react-router-dom";
 
-import { getRole } from "../api/client";
+import { clearAuth, getRole } from "../api/client";
 
 const drawerWidth = 280;
 
@@ -45,6 +45,22 @@ const navItems = [
 export function AppLayout() {
   const location = useLocation();
   const role = getRole() ?? "read-only";
+  if (import.meta.env.VITE_LIVE_MONITOR_ONLY === "1") return (
+    <Box sx={{minHeight:"100vh"}}>
+      <Box component="header" sx={{borderBottom:"1px solid rgba(255,255,255,.08)",background:"#0a1b24",px:{xs:2,md:4},py:2}}>
+        <Stack direction="row" alignItems="center" justifyContent="space-between" gap={2} flexWrap="wrap">
+          <Box><Typography variant="h6">Trade CCG <Box component="span" sx={{color:"primary.main"}}>LIVE</Box></Typography><Typography variant="caption" color="text.secondary">Monitoramento da conta Spot</Typography></Box>
+          <Stack component="nav" direction="row" spacing={1} flexWrap="wrap">
+            <Button component={Link} to="/" variant={location.pathname==="/"?"contained":"text"}>Visão geral</Button>
+            <Button component={Link} to="/trades" variant={location.pathname==="/trades"?"contained":"text"}>Operações</Button>
+            <Button onClick={()=>{clearAuth();window.location.assign("/");}}>Sair</Button>
+          </Stack>
+          <Chip size="small" label={role === "read-only" ? "Somente leitura" : "Controle de processos"} color="success" variant="outlined"/>
+        </Stack>
+      </Box>
+      <Box component="main" sx={{maxWidth:1600,mx:"auto",p:{xs:2,md:4}}}><Outlet/></Box>
+    </Box>
+  );
 
   return (
     <Box sx={{ display: "flex", minHeight: "100vh" }}>
@@ -64,13 +80,13 @@ export function AppLayout() {
         <Toolbar>
           <Box>
             <Typography variant="h6" sx={{ letterSpacing: 0.5 }}>
-              Quant Nexus
+              Trade CCG
             </Typography>
             <Typography variant="caption" color="text.secondary">
               Trading Control Center
             </Typography>
             <Box sx={{ mt: 0.6 }}>
-              <Chip size="small" label={`Role: ${role}`} color={role === "administrator" ? "primary" : "default"} />
+              <Chip size="small" label="Admin" color={role === "administrator" ? "primary" : "default"} />
             </Box>
           </Box>
         </Toolbar>

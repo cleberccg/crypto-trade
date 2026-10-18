@@ -2,6 +2,8 @@ import { Grid2 as Grid, Paper, Typography } from "@mui/material";
 
 interface MetricItem {
   label: string;
+  note?: string;
+  tone?: string;
   value: string | number | null | undefined;
 }
 
@@ -18,7 +20,8 @@ export function MetricGrid({ items }: MetricGridProps) {
             <Typography variant="caption" color="text.secondary">
               {item.label}
             </Typography>
-            <Typography variant="h6">{item.value ?? "-"}</Typography>
+            <Typography variant="h6" color={item.tone} sx={{fontVariantNumeric:"tabular-nums",overflowWrap:"anywhere"}}>{item.value ?? "Indisponivel"}</Typography>
+            {item.note && <Typography variant="caption" color="text.secondary">{item.note}</Typography>}
           </Paper>
         </Grid>
       ))}

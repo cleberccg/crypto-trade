@@ -1,9 +1,9 @@
 """Auditoria de prontidão LIVE + DRY RUN para um contexto live. NUNCA envia ordens.
 
-Somente chamadas à Binance de leitura (saldo, mercados, candles, ticker, ordens abertas, operações próprias).
-A criação de ordens é interceptada por DryRunExchange e as ordens reais permanecem desarmadas
-(proteção de exchange.binance_client). As gravações no banco do fluxo live são substituídas por objetos simulados.
-As credenciais nunca são exibidas.
+O fluxo usa endpoints de leitura e simula criação de mercado; criação limitada e cancelamento são bloqueados.
+Isto não torna o transporte ccxt estritamente GET-only nem comprova o escopo das credenciais. Não use
+chaves com permissão de negociação sem uma barreira externa read-only comprovada. As gravações no banco
+do fluxo live são substituídas por objetos simulados. As credenciais nunca são exibidas.
 
 Exemplo:
     python audit_live_readiness.py --symbol BNB/USDT --timeframe 4h --strategy Sma200RegimeGated
@@ -14,6 +14,7 @@ import argparse
 import json
 import logging
 import os
+from collections import defaultdict
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -34,7 +35,7 @@ from strategies.base_strategy import SignalType, StrategySignal
 
 
 class DryRunExchange(bc.BinanceClient):
-    """Chamadas reais somente de leitura; a criação de ordens é capturada e nunca encaminhada."""
+    """Simula ordens e bloqueia cancelamentos; não é uma garantia de transporte HTTP somente GET."""
 
     def __init__(self) -> None:
         super().__init__()
@@ -50,6 +51,9 @@ class DryRunExchange(bc.BinanceClient):
 
     def create_limit_order(self, *args, **kwargs):
         raise RuntimeError("limit orders are not allowed in dry run")
+
+    def cancel_order(self, order_id, symbol):
+        raise RuntimeError("order cancellation is not allowed in dry run")
 
 
 class _MemStore:
@@ -88,35 +92,93 @@ def _fake_db_ops(log: list) -> dict:
     }
 
 
-def audit_open_db_positions(ex: DryRunExchange, balance: dict) -> list[dict]:
-    """Compara, somente para leitura, as operações live OPEN do banco com as ordens e o saldo atual da Binance."""
-    out = []
+def audit_live_ownership(balance: dict) -> dict[str, list[dict]]:
+    """Audita posições live OPEN/DUST e compara ownership agregado com saldo; excedente fica não atribuído."""
     with get_session() as session:
         trades = session.execute(text(
-            "SELECT id,symbol,strategy_name,timeframe,quantity,entry_price,stake_amount,entry_time,is_paper "
-            "FROM trades WHERE status='OPEN'")).fetchall()
-        for t in trades:
+            "SELECT id,symbol,strategy_name,timeframe,quantity,entry_price,stake_amount,entry_time,"
+            "is_paper,status,pnl,fee FROM trades "
+            "WHERE status IN ('OPEN','DUST') AND is_paper=0 ORDER BY entry_time,id"
+        )).mappings().all()
+        rows = []
+        owned_by_asset: dict[str, float] = defaultdict(float)
+        invalid_assets: set[str] = set()
+        for trade in trades:
+            asset = str(trade["symbol"]).split("/")[0]
+            quantity = float(trade["quantity"] or 0.0)
+            if quantity <= 0.0:
+                invalid_assets.add(asset)
+            else:
+                owned_by_asset[asset] += quantity
             orders = session.execute(text(
                 "SELECT side,status,price,quantity,filled_quantity,fee,timestamp FROM orders WHERE trade_id=:i "
-                "ORDER BY timestamp"), {"i": t[0]}).fetchall()
-            asset = str(t[1]).split("/")[0]
-            total = float((balance.get("total") or {}).get(asset, 0.0) or 0.0)
-            price = float(ex.fetch_ticker(t[1]).get("last") or 0.0)
-            try:
-                recent = ex._client.fetch_my_trades(t[1], limit=10)
-                last_fills = [{"side": r["side"], "amount": r["amount"], "price": r["price"],
-                               "datetime": r["datetime"]} for r in recent[-5:]]
-            except Exception as exc:
-                last_fills = f"unavailable: {type(exc).__name__}"
-            out.append({
-                "trade_id": t[0], "symbol": t[1], "strategy": t[2], "timeframe": t[3], "is_paper": bool(t[8]),
-                "db_quantity": float(t[4] or 0.0), "db_entry_price": float(t[5] or 0.0),
-                "db_stake": float(t[6] or 0.0), "db_entry_time": str(t[7]),
-                "orders": [tuple(str(x) for x in o) for o in orders],
-                "binance_total_balance": total, "estimated_value_usdt": round(total * price, 4),
-                "binance_recent_fills": last_fills,
+                "ORDER BY timestamp"), {"i": trade["id"]}).fetchall()
+            entry_price = float(trade["entry_price"] or 0.0)
+            rows.append({
+                "trade_id": int(trade["id"]),
+                "symbol": str(trade["symbol"]),
+                "strategy": str(trade["strategy_name"]),
+                "timeframe": str(trade["timeframe"] or ""),
+                "status": str(trade["status"]),
+                "ownership": "BOT_LIVE",
+                "quantity": quantity,
+                "residual_quantity": quantity if trade["status"] == "DUST" else None,
+                "entry_price": entry_price,
+                "residual_cost_usdt": quantity * entry_price if trade["status"] == "DUST" else None,
+                # Valores exibidos por trade; não entram em qualquer agregado de PnL fechado.
+                "realized_pnl_usdt": trade["pnl"],
+                "recorded_fees_usdt": trade["fee"],
+                "stake_amount": float(trade["stake_amount"] or 0.0),
+                "entry_time": str(trade["entry_time"]),
+                "orders": [tuple(str(value) for value in order) for order in orders],
             })
-    return out
+
+    exchange_total = balance.get("total") or {}
+    asset_audit = []
+    for asset in sorted(set(owned_by_asset) | invalid_assets):
+        bot_owned = owned_by_asset.get(asset, 0.0)
+        raw_total = exchange_total.get(asset)
+        if raw_total is None:
+            total = None
+            unassigned = None
+            shortfall = None
+            status = "INVALID_DB_QUANTITY" if asset in invalid_assets else "BALANCE_UNAVAILABLE"
+        else:
+            total = max(0.0, float(raw_total or 0.0))
+            delta = total - bot_owned
+            unassigned = max(0.0, delta)
+            shortfall = max(0.0, -delta)
+            status = (
+                "INVALID_DB_QUANTITY" if asset in invalid_assets else
+                "OWNERSHIP_SHORTFALL" if delta < -1e-10 else
+                "UNASSIGNED_SURPLUS" if delta > 1e-10 else
+                "MATCHED"
+            )
+        asset_audit.append({
+            "asset": asset,
+            "bot_owned_quantity": bot_owned,
+            "binance_total_quantity": total,
+            "unassigned_quantity": unassigned,
+            "shortfall_quantity": shortfall,
+            "ownership_status": status,
+        })
+
+    for row in rows:
+        asset = row["symbol"].split("/")[0]
+        audit = next((item for item in asset_audit if item["asset"] == asset), None)
+        if audit is not None:
+            row["aggregate_bot_owned_quantity"] = audit["bot_owned_quantity"]
+            row["binance_total_quantity"] = audit["binance_total_quantity"]
+            row["unassigned_quantity"] = audit["unassigned_quantity"]
+            row["ownership_status"] = audit["ownership_status"]
+
+    return {"positions": rows, "assets": asset_audit}
+
+
+def audit_open_db_positions(ex: DryRunExchange, balance: dict) -> list[dict]:
+    """Compatibilidade: retorna somente posições OPEN, sem chamadas privadas à exchange."""
+    del ex  # Ownership é comparado apenas com o snapshot de saldo fornecido pelo chamador.
+    return [row for row in audit_live_ownership(balance)["positions"] if row["status"] == "OPEN"]
 
 
 def main() -> int:
@@ -224,7 +286,15 @@ def main() -> int:
             out["DRY_RUN_SELL"] = "PASS" if ok else "FAIL"
         out["WOULD_SEND"] = ex.would_send
         out["FAKE_DB_OPS"] = db_log
-        out["OPEN_DB_POSITIONS"] = audit_open_db_positions(ex, balance)
+        ownership = audit_live_ownership(balance)
+        out["LIVE_DB_POSITIONS"] = ownership["positions"]
+        out["OPEN_DB_POSITIONS"] = [
+            row for row in ownership["positions"] if row["status"] == "OPEN"
+        ]
+        out["DUST_DB_POSITIONS"] = [
+            row for row in ownership["positions"] if row["status"] == "DUST"
+        ]
+        out["ASSET_OWNERSHIP_RECONCILIATION"] = ownership["assets"]
     finally:
         ex.disconnect()
     out["REAL_ORDERS_ARMED_AFTER"] = bc.real_orders_armed()

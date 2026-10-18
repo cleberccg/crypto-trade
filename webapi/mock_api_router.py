@@ -277,7 +277,7 @@ def _authorize_ws_token(token: str | None) -> bool:
         payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
     except jwt.InvalidTokenError:
         return False
-    return bool(payload.get("sub"))
+    return payload.get("sub") == "admin" and payload.get("role") == "administrator"
 
 
 @router.websocket("/ws/timeline")

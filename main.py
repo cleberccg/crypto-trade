@@ -75,7 +75,7 @@ def _parse_args() -> argparse.Namespace:
     )
     mde.add_argument(
         "--mode",
-        choices=["incremental", "backfill", "full"],
+        choices=["incremental", "backfill", "fulml"],
         default="full",
         help="Run incremental update only, retroactive backfill only, or full cycle (default: full)",
     )
@@ -3287,6 +3287,19 @@ def cmd_edge_discovery_lab(args: argparse.Namespace) -> None:
         print(f"- {key}: {value}")
 
 
+def main() -> None:
+    args = _parse_args()
+    handler_name = f"cmd_{str(args.command).replace('-', '_')}"
+    handler = globals().get(handler_name)
+    if not callable(handler):
+        raise SystemExit(f"No command handler registered for: {args.command}")
+    handler(args)
+
+
+if __name__ == "__main__":
+    main()
+
+
 def cmd_edge_extraction_lab(args: argparse.Namespace) -> None:
     from research.services.edge_extraction_lab import EdgeExtractionConfig, EdgeExtractionLabService
 
@@ -5123,13 +5136,3 @@ def cmd_edge_discovery_lab(args: argparse.Namespace) -> None:
         print(f"- {key}: {value}")
 
 
-def cmd_edge_extraction_lab(args: argparse.Namespace) -> None:
-    from research.services.edge_extraction_lab import EdgeExtractionConfig, EdgeExtractionLabService
-
-    prioritized = tuple([item.strip() for item in str(args.prioritized_strategies).split(",") if item.strip()])
-    symbols = tuple([item.strip() for item in str(args.symbols).split(",") if item.strip()])
-    timeframes = tuple([item.strip() for item in str(args.timeframes).split(",") if item.strip()])
-
-    if not prioritized:
-        raise ValueError("--prioritized-strategies cannot be empty")
-    if not symbols

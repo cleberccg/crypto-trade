@@ -1,0 +1,75 @@
+========================================
+EXECUTION DIAGNOSTIC
+========================================
+BUY Signals Gerados: 13
+BUY Recebidos pelo Engine: 13
+BUY Aceitos: 13
+BUY Rejeitados: 0
+Posicoes Criadas: 13
+Posicoes Fechadas: 13
+Trades Registrados: 13
+========================================
+REJECTION REASONS
+========================================
+quantidade_zero: 0
+saldo_insuficiente: 0
+lote_minimo: 0
+posicao_existente: 0
+risk_manager_rejeitou: 0
+erro_interno: 0
+validacao_desconhecida: 0
+========================================
+FLOW LOG
+========================================
+BUY recebido pelo engine | price=639.160000 score=1.0000 stop=6.3915999999999995 take=63916.0 atr=n/a cash=1000.00
+BUY sizing details | capital=1000.00 risk_allowed=10.00 qty_suggested=0.01580357 qty_after_cap=0.01500000 qty_final=0.01500000 trade_value=9.59 min_value=0.00 lot_min=0.00000001 precision=8 max_stake=20.00
+Trade aberto | price=639.160000 qty=0.01500000 sl=6.391600 tp=63916.000000 cash=990.39
+Trade fechado | reason=strategy_exit | pnl=-0.16 | cash=999.84
+BUY recebido pelo engine | price=634.840000 score=1.0000 stop=6.348400000000001 take=63484.0 atr=n/a cash=999.84
+BUY sizing details | capital=999.84 risk_allowed=10.00 qty_suggested=0.01590852 qty_after_cap=0.01500000 qty_final=0.01500000 trade_value=9.52 min_value=0.00 lot_min=0.00000001 precision=8 max_stake=20.00
+Trade aberto | price=634.840000 qty=0.01500000 sl=6.348400 tp=63484.000000 cash=990.30
+Trade fechado | reason=strategy_exit | pnl=-0.08 | cash=999.76
+BUY recebido pelo engine | price=638.400000 score=1.0000 stop=6.384 take=63840.0 atr=n/a cash=999.76
+BUY sizing details | capital=999.76 risk_allowed=10.00 qty_suggested=0.01581855 qty_after_cap=0.01500000 qty_final=0.01500000 trade_value=9.58 min_value=0.00 lot_min=0.00000001 precision=8 max_stake=20.00
+Trade aberto | price=638.400000 qty=0.01500000 sl=6.384000 tp=63840.000000 cash=990.16
+Trade fechado | reason=strategy_exit | pnl=-0.12 | cash=999.64
+BUY recebido pelo engine | price=637.870000 score=1.0000 stop=6.3787 take=63787.0 atr=n/a cash=999.64
+BUY sizing details | capital=999.64 risk_allowed=10.00 qty_suggested=0.01582977 qty_after_cap=0.01500000 qty_final=0.01500000 trade_value=9.57 min_value=0.00 lot_min=0.00000001 precision=8 max_stake=19.99
+Trade aberto | price=637.870000 qty=0.01500000 sl=6.378700 tp=63787.000000 cash=990.05
+Trade fechado | reason=strategy_exit | pnl=-0.14 | cash=999.50
+BUY recebido pelo engine | price=638.310000 score=1.0000 stop=6.3831 take=63830.99999999999 atr=n/a cash=999.50
+BUY sizing details | capital=999.50 risk_allowed=9.99 qty_suggested=0.01581665 qty_after_cap=0.01500000 qty_final=0.01500000 trade_value=9.57 min_value=0.00 lot_min=0.00000001 precision=8 max_stake=19.99
+Trade aberto | price=638.310000 qty=0.01500000 sl=6.383100 tp=63831.000000 cash=989.90
+Trade fechado | reason=strategy_exit | pnl=-0.08 | cash=999.42
+BUY recebido pelo engine | price=619.240000 score=1.0000 stop=6.1924 take=61924.0 atr=n/a cash=999.42
+BUY sizing details | capital=999.42 risk_allowed=9.99 qty_suggested=0.01630243 qty_after_cap=0.01600000 qty_final=0.01600000 trade_value=9.91 min_value=0.00 lot_min=0.00000001 precision=8 max_stake=19.99
+Trade aberto | price=619.240000 qty=0.01600000 sl=6.192400 tp=61924.000000 cash=989.49
+Trade fechado | reason=strategy_exit | pnl=-0.10 | cash=999.32
+BUY recebido pelo engine | price=616.190000 score=1.0000 stop=6.161900000000001 take=61619.00000000001 atr=n/a cash=999.32
+BUY sizing details | capital=999.32 risk_allowed=9.99 qty_suggested=0.01638148 qty_after_cap=0.01600000 qty_final=0.01600000 trade_value=9.86 min_value=0.00 lot_min=0.00000001 precision=8 max_stake=19.99
+Trade aberto | price=616.190000 qty=0.01600000 sl=6.161900 tp=61619.000000 cash=989.44
+Trade fechado | reason=strategy_exit | pnl=-0.04 | cash=999.27
+BUY recebido pelo engine | price=618.220000 score=1.0000 stop=6.182200000000001 take=61822.0 atr=n/a cash=999.27
+BUY sizing details | capital=999.27 risk_allowed=9.99 qty_suggested=0.01632700 qty_after_cap=0.01600000 qty_final=0.01600000 trade_value=9.89 min_value=0.00 lot_min=0.00000001 precision=8 max_stake=19.99
+Trade aberto | price=618.220000 qty=0.01600000 sl=6.182200 tp=61822.000000 cash=989.36
+Trade fechado | reason=strategy_exit | pnl=-0.04 | cash=999.23
+BUY recebido pelo engine | price=631.010000 score=1.0000 stop=6.3101 take=63101.0 atr=n/a cash=999.23
+BUY sizing details | capital=999.23 risk_allowed=9.99 qty_suggested=0.01599542 qty_after_cap=0.01500000 qty_final=0.01500000 trade_value=9.47 min_value=0.00 lot_min=0.00000001 precision=8 max_stake=19.98
+Trade aberto | price=631.010000 qty=0.01500000 sl=6.310100 tp=63101.000000 cash=989.75
+Trade fechado | reason=strategy_exit | pnl=0.05 | cash=999.29
+BUY recebido pelo engine | price=644.790000 score=1.0000 stop=6.4479 take=64479.0 atr=n/a cash=999.29
+BUY sizing details | capital=999.29 risk_allowed=9.99 qty_suggested=0.01565443 qty_after_cap=0.01500000 qty_final=0.01500000 trade_value=9.67 min_value=0.00 lot_min=0.00000001 precision=8 max_stake=19.99
+Trade aberto | price=644.790000 qty=0.01500000 sl=6.447900 tp=64479.000000 cash=989.60
+Trade fechado | reason=strategy_exit | pnl=-0.13 | cash=999.16
+BUY recebido pelo engine | price=639.980000 score=1.0000 stop=6.3998 take=63998.0 atr=n/a cash=999.16
+BUY sizing details | capital=999.16 risk_allowed=9.99 qty_suggested=0.01577007 qty_after_cap=0.01500000 qty_final=0.01500000 trade_value=9.60 min_value=0.00 lot_min=0.00000001 precision=8 max_stake=19.98
+Trade aberto | price=639.980000 qty=0.01500000 sl=6.399800 tp=63998.000000 cash=989.54
+Trade fechado | reason=strategy_exit | pnl=-0.08 | cash=999.08
+BUY recebido pelo engine | price=647.490000 score=1.0000 stop=6.4749 take=64749.0 atr=n/a cash=999.08
+BUY sizing details | capital=999.08 risk_allowed=9.99 qty_suggested=0.01558584 qty_after_cap=0.01500000 qty_final=0.01500000 trade_value=9.71 min_value=0.00 lot_min=0.00000001 precision=8 max_stake=19.98
+Trade aberto | price=647.490000 qty=0.01500000 sl=6.474900 tp=64749.000000 cash=989.35
+Trade fechado | reason=strategy_exit | pnl=0.09 | cash=999.17
+BUY recebido pelo engine | price=673.820000 score=1.0000 stop=6.738200000000001 take=67382.0 atr=n/a cash=999.17
+BUY sizing details | capital=999.17 risk_allowed=9.99 qty_suggested=0.01497821 qty_after_cap=0.01400000 qty_final=0.01400000 trade_value=9.43 min_value=0.00 lot_min=0.00000001 precision=8 max_stake=19.98
+Trade aberto | price=673.820000 qty=0.01400000 sl=6.738200 tp=67382.000000 cash=989.72
+Trade fechado | reason=strategy_exit | pnl=0.45 | cash=999.62

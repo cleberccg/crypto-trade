@@ -123,7 +123,7 @@ class Trade(Base):
     strategy_name: Mapped[str] = mapped_column(String(100), nullable=False)
     timeframe: Mapped[str | None] = mapped_column(String(10), nullable=True)
     side: Mapped[str] = mapped_column(String(5), nullable=False)  # BUY | SELL
-    status: Mapped[str] = mapped_column(String(10), nullable=False)  # OPEN | CLOSED | CANCELLED
+    status: Mapped[str] = mapped_column(String(10), nullable=False)  # OPEN | DUST | CLOSED | CANCELLED
     is_paper: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
     entry_price: Mapped[float] = mapped_column(Float, nullable=False)

@@ -30,7 +30,7 @@ export function SimpleTable({ columns, rows, onRowClick }: SimpleTableProps) {
               sx={onRowClick ? { cursor: "pointer" } : undefined}
             >
               {columns.map((column) => (
-                <TableCell key={column}>{String(row[column] ?? "-")}</TableCell>
+                <TableCell key={column} sx={{fontVariantNumeric:"tabular-nums", whiteSpace:"pre-line", color: String(row[column]).includes("PREJU\u00cdZO") ? "error.main" : String(row[column]).includes("LUCRO") ? "success.main" : undefined}}>{String(row[column] ?? "-")}</TableCell>
               ))}
             </TableRow>
           ))}

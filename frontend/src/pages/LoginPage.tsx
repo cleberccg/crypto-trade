@@ -10,7 +10,7 @@ interface LoginPageProps {
 
 export function LoginPage({ onAuthenticated }: LoginPageProps) {
   const [username, setUsername] = useState("admin");
-  const [password, setPassword] = useState("admin");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string>("");
 
   const submit = async () => {
@@ -23,7 +23,7 @@ export function LoginPage({ onAuthenticated }: LoginPageProps) {
       setRole(response.role ?? "read-only");
       onAuthenticated();
     } catch {
-      setError("Falha de autenticacao");
+      setError("Falha de autenticação");
     }
   };
 
@@ -34,8 +34,8 @@ export function LoginPage({ onAuthenticated }: LoginPageProps) {
           Acesso ao Dashboard
         </Typography>
         <Stack spacing={2}>
-          <TextField label="Usuario" value={username} onChange={(e) => setUsername(e.target.value)} />
-          <TextField label="Senha" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+          <TextField autoComplete="username" label="Usuário" value={username} onChange={(e) => setUsername(e.target.value)} />
+          <TextField autoComplete="current-password" label="Senha" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
           <Button variant="contained" onClick={submit}>
             Entrar
           </Button>

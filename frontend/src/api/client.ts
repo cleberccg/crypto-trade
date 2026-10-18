@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000/api/v1";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api/v1";
 const TOKEN_STORAGE_KEY = "dashboard_auth_token";
 const ROLE_STORAGE_KEY = "dashboard_auth_role";
 export const AUTH_REQUIRED_EVENT = "dashboard:auth-required";
@@ -70,7 +70,8 @@ export async function apiPost<T>(path: string, body: unknown): Promise<T> {
     handleUnauthorized();
   }
   if (!response.ok) {
-    throw new Error(`Request failed: ${response.status}`);
+    const errorBody = await response.json().catch(() => null);
+    throw new Error(typeof errorBody?.detail === "string" ? errorBody.detail : `Request failed: ${response.status}`);
   }
   return response.json() as Promise<T>;
 }

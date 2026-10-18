@@ -55,7 +55,7 @@ class MonitorState:
     last_buy_intent_at: datetime | None = None
     last_buy_intent_line: str | None = None
     started_at_utc: datetime | None = None
-    last_report_key: tuple[int, int, int] | None = None
+    last_report_key: tuple[object, ...] | None = None
     recent_alerts: deque[str] = None  # type: ignore[assignment]
 
     def __post_init__(self) -> None:
@@ -106,7 +106,9 @@ def _poll_database() -> dict[str, object]:
                 """
                 SELECT
                     SUM(CASE WHEN status = 'OPEN' THEN 1 ELSE 0 END) AS open_trades,
+                    SUM(CASE WHEN status = 'DUST' THEN 1 ELSE 0 END) AS dust_trades,
                     SUM(CASE WHEN status = 'CLOSED' THEN 1 ELSE 0 END) AS closed_trades,
+                    SUM(CASE WHEN status NOT IN ('OPEN', 'DUST', 'CLOSED') THEN 1 ELSE 0 END) AS other_trades,
                     COUNT(*) AS total_trades
                 FROM trades
                 """
@@ -135,6 +137,18 @@ def _poll_database() -> dict[str, object]:
             )
         ).mappings().first()
 
+        dust_rows = conn.execute(
+            text(
+                """
+                SELECT id, symbol, status, side, is_paper, quantity, entry_price, pnl, fee
+                FROM trades
+                WHERE status = 'DUST'
+                ORDER BY id DESC
+                LIMIT 10
+                """
+            )
+        ).mappings().all()
+
         last_order = conn.execute(
             text(
                 """
@@ -146,10 +160,30 @@ def _poll_database() -> dict[str, object]:
             )
         ).mappings().first()
 
+    dust_positions = []
+    for row in dust_rows:
+        quantity = float(row["quantity"] or 0.0)
+        entry_price = float(row["entry_price"]) if row["entry_price"] is not None else None
+        dust_positions.append({
+            "trade_id": int(row["id"]),
+            "symbol": str(row["symbol"]),
+            "status": str(row["status"]),
+            "side": str(row["side"]),
+            "ownership": "PAPER" if bool(row["is_paper"]) else "BOT_LIVE",
+            "quantity": quantity,
+            "residual_cost_usdt": quantity * entry_price if entry_price is not None else None,
+            "realized_pnl_usdt": row["pnl"],
+            "recorded_fees_usdt": row["fee"],
+        })
+
     return {
         "open_trades": int(trade_counts["open_trades"] or 0),
+        "dust_trades": int(trade_counts["dust_trades"] or 0),
         "closed_trades": int(trade_counts["closed_trades"] or 0),
+        "other_trades": int(trade_counts["other_trades"] or 0),
         "total_trades": int(trade_counts["total_trades"] or 0),
+        "dust_positions": dust_positions,
+        "dust_positions_truncated": int(trade_counts["dust_trades"] or 0) > len(dust_positions),
         "open_orders": int(order_counts["open_orders"] or 0),
         "total_orders": int(order_counts["total_orders"] or 0),
         "last_trade": dict(last_trade) if last_trade else None,
@@ -165,18 +199,48 @@ def _maybe_alert(state: MonitorState, message: str) -> None:
 
 
 def _report_database_state(state: MonitorState, report: dict[str, object]) -> None:
+    dust_positions = report.get("dust_positions") or []
     key = (
         int(report["total_trades"]),
         int(report["open_trades"]),
+        int(report["dust_trades"]),
+        int(report["closed_trades"]),
+        int(report["other_trades"]),
         int(report["total_orders"]),
+        tuple(
+            (
+                row["trade_id"], row["symbol"], row["quantity"],
+                row["residual_cost_usdt"], row["realized_pnl_usdt"],
+                row["recorded_fees_usdt"],
+            )
+            for row in dust_positions
+        ),
     )
     if state.last_report_key == key:
         return
     state.last_report_key = key
     _print(
-        "DB | trades total={total_trades} open={open_trades} closed={closed_trades} | "
+        "DB | trades total={total_trades} open={open_trades} dust={dust_trades} "
+        "closed={closed_trades} other={other_trades} | "
         "orders total={total_orders} open_like={open_orders}".format(**report)
     )
+
+    for dust in dust_positions:
+        cost = dust["residual_cost_usdt"]
+        cost_text = f"{cost:.8f}" if cost is not None else "unknown"
+        pnl = dust["realized_pnl_usdt"]
+        pnl_text = f"{float(pnl):.8f}" if pnl is not None else "unknown"
+        fees = dust["recorded_fees_usdt"]
+        fees_text = f"{float(fees):.8f}" if fees is not None else "unknown"
+        _print(
+            "DB | dust trade_id={trade_id} symbol={symbol} qty={quantity:.12f} "
+            "owner={ownership} residual_cost_usdt={cost} realized_pnl_usdt={pnl} "
+            "recorded_fees_usdt={fees}".format(
+                **dust, cost=cost_text, pnl=pnl_text, fees=fees_text
+            )
+        )
+    if report.get("dust_positions_truncated"):
+        _print("DB | dust detail limit reached; additional DUST rows omitted")
 
     last_trade = report.get("last_trade")
     if last_trade:

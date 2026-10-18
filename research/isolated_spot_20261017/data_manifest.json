@@ -1,0 +1,44 @@
+[
+  {
+    "source": "data\\binance_spot_extended_klines.csv.gz",
+    "sha256": "5c3736b1ad1f07eefc03e7d3003b5495a32611533866894ee4d4b7223aced433",
+    "rejected_cache": "BTC 5m parquet missing 8064 candles in requested window; not used",
+    "public_archive_download": "DNS failed; complete existing extended kline CSV used for all four assets"
+  },
+  {
+    "symbol": "BTCUSDT",
+    "rows": 105120,
+    "duplicates": 0,
+    "missing": 0,
+    "nonpositive": 0,
+    "nan": 0,
+    "invalid_ohlc": 0
+  },
+  {
+    "symbol": "ETHUSDT",
+    "rows": 105120,
+    "duplicates": 0,
+    "missing": 0,
+    "nonpositive": 0,
+    "nan": 0,
+    "invalid_ohlc": 0
+  },
+  {
+    "symbol": "SOLUSDT",
+    "rows": 105120,
+    "duplicates": 0,
+    "missing": 0,
+    "nonpositive": 0,
+    "nan": 0,
+    "invalid_ohlc": 0
+  },
+  {
+    "symbol": "BNBUSDT",
+    "rows": 105120,
+    "duplicates": 0,
+    "missing": 0,
+    "nonpositive": 0,
+    "nan": 0,
+    "invalid_ohlc": 0
+  }
+]

@@ -1,0 +1,25 @@
+{
+  "start": "2025-06-01 00:00:00+00:00",
+  "end_exclusive": "2026-06-01 00:00:00+00:00",
+  "split": [
+    0.6,
+    0.2,
+    0.2
+  ],
+  "capital_usdt": 1000,
+  "fee_per_side": 0.001,
+  "half_spread_per_side": 0.0001,
+  "slippage_per_side": 0.0002,
+  "stress_total_per_side": 0.0019,
+  "thresholds": {
+    "oos_trades": 30,
+    "oos_pf": 1.2,
+    "bootstrap_mean_lower_gt": 0,
+    "multiple_tests": 16
+  },
+  "live_pids": [
+    80848,
+    17832
+  ],
+  "no_parameter_search": true
+}

@@ -1,0 +1,59 @@
+[
+  {
+    "pid": 80848,
+    "created": 1792280722.6133137,
+    "command": [
+      "C:\\Python313\\python.exe",
+      "main.py",
+      "live",
+      "--strategy-name",
+      "Sma200RegimeGated",
+      "--strategy-version",
+      "v1",
+      "--symbol",
+      "BNB/USDT",
+      "--timeframe",
+      "4h",
+      "--poll-seconds",
+      "15",
+      "--bootstrap-bars",
+      "1500",
+      "--bootstrap-replay-bars",
+      "350",
+      "--enable-real-orders"
+    ]
+  },
+  {
+    "pid": 17832,
+    "created": 1790821243.0490608,
+    "command": [
+      "C:\\Python313\\python.exe",
+      "main.py",
+      "market-data-daemon",
+      "--symbols",
+      "BNB/USDT",
+      "--timeframes",
+      "4h",
+      "--polling-interval-seconds",
+      "30",
+      "--context-delay-seconds",
+      "0.2",
+      "--batch-size",
+      "1000",
+      "--retry-count",
+      "5",
+      "--retry-delay-seconds",
+      "2",
+      "--bootstrap-days",
+      "7",
+      "--recent-gap-bars",
+      "2000",
+      "--report-every-cycles",
+      "1",
+      "--max-cycles",
+      "0",
+      "--output-prefix",
+      "market_data_daemon"
+    ]
+  }
+]

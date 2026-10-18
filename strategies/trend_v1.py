@@ -279,15 +279,15 @@ class TrendV1Strategy(TrendStrategy):
     def exit_signal(self, df: pd.DataFrame, entry_price: float) -> StrategySignal:
         """Gera um sinal SELL quando qualquer condição de saída é acionada."""
         self._assert_initialized()
-    """
-    Calcula uma pontuação composta de confiança entre 0 e 1.
 
-    Fatores:
-    - Alinhamento das EMAs (0.25)
-    - RSI na faixa ideal de 50–60 (0.25)
-    - Força do histograma MACD (0.25)
-    - Posição do %B de Bollinger (0.25)
-    """
+        last = df.iloc[-1]
+        prev = df.iloc[-2] if len(df) >= 2 else last
+        price = float(last["close"])
+        timestamp = last.name.to_pydatetime()  # type: ignore[union-attr]
+
+        ema_fast_col = self._ema_fast.name  # type: ignore[union-attr]
+        ema_slow_col = self._ema_slow.name  # type: ignore[union-attr]
+
         # --- Condicoes de saida ---
         ema_bearish_cross = (
             float(last[ema_fast_col]) < float(last[ema_slow_col])

@@ -2,11 +2,11 @@
 from __future__ import annotations
 
 import json
-from dataclasses import asdict, dataclass
-from decimal import Decimal
+from dataclasses import asdict, dataclass, replace
+from decimal import Decimal, ROUND_DOWN
 from datetime import datetime, timezone
 from pathlib import Path
-from time import sleep
+from time import monotonic, sleep
 from typing import Any, Callable
 
 import ccxt
@@ -57,6 +57,10 @@ class LivePositionState:
     realized_exit_fees_usdt: float = 0.0
     realized_net_pnl: float | None = None
     fee_accounting_complete: bool = False
+    status: str = "OPEN"  # DUST preserva propriedade; nao representa venda/fechamento.
+    dust_reason: str = ""
+    last_evaluated_candle: str = ""
+    exit_pending: bool = False
 
     @property
     def context_key(self) -> tuple[str, str, str]:
@@ -80,7 +84,7 @@ class _LivePositionStore:
             atomic_write_text(self._path.with_suffix(self._path.suffix + ".bak"), payload, encoding="utf-8")
             logger.debug("LivePositionStore.save_all -> %s (count=%d)", self._path, len(states))
         except Exception as exc:
-            logger.warning("LivePositionStore: failed to save state: %s", exc)
+            raise RuntimeError("LIVE state persistence failed; operation blocked") from exc
 
     def load(self) -> LivePositionState | None:
         # Carregamento de estado único compatível com versões anteriores.
@@ -95,16 +99,11 @@ class _LivePositionStore:
         except json.JSONDecodeError:
             backup = self._path.with_suffix(self._path.suffix + ".bak")
             if not backup.exists():
-                return []
+                raise RuntimeError("Corrupted LIVE state without backup")
             try:
                 data = json.loads(backup.read_text(encoding="utf-8"))
             except Exception as exc:
-                logger.warning(
-                    "LivePositionStore: failed to load backup state from %s: %s",
-                    backup,
-                    exc,
-                )
-                return []
+                raise RuntimeError("Corrupted LIVE state and backup") from exc
         try:
             if isinstance(data, dict):
                 # Formato legado de posição única.
@@ -127,15 +126,21 @@ class _LivePositionStore:
                     realized_exit_fees_usdt=float(data.get("realized_exit_fees_usdt", 0.0) or 0.0),
                     realized_net_pnl=(float(data["realized_net_pnl"]) if data.get("realized_net_pnl") is not None else None),
                     fee_accounting_complete=bool(data.get("fee_accounting_complete", False)),
+                    status=str(data.get("status", "OPEN")),
+                    dust_reason=str(data.get("dust_reason", "")),
+                    last_evaluated_candle=str(data.get("last_evaluated_candle", "")),
+                    exit_pending=bool(data.get("exit_pending", False)),
                 )
                 logger.info("LivePositionStore.load_all -> loaded legacy single state")
                 return [state]
 
             states: list[LivePositionState] = []
+            if not isinstance(data, list):
+                raise ValueError("Invalid LIVE state payload")
             if isinstance(data, list):
                 for item in data:
                     if not isinstance(item, dict):
-                        continue
+                        raise ValueError("Invalid LIVE position")
                     states.append(
                         LivePositionState(
                             trade_id=int(item["trade_id"]),
@@ -156,15 +161,16 @@ class _LivePositionStore:
                             realized_exit_fees_usdt=float(item.get("realized_exit_fees_usdt", 0.0) or 0.0),
                             realized_net_pnl=(float(item["realized_net_pnl"]) if item.get("realized_net_pnl") is not None else None),
                             fee_accounting_complete=bool(item.get("fee_accounting_complete", False)),
+                            status=str(item.get("status", "OPEN")),
+                            dust_reason=str(item.get("dust_reason", "")),
+                            last_evaluated_candle=str(item.get("last_evaluated_candle", "")),
+                            exit_pending=bool(item.get("exit_pending", False)),
                         )
                     )
             logger.info("LivePositionStore.load_all -> loaded %d position(s)", len(states))
             return states
         except Exception as exc:
-            logger.warning(
-                "LivePositionStore: failed to load state from %s: %s", self._path, exc
-            )
-            return []
+            raise RuntimeError("Invalid LIVE position state; reconciliation required") from exc
 
     def clear(self) -> None:
         try:
@@ -238,6 +244,16 @@ class LiveTradingService:
         self._order_executor_factory = order_executor_factory
         self._asset_ranking_monitor_factory = asset_ranking_monitor_factory or AssetRankingMonitor
         self._db_ops: dict[str, Callable] = db_ops or {}
+        self._dust_positions: dict[int, LivePositionState] = {}
+        self._preserved_positions: dict[int, LivePositionState] = {}
+        self._saved_positions: dict[int, LivePositionState] = {}
+        self._active_positions: dict[tuple[str, str, str], LivePositionState] = {}
+        self._runtime_store: Any = None
+        self._sell_blocks: dict[int, str] = {}
+        self._last_exit_filled = False
+        self._last_terminal_position_summary: tuple[str, ...] | None = None
+        self._asset_ranking_has_history: dict[str, bool] = {}
+        self._last_terminal_summary_at: float | None = None
 
     # ------------------------------------------------------------------
     # Ponto de entrada público
@@ -313,6 +329,8 @@ class LiveTradingService:
                 )
                 strategy_cache[ctx] = strategy_obj
             last_signals: dict[tuple[str, str, str], str] = {}
+            recovery_pending = set(open_positions)
+            logged_actions: dict[tuple[str, str, str], str] = {}
 
             while True:
                 cycles += 1
@@ -361,10 +379,18 @@ class LiveTradingService:
                     if latest is not None and not latest.empty and frame is not None and not frame.empty:
                         latest = latest.loc[latest.index > frame.index[-1]]
 
+                    recovering = context_key in recovery_pending
                     if latest is None or latest.empty:
-                        last_signals[context_key] = "HOLD"
-                        cycle_logs.append((context_key, "HOLD"))
-                        continue
+                        if not recovering:
+                            if last_signals.get(context_key) != "SELL_BLOCKED":
+                                last_signals[context_key] = "HOLD"
+                            continue
+                        if frame is None or frame.empty:
+                            continue
+                        strategy_obj = strategy_cache[context_key]
+                        enriched, _ = self._recalculate_indicators(strategy_obj, frame)
+                        if enriched is not None:
+                            frame = enriched
 
                     if latest is not None and not latest.empty:
                         latest_ts = latest.index[-1]
@@ -418,11 +444,22 @@ class LiveTradingService:
                         # Posição existente: avalia saídas independentes por contexto.
                     if context_key in open_positions:
                         position = open_positions[context_key]
+                        recovery_pending.discard(context_key)
+                        candle_key = frame_for_signal.index[-1].isoformat()
+                        # Recuperacao so age no fechamento mais recente esperado, nunca em backlog.
+                        if not self._is_current_closed_candle(frame_for_signal, timeframe):
+                            self._record_sell_block(position, "STALE_CLOSED_CANDLE")
+                            last_signals[context_key] = "SELL_BLOCKED"
+                            continue
+                        if candle_key == position.last_evaluated_candle:
+                            last_signals[context_key] = "SELL_BLOCKED" if position.exit_pending else "HOLD"
+                            continue
                         should_exit, exit_reason = self._check_exit_conditions(
                             position=position,
                             frame=frame_for_signal,
                             strategy=strategy_obj,
                         )
+                        position.last_evaluated_candle = candle_key
                         if should_exit:
                             close_price = float(frame_for_signal["close"].iloc[-1])
                             success = self._try_close_position(
@@ -442,12 +479,35 @@ class LiveTradingService:
                                 last_signals[context_key] = "SELL"
                                 cycle_logs.append((context_key, "SELL"))
                             else:
+                                classified_dust = position.status == "DUST"
+                                if classified_dust:
+                                    open_positions.pop(context_key, None)
                                 self._store_save_positions(store=store, positions=open_positions)
+                                if classified_dust:
+                                    last_signals[context_key] = (
+                                        "DUST_AFTER_PARTIAL_SELL" if self._last_exit_filled else "DUST"
+                                    )
+                                    cycle_logs.append((context_key, last_signals[context_key]))
+                                else:
+                                    last_signals[context_key] = "SELL" if self._last_exit_filled else "SELL_BLOCKED"
+                        else:
+                            if callable(getattr(exchange, "fetch_symbol_trading_filters", None)):
+                                try:
+                                    dust_reason = self._dust_filter_reason(
+                                        exchange, position, float(frame_for_signal["close"].iloc[-1]))
+                                except Exception:
+                                    dust_reason = ""
+                                if dust_reason and not position.exit_pending:
+                                    self._validate_sell_ownership(exchange, position)
+                                    self._detach_dust(position, dust_reason)
+                                    open_positions.pop(context_key, None)
+                            if position.status == "DUST":
+                                last_signals[context_key] = "DUST"
+                                cycle_logs.append((context_key, "DUST"))
+                            else:
                                 last_signals[context_key] = "HOLD"
                                 cycle_logs.append((context_key, "HOLD"))
-                        else:
-                            last_signals[context_key] = "HOLD"
-                            cycle_logs.append((context_key, "HOLD"))
+                            self._store_save_positions(store=store, positions=open_positions)
                         continue
 
                     if context_key not in target_contexts:
@@ -455,6 +515,9 @@ class LiveTradingService:
                         cycle_logs.append((context_key, "HOLD"))
                         continue
 
+                    if not self._is_current_closed_candle(frame_for_signal, timeframe):
+                        last_signals[context_key] = "HOLD"
+                        continue
                     signal = self._entry_signal(strategy=strategy_obj, frame=frame_for_signal)
                     if signal is None:
                         last_signals[context_key] = "HOLD"
@@ -487,7 +550,7 @@ class LiveTradingService:
                             cycle_logs.append((context_key, "HOLD"))
                             continue
                         committed = self._capital_committed(open_positions)
-                        capital_livre = max(0.0, free_usdt - committed)
+                        capital_livre = max(0.0, free_usdt)
 
                         logger.info(
                             "Open positions: %d/%d | Capital livre: %.2f USDT | Capital comprometido: %.2f USDT",
@@ -551,8 +614,8 @@ class LiveTradingService:
                                 last_signals[context_key] = "HOLD"
                                 cycle_logs.append((context_key, "HOLD"))
                     elif signal.signal == SignalType.SELL:
-                        last_signals[context_key] = "SELL"
-                        cycle_logs.append((context_key, "SELL"))
+                        # Sinal SELL sem posicao nao e venda executada.
+                        last_signals[context_key] = "HOLD"
                     else:
                         last_signals[context_key] = "HOLD"
                         cycle_logs.append((context_key, "HOLD"))
@@ -560,17 +623,22 @@ class LiveTradingService:
                 # Registra os logs de cada ciclo por símbolo/contexto
                 for context_key in sorted(target_contexts, key=lambda item: item[0]):
                     action = last_signals.get(context_key, "HOLD")
-                    logger.info("%s -> %s", context_key[0], action)
+                    if action == "HOLD" and context_key not in open_positions and any(
+                        position.context_key == context_key
+                        for position in self._dust_positions.values()
+                    ):
+                        action = "HOLD_NO_ACTIVE_POSITION"
+                    if logged_actions.get(context_key) != action:
+                        logger.info("%s -> %s", context_key[0], action)
+                        logged_actions[context_key] = action
 
-                open_ctx_labels = [
-                    f"{pos.symbol} OPEN"
-                    for pos in sorted(open_positions.values(), key=lambda item: (item.symbol, item.timeframe, item.strategy))
-                ]
                 committed = self._capital_committed(open_positions)
+                balance_is_current = True
                 try:
                     free_usdt = self._fetch_free_usdt(exchange)
                     last_known_free_usdt = free_usdt
                 except ccxt.NetworkError as exc:
+                    balance_is_current = False
                     free_usdt = last_known_free_usdt
                     logger.warning(
                         "Falha de rede ao atualizar saldo no ciclo: %s. "
@@ -578,12 +646,13 @@ class LiveTradingService:
                         exc,
                         free_usdt,
                     )
-                capital_livre = max(0.0, free_usdt - committed)
-                logger.info("Open positions: %d/%d", len(open_positions), int(settings.trading.max_open_positions))
-                for label in open_ctx_labels:
-                    logger.info(label)
-                logger.info("Capital comprometido: %.2f USDT", committed)
-                logger.info("Capital livre: %.2f USDT", capital_livre)
+                capital_livre = max(0.0, free_usdt)
+                self._log_terminal_position_summary(
+                    open_positions=open_positions,
+                    committed_usdt=committed,
+                    free_usdt=capital_livre if balance_is_current else None,
+                    max_open_positions=int(settings.trading.max_open_positions),
+                )
                 if cycles % int(settings.trading.asset_ranking_refresh_cycles) == 0:
                     self._log_asset_ranking(
                         asset_monitor=asset_monitor,
@@ -611,6 +680,11 @@ class LiveTradingService:
                 "cycles": cycles,
                 "open_position": len(open_positions) > 0,
                 "open_positions": len(open_positions),
+                "dust_positions": len(self._dust_positions),
+                "capital_free": capital_livre,
+                "capital_committed": committed,
+                "residual_cost": sum(p.quantity * p.entry_price for p in self._dust_positions.values()),
+                "last_signals": {"|".join(k): v for k, v in last_signals.items()},
             }
         except Exception:
             logger.exception("LIVE service failed during initialization or execution.")
@@ -725,9 +799,12 @@ class LiveTradingService:
             return
 
         if not ranking:
-            logger.info("Ranking ativos: sem trades fechados para analise.")
+            if self._asset_ranking_has_history.get(strategy_name) is not False:
+                logger.info("Sem trades CLOSED para %s", strategy_name)
+            self._asset_ranking_has_history[strategy_name] = False
             return
 
+        self._asset_ranking_has_history[strategy_name] = True
         logger.info("Ranking ativos (estrategia=%s):", strategy_name)
         for row in ranking:
             logger.info(
@@ -790,134 +867,52 @@ class LiveTradingService:
         target_contexts: set[tuple[str, str, str]],
     ) -> dict[tuple[str, str, str], LivePositionState]:
         """Restaura posições abertas após falha/reinicialização, verificando o banco e a Binance."""
-        restored: dict[tuple[str, str, str], LivePositionState] = {}
-        target_symbols = {ctx[0] for ctx in target_contexts}
-
-        def _normalize_context(state: LivePositionState) -> LivePositionState:
-            timeframe = str(state.timeframe or "").strip() or cfg.timeframe
-            strategy = str(state.strategy or "").strip() or cfg.strategy_name
-            return LivePositionState(
-                trade_id=state.trade_id,
-                symbol=state.symbol,
-                timeframe=timeframe,
-                strategy=strategy,
-                quantity=state.quantity,
-                stake_amount=state.stake_amount,
-                entry_price=state.entry_price,
-                stop_loss=state.stop_loss,
-                take_profit=state.take_profit,
-                opened_at=state.opened_at,
-                exchange_order_id=state.exchange_order_id,
-                original_quantity=state.original_quantity or state.quantity,
-                entry_fee_usdt=state.entry_fee_usdt,
-                entry_fee_allocated_usdt=state.entry_fee_allocated_usdt,
-                realized_gross_pnl=state.realized_gross_pnl,
-                realized_exit_fees_usdt=state.realized_exit_fees_usdt,
-                realized_net_pnl=state.realized_net_pnl,
-                fee_accounting_complete=state.fee_accounting_complete,
-            )
-
-        saved_positions = self._store_load_positions(store)
-        db_positions_by_trade = self._db_load_all_open_trade_states_with_retry(cfg=cfg)
-
-        # Reconcilia cada posição salva com o banco de dados e a Binance.
-        for saved in saved_positions.values():
-            saved = _normalize_context(saved)
-            if saved.context_key not in target_contexts:
-                continue
-            db_state = db_positions_by_trade.get(saved.trade_id)
-            if db_state is not None and (not str(db_state.timeframe or "").strip()):
-                db_state = LivePositionState(
-                    trade_id=db_state.trade_id,
-                    symbol=db_state.symbol,
-                    timeframe=saved.timeframe,
-                    strategy=str(db_state.strategy or "").strip() or saved.strategy,
-                    quantity=db_state.quantity,
-                    stake_amount=db_state.stake_amount,
-                    entry_price=db_state.entry_price,
-                    stop_loss=db_state.stop_loss,
-                    take_profit=db_state.take_profit,
-                    opened_at=db_state.opened_at,
-                    exchange_order_id=db_state.exchange_order_id,
-                    original_quantity=db_state.original_quantity or db_state.quantity,
-                    entry_fee_usdt=db_state.entry_fee_usdt,
-                    entry_fee_allocated_usdt=db_state.entry_fee_allocated_usdt,
-                    realized_gross_pnl=db_state.realized_gross_pnl,
-                    realized_exit_fees_usdt=db_state.realized_exit_fees_usdt,
-                    realized_net_pnl=db_state.realized_net_pnl,
-                    fee_accounting_complete=db_state.fee_accounting_complete,
-                )
-                logger.warning(
-                    "Reconciliacao: trade_id=%d com timeframe vazio no DB; usando timeframe salvo=%s.",
-                    db_state.trade_id,
-                    saved.timeframe,
-                )
-            if db_state is not None:
-                db_state = _normalize_context(db_state)
-            expected_quantity = db_state.quantity if db_state is not None else saved.quantity
-            if expected_quantity <= 0.0:
-                raise RuntimeError(
-                    "LIVE recovery blocked: persisted open trade has no confirmed filled quantity "
-                    f"(trade_id={saved.trade_id}); no order was sent."
-                )
-            exchange_position_exists = self._binance_has_position(
-                exchange=exchange,
-                symbol=saved.symbol,
-                quantity_hint=expected_quantity,
-            )
-
-            if not exchange_position_exists:
-                raise RuntimeError(
-                    "LIVE recovery blocked: database/state position is not covered by "
-                    f"the Binance balance (trade_id={saved.trade_id}, symbol={saved.symbol}, "
-                    f"expected={expected_quantity:.12f}). "
-                    "Reconcile manually; no order was sent."
+        self._store_load_positions(store)
+        db_states = self._db_load_all_open_trade_states_with_retry(cfg=cfg)
+        states = dict(db_states)
+        for trade_id, saved in self._saved_positions.items():
+            current = states.get(trade_id)
+            if current is None:
+                if saved.context_key in target_contexts and not self._db_is_trade_open(trade_id):
+                    raise RuntimeError("LIVE recovery blocked: JSON/DB trade ownership mismatch")
+                states[trade_id] = saved
+            else:
+                if (current.symbol, current.strategy) != (saved.symbol, saved.strategy):
+                    raise RuntimeError("LIVE recovery blocked: conflicting trade ownership")
+                # DB tem precedencia para fills; checkpoints incertos continuam bloqueados.
+                states[trade_id] = replace(
+                    current, timeframe=current.timeframe or saved.timeframe,
+                    last_evaluated_candle=saved.last_evaluated_candle,
+                    exit_pending=saved.exit_pending,
+                    dust_reason=saved.dust_reason if current.status == "DUST" else "",
                 )
 
-            if db_state is not None and abs(float(db_state.quantity) - float(saved.quantity)) > max(1e-10, float(saved.quantity) * 1e-6):
-                logger.warning(
-                    "Recovery JSON stale after persisted fill: trade_id=%d state_qty=%.12f "
-                    "database_qty=%.12f; database accounting will be restored.",
-                    saved.trade_id,
-                    saved.quantity,
-                    db_state.quantity,
-                )
-
-            if db_state is None:
-                restored[saved.context_key] = saved
-                continue
-
-            if db_state is not None:
-                restored[db_state.context_key] = db_state
-
-        # Inclui negociações OPEN do banco de dados que não estavam no arquivo salvo.
-        for db_state in db_positions_by_trade.values():
-            db_state = _normalize_context(db_state)
-            if db_state.symbol not in target_symbols:
-                continue
-            if db_state.strategy != cfg.strategy_name:
-                continue
-            if db_state.context_key not in target_contexts:
-                continue
-            if db_state.quantity <= 0.0 or not self._binance_has_position(
-                exchange=exchange,
-                symbol=db_state.symbol,
-                quantity_hint=db_state.quantity,
-            ):
-                raise RuntimeError(
-                    "LIVE recovery blocked: database OPEN trade is not covered by "
-                    f"the Binance balance (trade_id={db_state.trade_id}, "
-                    f"symbol={db_state.symbol}, quantity={db_state.quantity:.12f}). "
-                    "Reconcile manually; no order was sent."
-                )
-            restored.setdefault(db_state.context_key, db_state)
-
-        # Mantém somente uma posição por contexto (vence o trade_id mais recente).
+        self._dust_positions = {}
+        self._preserved_positions = {}
         deduped: dict[tuple[str, str, str], LivePositionState] = {}
-        for state in restored.values():
-            existing = deduped.get(state.context_key)
-            if existing is None or state.trade_id > existing.trade_id:
+        totals: dict[str, float] = {}
+        for state in states.values():
+            state = replace(state, timeframe=state.timeframe or cfg.timeframe,
+                            strategy=state.strategy or cfg.strategy_name)
+            if state.quantity <= 0 or state.status not in ("OPEN", "DUST"):
+                raise RuntimeError("LIVE recovery blocked: invalid persisted quantity/status")
+            totals[state.symbol] = totals.get(state.symbol, 0.0) + state.quantity
+            if state.context_key not in target_contexts:
+                # ETH antigo e contextos alheios nunca sao adotados nem vendidos.
+                self._preserved_positions[state.trade_id] = state
+            elif state.status == "DUST":
+                self._dust_positions[state.trade_id] = state
+            elif state.context_key in deduped:
+                raise RuntimeError("LIVE recovery blocked: duplicate OPEN context")
+            else:
                 deduped[state.context_key] = state
+
+        for symbol in {ctx[0] for ctx in target_contexts}:
+            expected = totals.get(symbol, 0.0)
+            if expected > 0 and not self._binance_has_position(exchange, symbol, expected):
+                raise RuntimeError("LIVE recovery blocked: ownership not covered by the Binance balance")
+        self._active_positions = deduped
+        self._runtime_store = store
 
         # Nunca declare o saldo da exchange como pertencente ao bot: os saldos são fungíveis e
         # podem incluir ativos preexistentes ou mantidos manualmente. Saldos não rastreados permanecem
@@ -927,7 +922,8 @@ class LiveTradingService:
             if context_key in deduped:
                 continue
 
-            asset_qty = self._fetch_total_asset_quantity(exchange, symbol)
+            asset_qty = max(0.0, self._fetch_total_asset_quantity(exchange, symbol)
+                            - totals.get(symbol, 0.0))
             if asset_qty <= 0.0:
                 continue
             # Mesma tolerância baseada em minNotional de _has_untracked_asset_balance, para que este
@@ -1200,6 +1196,96 @@ class LiveTradingService:
     # Fechamento da posição
     # ------------------------------------------------------------------
 
+    @staticmethod
+    def _is_current_closed_candle(frame: pd.DataFrame, timeframe: str) -> bool:
+        step = pd.Timedelta(timeframe)
+        expected = pd.Timestamp.now(tz="UTC").floor(step) - step
+        return not frame.empty and frame.index[-1] == expected
+
+    def _record_sell_block(self, position: LivePositionState, reason: str) -> None:
+        key = f"{reason}|{position.quantity:.12f}"
+        if self._sell_blocks.get(position.trade_id) != key:
+            logger.warning("SELL_BLOCKED trade_id=%d symbol=%s qty=%.12f reason=%s",
+                           position.trade_id, position.symbol, position.quantity, reason)
+            self._sell_blocks[position.trade_id] = key
+
+    def _dust_filter_reason(self, exchange: BaseExchange, position: LivePositionState,
+                            price: float) -> str:
+        # Nunca inferir dust com filtros padrao ou indisponiveis.
+        filters = exchange.fetch_symbol_trading_filters(position.symbol)
+        values = {k: Decimal(str(filters[k])) for k in ("step_size", "min_qty", "min_notional")}
+        if any(not v.is_finite() or v <= 0 for v in values.values()):
+            raise RuntimeError("FILTERS_UNAVAILABLE")
+        quantity = Decimal(str(position.quantity))
+        step = values["step_size"]
+        tradable = (quantity / step).to_integral_value(rounding=ROUND_DOWN) * step
+        if tradable <= 0 or tradable < values["min_qty"]:
+            return f"LOT_SIZE stepSize={step} minQty={values['min_qty']} roundedQty={tradable}"
+        if price <= 0:
+            raise RuntimeError("PRICE_UNAVAILABLE")
+        # Para filtros nocionais a referencia atual da exchange tambem deve ser valida.
+        ticker = exchange.fetch_ticker(position.symbol)
+        ticker_price = float(ticker.get("last") or 0)
+        if ticker_price <= 0:
+            raise RuntimeError("PRICE_UNAVAILABLE")
+        reference = max(price, ticker_price, float(ticker.get("high") or 0))
+        if tradable * Decimal(str(reference)) < values["min_notional"]:
+            return f"NOTIONAL minNotional={values['min_notional']} roundedQty={tradable}"
+        return ""
+
+    def _detach_dust(self, position: LivePositionState, reason: str) -> None:
+        if position.exit_pending:
+            raise RuntimeError("Uncertain execution cannot be classified as dust")
+        override = self._db_ops.get("mark_dust")
+        if override:
+            override(trade_id=position.trade_id, quantity=position.quantity)
+        else:
+            from sqlalchemy import text
+            with get_session() as session:
+                result = session.execute(text(
+                    "UPDATE trades SET status='DUST' WHERE id=:id AND is_paper=0 "
+                    "AND status='OPEN' AND ABS(quantity-:qty)<=:tolerance"
+                ), {"id": position.trade_id, "qty": position.quantity,
+                    "tolerance": max(1e-10, position.quantity * 1e-6)})
+                if result.rowcount != 1:
+                    raise RuntimeError("DUST transition rejected: DB/state mismatch")
+        position.status = "DUST"
+        position.dust_reason = reason
+        self._dust_positions[position.trade_id] = position
+        self._record_sell_block(position, reason)
+        # Mantem quantidade, stake original, taxas e PnL realizados intactos.
+
+    def _validate_sell_ownership(self, exchange: BaseExchange, position: LivePositionState) -> None:
+        protected = {p.trade_id: p for p in [*self._dust_positions.values(),
+                     *self._preserved_positions.values(), *self._active_positions.values()]}
+        protected[position.trade_id] = position
+        expected = sum(p.quantity for p in protected.values()
+                       if p.symbol.split("/")[0] == position.symbol.split("/")[0])
+        if not self._binance_has_position(exchange, position.symbol, expected):
+            raise RuntimeError("OWNERSHIP_BALANCE_MISMATCH")
+        if self._fetch_free_asset_quantity(exchange, position.symbol) + 1e-12 < position.quantity:
+            raise RuntimeError("OWNERSHIP_FREE_BALANCE_MISMATCH")
+        if exchange.fetch_open_orders(position.symbol):
+            raise RuntimeError("OPEN_ORDERS_REQUIRE_RECONCILIATION")
+
+    @staticmethod
+    def _sell_order_quantity(exchange: BaseExchange, position: LivePositionState) -> float:
+        filters = exchange.fetch_symbol_trading_filters(position.symbol)
+        step = Decimal(str(filters["step_size"]))
+        # BNB paga sua propria comissao. Reserva a tarifa oficial, nunca BNB externo.
+        available = Decimal(str(position.quantity))
+        if position.symbol.split("/")[0] == "BNB":
+            fee_reader = getattr(exchange, "fetch_trading_fee", None)
+            if not callable(fee_reader):
+                fee_reader = getattr(getattr(exchange, "_client", None), "fetch_trading_fee", None)
+            if not callable(fee_reader):
+                raise RuntimeError("FEE_RATE_UNAVAILABLE")
+            rate = Decimal(str(fee_reader(position.symbol)["taker"]))
+            if not rate.is_finite() or rate < 0 or rate >= 1:
+                raise RuntimeError("FEE_RATE_UNAVAILABLE")
+            available /= 1 + rate
+        return float((available / step).to_integral_value(rounding=ROUND_DOWN) * step)
+
     def _try_close_position(
         self,
         position: LivePositionState,
@@ -1208,22 +1294,55 @@ class LiveTradingService:
         order_executor: OrderExecutor,
     ) -> bool:
         """Envia uma ordem SELL e atualiza o banco. Retorna True em caso de sucesso e False para tentar novamente."""
+        self._last_exit_filled = False
+        if position.status == "DUST":
+            self._record_sell_block(position, position.dust_reason or "DUST_RESERVED_NOT_FOR_SALE")
+            return False
+        if position.exit_pending:
+            self._record_sell_block(position, "UNCERTAIN_PREVIOUS_SELL_RECONCILE_REQUIRED")
+            return False
+        exchange = getattr(order_executor, "exchange", None)
+        if exchange is not None:
+            try:
+                self._validate_sell_ownership(exchange, position)
+                dust_reason = self._dust_filter_reason(exchange, position, close_price)
+            except Exception as exc:
+                detail = str(exc) if isinstance(exc, RuntimeError) else type(exc).__name__
+                self._record_sell_block(position, f"PREFLIGHT_{detail}")
+                return False
+            if dust_reason:
+                self._detach_dust(position, dust_reason)
+                return False
         trade_stub = _TradeStub(position.trade_id)
         sell_quantity = float(position.quantity)
+        order_quantity = sell_quantity
+        if exchange is not None:
+            try:
+                order_quantity = self._sell_order_quantity(exchange, position)
+                rounded = replace(position, quantity=order_quantity)
+                blocked = self._dust_filter_reason(exchange, rounded, close_price)
+                if blocked:
+                    self._record_sell_block(position, "FEE_RESERVE_" + blocked)
+                    return False
+            except Exception:
+                self._record_sell_block(position, "FEE_OR_FILTERS_UNAVAILABLE")
+                return False
+        position.exit_pending = True
+        if self._runtime_store is not None:
+            self._store_save_positions(self._runtime_store, self._active_positions)
         try:
             order = order_executor.execute_market_sell(
                 trade=trade_stub,
                 symbol=position.symbol,
-                quantity=sell_quantity,
+                quantity=order_quantity,
                 price=close_price,
             )
         except ccxt.NetworkError as exc:
-            logger.warning(
-                "Falha de rede ao fechar posicao: %s. "
-                "Mantendo posicao aberta para retry.", exc,
-            )
+            self._record_sell_block(position, "NETWORK_UNCERTAIN_SELL_RECONCILE_REQUIRED")
             return False
         except ccxt.InsufficientFunds as exc:
+            position.exit_pending = False
+            self._record_sell_block(position, "INSUFFICIENT_FREE_BOT_BALANCE")
             logger.warning(
                 "Saldo insuficiente para vender somente a quantidade do bot %.12f: %s. "
                 "Nenhum retry com saldo total sera feito; posicao preservada.",
@@ -1232,6 +1351,8 @@ class LiveTradingService:
             )
             return False
         except (ccxt.InvalidOrder, ccxt.BadRequest) as exc:
+            position.exit_pending = False
+            self._record_sell_block(position, f"ORDER_FILTER_{type(exc).__name__}")
             if self._is_notional_filter_error(exc):
                 exchange = getattr(order_executor, "exchange", None)
                 available_qty = self._fetch_free_asset_quantity(exchange, position.symbol)
@@ -1265,15 +1386,13 @@ class LiveTradingService:
             )
             return False
         except Exception as exc:
-            logger.error(
-                "Erro inesperado ao fechar posicao: %s. "
-                "Mantendo posicao aberta.", exc,
-            )
+            self._record_sell_block(position, "EXECUTION_UNCERTAIN_RECONCILE_REQUIRED")
             return False
 
         fill_price = float(order.price or close_price)
         fill_qty = min(sell_quantity, max(0.0, float(order.filled_quantity or 0.0)))
         if fill_qty <= 0.0:
+            self._record_sell_block(position, "NO_CONFIRMED_FILL_RECONCILE_REQUIRED")
             logger.error(
                 "SELL sem fill confirmado para trade_id=%d; mantendo quantidade %.12f aberta.",
                 position.trade_id,
@@ -1281,6 +1400,8 @@ class LiveTradingService:
             )
             return False
         base_fee_qty = max(0.0, float(getattr(order, "base_fee_quantity", 0.0) or 0.0))
+        if float(order.filled_quantity or 0) > order_quantity + 1e-10 or fill_qty + base_fee_qty > sell_quantity + 1e-10:
+            raise RuntimeError("Confirmed SELL exceeds owned quantity; reconcile accounting")
         remaining_qty = max(0.0, sell_quantity - fill_qty - base_fee_qty)
         original_quantity = position.original_quantity or sell_quantity
         gross_delta = (fill_price - position.entry_price) * fill_qty
@@ -1304,8 +1425,8 @@ class LiveTradingService:
         )
         net_pnl = gross_pnl - entry_fee_allocated - exit_fees if fee_complete else None
         total_fees = float(entry_fee_usdt) + exit_fees if fee_complete else None
-        fully_closed = remaining_qty <= max(1e-10, sell_quantity * 1e-8)
-        position.quantity = 0.0 if fully_closed else remaining_qty
+        fully_closed = remaining_qty == 0.0
+        position.quantity = remaining_qty
         position.entry_fee_allocated_usdt = entry_fee_allocated
         position.realized_gross_pnl = gross_pnl
         position.realized_exit_fees_usdt = exit_fees
@@ -1332,8 +1453,22 @@ class LiveTradingService:
             exit_time=datetime.now(tz=timezone.utc),
             fully_closed=fully_closed,
         )
+        position.exit_pending = str(getattr(order, "status", "CLOSED")).upper() not in (
+            "CLOSED", "FILLED", "CANCELED", "CANCELLED", "EXPIRED", "REJECTED")
+        self._last_exit_filled = True
+        self._sell_blocks.pop(position.trade_id, None)
 
         if not fully_closed:
+            if position.exit_pending:
+                self._record_sell_block(position, "ORDER_NOT_TERMINAL_RECONCILE_REQUIRED")
+            if exchange is not None and not position.exit_pending:
+                try:
+                    dust_reason = self._dust_filter_reason(exchange, position, fill_price)
+                except Exception:
+                    dust_reason = ""
+                    self._record_sell_block(position, "POST_FILL_FILTERS_UNAVAILABLE")
+                if dust_reason:
+                    self._detach_dust(position, dust_reason)
             logger.warning(
                 "SELL parcial: trade_id=%d executed=%.12f base_fee=%.12f remaining=%.12f "
                 "gross_realized=%.8f net_realized=%s",
@@ -1526,7 +1661,7 @@ class LiveTradingService:
         from sqlalchemy import text
         try:
             with get_session() as session:
-                session.execute(
+                result = session.execute(
                     text(
                         "UPDATE trades SET quantity=:remaining_quantity, "
                         "gross_pnl=:gross_pnl, pnl=:pnl, pnl_pct=:pnl_pct, "
@@ -1557,8 +1692,10 @@ class LiveTradingService:
                         "trade_id": trade_id,
                     },
                 )
+                if result.rowcount != 1:
+                    raise RuntimeError("Confirmed SELL has no matching OPEN LIVE trade")
         except Exception as exc:
-            logger.error("_db_record_live_exit failed: %s", exc)
+            raise RuntimeError("Confirmed SELL accounting persistence failed; reconcile before retry") from exc
 
     def _db_update_open_trade_quantity(self, *, trade_id: int, quantity: float) -> None:
         override = self._db_ops.get("update_open_quantity")
@@ -1617,8 +1754,8 @@ class LiveTradingService:
                     "SELECT id, symbol, timeframe, strategy_name, quantity, entry_price, "
                     "stake_amount, stop_loss, take_profit, entry_time, original_quantity, "
                     "entry_fee_usdt, entry_fee_allocated_usdt, gross_pnl, exit_fee_usdt, "
-                    "fee_accounting_complete, pnl FROM trades "
-                    "WHERE id=:trade_id AND status='OPEN'"
+                    "fee_accounting_complete, pnl, status FROM trades "
+                    "WHERE id=:trade_id AND status IN ('OPEN','DUST') AND is_paper=0"
                 ),
                 {"trade_id": trade_id},
             ).fetchone()
@@ -1646,6 +1783,7 @@ class LiveTradingService:
                 realized_exit_fees_usdt=float(row[14] or 0.0),
                 fee_accounting_complete=bool(row[15]),
                 realized_net_pnl=float(row[16]) if row[16] is not None else None,
+                status=str(row[17]),
             )
 
     def _db_load_all_open_trade_states(self) -> dict[int, LivePositionState]:
@@ -1663,8 +1801,8 @@ class LiveTradingService:
                     "SELECT id, symbol, timeframe, strategy_name, quantity, entry_price, "
                     "stake_amount, stop_loss, take_profit, entry_time, original_quantity, "
                     "entry_fee_usdt, entry_fee_allocated_usdt, gross_pnl, exit_fee_usdt, "
-                    "fee_accounting_complete, pnl "
-                    "FROM trades WHERE status='OPEN'"
+                    "fee_accounting_complete, pnl, status "
+                    "FROM trades WHERE status IN ('OPEN','DUST') AND is_paper=0"
                 )
             ).fetchall()
             for row in rows:
@@ -1688,6 +1826,7 @@ class LiveTradingService:
                     realized_exit_fees_usdt=float(row[14] or 0.0),
                     fee_accounting_complete=bool(row[15]),
                     realized_net_pnl=float(row[16]) if row[16] is not None else None,
+                    status=str(row[17]),
                 )
                 states[trade_id] = state
         return states
@@ -1704,10 +1843,17 @@ class LiveTradingService:
                 loaded = [state]
 
         positions: dict[tuple[str, str, str], LivePositionState] = {}
+        self._saved_positions = {state.trade_id: state for state in loaded}
+        if len(self._saved_positions) != len(loaded):
+            raise RuntimeError("Duplicate persisted trade ownership")
         for state in loaded:
+            if state.status == "DUST":
+                self._dust_positions[state.trade_id] = state
+                continue
             existing = positions.get(state.context_key)
-            if existing is None or state.trade_id > existing.trade_id:
-                positions[state.context_key] = state
+            if existing is not None:
+                raise RuntimeError("Duplicate persisted OPEN context")
+            positions[state.context_key] = state
         return positions
 
     def _store_save_positions(
@@ -1715,7 +1861,9 @@ class LiveTradingService:
         store: Any,
         positions: dict[tuple[str, str, str], LivePositionState],
     ) -> None:
-        states = list(positions.values())
+        by_trade = {**self._preserved_positions, **self._dust_positions}
+        by_trade.update({p.trade_id: p for p in positions.values()})
+        states = list(by_trade.values())
         if hasattr(store, "save_all") and callable(store.save_all):
             store.save_all(states)
             return
@@ -1881,11 +2029,75 @@ class LiveTradingService:
     ) -> float:
         committed = 0.0
         for state in positions.values():
-            stake = float(state.stake_amount or 0.0)
-            if stake <= 0.0:
-                stake = float(state.quantity) * float(state.entry_price)
+            if state.status != "OPEN":
+                continue
+            stake = float(state.quantity) * float(state.entry_price)
             committed += max(0.0, stake)
         return committed
+
+    def _log_terminal_position_summary(
+        self,
+        *,
+        open_positions: dict[tuple[str, str, str], LivePositionState],
+        committed_usdt: float,
+        free_usdt: float | None,
+        max_open_positions: int,
+    ) -> None:
+        """Emite estado OPEN/DUST e contabilidade apenas quando o resumo visível muda."""
+        active = sorted(
+            (position for position in open_positions.values() if position.status == "OPEN"),
+            key=lambda position: position.trade_id,
+        )
+        dust = sorted(
+            (position for position in self._dust_positions.values() if position.status == "DUST"),
+            key=lambda position: position.trade_id,
+        )
+        dust_by_asset: dict[str, float] = {}
+        for position in dust:
+            asset = position.symbol.split("/")[0]
+            dust_by_asset[asset] = dust_by_asset.get(asset, 0.0) + max(0.0, position.quantity)
+
+        dust_quantity = (
+            ",".join(f"{asset}:{quantity:.12f}" for asset, quantity in sorted(dust_by_asset.items()))
+            if dust_by_asset else "none"
+        )
+        dust_cost = sum(position.quantity * position.entry_price for position in dust)
+        free_text = f"{free_usdt:.8f}" if free_usdt is not None else "UNKNOWN"
+        summary = (
+            f"LIVE_STATE | OPEN={len(active)}/{max_open_positions} DUST={len(dust)} "
+            f"DUST_qty={dust_quantity} capital_committed_usdt={committed_usdt:.2f} "
+            f"dust_cost_usdt={dust_cost:.6f} capital_free_usdt={free_text}"
+            f" balance_status={'CURRENT' if free_usdt is not None else 'UNAVAILABLE'}"
+        )
+        trade_lines = tuple(
+            "LIVE_TRADE | trade_id=%d status=%s symbol=%s quantity=%.12f realized_pnl_usdt=%s"
+            % (
+                position.trade_id,
+                position.status,
+                position.symbol,
+                position.quantity,
+                f"{position.realized_net_pnl:.6f}"
+                if position.realized_net_pnl is not None else "UNKNOWN",
+            )
+            + (
+                f" timeframe={position.timeframe} strategy={position.strategy}"
+                f" entry_price={position.entry_price:.8f} stop_loss={position.stop_loss}"
+                f" take_profit={position.take_profit} exit_pending={position.exit_pending}"
+            )
+            for position in [*active, *dust]
+        )
+        signature = (summary, *trade_lines)
+        now = monotonic()
+        if (signature == self._last_terminal_position_summary
+                and self._last_terminal_summary_at is not None
+                and now - self._last_terminal_summary_at < 300.0):
+            return
+
+        logger.info("%s", summary)
+        for line in trade_lines:
+            logger.info("%s", line)
+        self._last_terminal_position_summary = signature
+        self._last_terminal_summary_at = now
 
     def _binance_has_position(
         self,
@@ -2049,6 +2261,9 @@ class LiveTradingService:
         return PaperLiveService._closed_candles(normalized, timeframe)
 
     def _has_untracked_asset_balance(self, exchange: BaseExchange, symbol: str) -> bool:
+        if any(p.exit_pending for p in [*self._dust_positions.values(),
+               *self._preserved_positions.values()] if p.symbol == symbol):
+            return True
         try:
             balance = exchange.fetch_balance()
         except Exception:
@@ -2066,7 +2281,14 @@ class LiveTradingService:
             used_bucket = balance.get("used") or {}
             qty = float(free_bucket.get(base_asset, 0.0) or 0.0) + float(used_bucket.get(base_asset, 0.0) or 0.0)
         if qty <= 0.0:
-            return False
+            return any(p.quantity > 0 for p in [*self._dust_positions.values(),
+                       *self._preserved_positions.values()] if p.symbol == symbol)
+        reserved = sum(p.quantity for p in [*self._dust_positions.values(),
+                       *self._preserved_positions.values()]
+                       if p.symbol.split("/")[0] == base_asset)
+        if qty + max(1e-10, reserved * 1e-6) < reserved:
+            return True
+        qty = max(0.0, qty - reserved)
         try:
             price = float(exchange.fetch_ticker(symbol).get("last") or 0.0)
         except Exception:

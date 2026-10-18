@@ -1,0 +1,372 @@
+[
+  {
+    "symbol": "BTCUSDT",
+    "tf": "5min",
+    "strategy": "pullback",
+    "positive_months": 0,
+    "months": 3,
+    "stress_pf": 0.0336,
+    "stress_net": -11.5,
+    "ci": [
+      -0.030256188737270987,
+      -0.024221794279713025
+    ],
+    "pf_without_best3": 0.05918891395782185,
+    "frequency_multiple": 32.81536095387592,
+    "accepted": false,
+    "reasons": [
+      "expectativa OOS negativa",
+      "PF OOS < 1,20",
+      "IC inferior n\u00e3o positivo",
+      "falha DEV/VAL/OOS",
+      "falha no estresse de custos"
+    ]
+  },
+  {
+    "symbol": "BTCUSDT",
+    "tf": "5min",
+    "strategy": "reversion",
+    "positive_months": 0,
+    "months": 3,
+    "stress_pf": 0.0595,
+    "stress_net": -3.3,
+    "ci": [
+      -0.03157979373876441,
+      -0.01131531086842498
+    ],
+    "pf_without_best3": 0.07831976801058427,
+    "frequency_multiple": 10.753682474749878,
+    "accepted": false,
+    "reasons": [
+      "expectativa OOS negativa",
+      "PF OOS < 1,20",
+      "IC inferior n\u00e3o positivo",
+      "falha DEV/VAL/OOS",
+      "falha no estresse de custos"
+    ]
+  },
+  {
+    "symbol": "BTCUSDT",
+    "tf": "15min",
+    "strategy": "pullback",
+    "positive_months": 0,
+    "months": 3,
+    "stress_pf": 0.1968,
+    "stress_net": -4.43,
+    "ci": [
+      -0.03740392699366199,
+      -0.013066283569253526
+    ],
+    "pf_without_best3": 0.23070513177355464,
+    "frequency_multiple": 13.748283462569177,
+    "accepted": false,
+    "reasons": [
+      "expectativa OOS negativa",
+      "PF OOS < 1,20",
+      "IC inferior n\u00e3o positivo",
+      "falha DEV/VAL/OOS",
+      "falha no estresse de custos"
+    ]
+  },
+  {
+    "symbol": "BTCUSDT",
+    "tf": "15min",
+    "strategy": "reversion",
+    "positive_months": 1,
+    "months": 3,
+    "stress_pf": 0.3324,
+    "stress_net": -0.48,
+    "ci": [
+      -0.03182606705423241,
+      0.011007124318253595
+    ],
+    "pf_without_best3": 0.19578632605155388,
+    "frequency_multiple": 2.5500848357991215,
+    "accepted": false,
+    "reasons": [
+      "expectativa OOS negativa",
+      "menos de 30 trades OOS",
+      "PF OOS < 1,20",
+      "IC inferior n\u00e3o positivo",
+      "falha DEV/VAL/OOS",
+      "falha no estresse de custos"
+    ]
+  },
+  {
+    "symbol": "ETHUSDT",
+    "tf": "5min",
+    "strategy": "pullback",
+    "positive_months": 0,
+    "months": 3,
+    "stress_pf": 0.0887,
+    "stress_net": -10.66,
+    "ci": [
+      -0.03212571903621145,
+      -0.022049164823147276
+    ],
+    "pf_without_best3": 0.1062342803221861,
+    "frequency_multiple": 33.92398801312848,
+    "accepted": false,
+    "reasons": [
+      "expectativa OOS negativa",
+      "PF OOS < 1,20",
+      "IC inferior n\u00e3o positivo",
+      "falha DEV/VAL/OOS",
+      "falha no estresse de custos"
+    ]
+  },
+  {
+    "symbol": "ETHUSDT",
+    "tf": "5min",
+    "strategy": "reversion",
+    "positive_months": 0,
+    "months": 3,
+    "stress_pf": 0.1166,
+    "stress_net": -3.15,
+    "ci": [
+      -0.034666384398239734,
+      -0.008811574962798765
+    ],
+    "pf_without_best3": 0.13270130273526562,
+    "frequency_multiple": 11.349569519098132,
+    "accepted": false,
+    "reasons": [
+      "expectativa OOS negativa",
+      "PF OOS < 1,20",
+      "IC inferior n\u00e3o positivo",
+      "falha DEV/VAL/OOS",
+      "falha no estresse de custos"
+    ]
+  },
+  {
+    "symbol": "ETHUSDT",
+    "tf": "15min",
+    "strategy": "pullback",
+    "positive_months": 0,
+    "months": 3,
+    "stress_pf": 0.1991,
+    "stress_net": -4.08,
+    "ci": [
+      -0.04331655678955205,
+      -0.012458776276255279
+    ],
+    "pf_without_best3": 0.14908842531993877,
+    "frequency_multiple": 12.223776223776223,
+    "accepted": false,
+    "reasons": [
+      "expectativa OOS negativa",
+      "PF OOS < 1,20",
+      "IC inferior n\u00e3o positivo",
+      "falha DEV/VAL/OOS",
+      "falha no estresse de custos"
+    ]
+  },
+  {
+    "symbol": "ETHUSDT",
+    "tf": "15min",
+    "strategy": "reversion",
+    "positive_months": 1,
+    "months": 3,
+    "stress_pf": 0.2756,
+    "stress_net": -1.07,
+    "ci": [
+      -0.06344121437194587,
+      0.015090187228593956
+    ],
+    "pf_without_best3": 0.2821561926221155,
+    "frequency_multiple": 4.116169544740973,
+    "accepted": false,
+    "reasons": [
+      "expectativa OOS negativa",
+      "PF OOS < 1,20",
+      "IC inferior n\u00e3o positivo",
+      "falha DEV/VAL/OOS",
+      "falha no estresse de custos"
+    ]
+  },
+  {
+    "symbol": "SOLUSDT",
+    "tf": "5min",
+    "strategy": "pullback",
+    "positive_months": 0,
+    "months": 3,
+    "stress_pf": 0.0753,
+    "stress_net": -11.0,
+    "ci": [
+      -0.03377930002660354,
+      -0.023791949333751367
+    ],
+    "pf_without_best3": 0.10644653346644517,
+    "frequency_multiple": 53.48016933834372,
+    "accepted": false,
+    "reasons": [
+      "expectativa OOS negativa",
+      "PF OOS < 1,20",
+      "IC inferior n\u00e3o positivo",
+      "falha DEV/VAL/OOS",
+      "falha no estresse de custos"
+    ]
+  },
+  {
+    "symbol": "SOLUSDT",
+    "tf": "5min",
+    "strategy": "reversion",
+    "positive_months": 0,
+    "months": 3,
+    "stress_pf": 0.1237,
+    "stress_net": -4.02,
+    "ci": [
+      -0.0322337798243622,
+      -0.010114461207174416
+    ],
+    "pf_without_best3": 0.20865928337794795,
+    "frequency_multiple": 23.946344479855398,
+    "accepted": false,
+    "reasons": [
+      "expectativa OOS negativa",
+      "PF OOS < 1,20",
+      "IC inferior n\u00e3o positivo",
+      "falha DEV/VAL/OOS",
+      "falha no estresse de custos"
+    ]
+  },
+  {
+    "symbol": "SOLUSDT",
+    "tf": "15min",
+    "strategy": "pullback",
+    "positive_months": 0,
+    "months": 3,
+    "stress_pf": 0.275,
+    "stress_net": -3.73,
+    "ci": [
+      -0.043903426296156185,
+      -0.0037818431914844754
+    ],
+    "pf_without_best3": 0.2536780192731732,
+    "frequency_multiple": 19.95718567147139,
+    "accepted": false,
+    "reasons": [
+      "expectativa OOS negativa",
+      "PF OOS < 1,20",
+      "IC inferior n\u00e3o positivo",
+      "falha DEV/VAL/OOS",
+      "falha no estresse de custos"
+    ]
+  },
+  {
+    "symbol": "SOLUSDT",
+    "tf": "15min",
+    "strategy": "reversion",
+    "positive_months": 0,
+    "months": 3,
+    "stress_pf": 0.2215,
+    "stress_net": -1.03,
+    "ci": [
+      -0.07522042901051706,
+      0.006577173502884719
+    ],
+    "pf_without_best3": 0.1859443174200236,
+    "frequency_multiple": 5.1888682745825605,
+    "accepted": false,
+    "reasons": [
+      "expectativa OOS negativa",
+      "menos de 30 trades OOS",
+      "PF OOS < 1,20",
+      "IC inferior n\u00e3o positivo",
+      "falha DEV/VAL/OOS",
+      "falha no estresse de custos"
+    ]
+  },
+  {
+    "symbol": "BNBUSDT",
+    "tf": "5min",
+    "strategy": "pullback",
+    "positive_months": 0,
+    "months": 3,
+    "stress_pf": 0.0547,
+    "stress_net": -9.04,
+    "ci": [
+      -0.02814466113863917,
+      -0.020499447623686613
+    ],
+    "pf_without_best3": 0.0768493631662915,
+    "frequency_multiple": 19.264527129627258,
+    "accepted": false,
+    "reasons": [
+      "expectativa OOS negativa",
+      "PF OOS < 1,20",
+      "IC inferior n\u00e3o positivo",
+      "falha DEV/VAL/OOS",
+      "falha no estresse de custos"
+    ]
+  },
+  {
+    "symbol": "BNBUSDT",
+    "tf": "5min",
+    "strategy": "reversion",
+    "positive_months": 0,
+    "months": 3,
+    "stress_pf": 0.0268,
+    "stress_net": -3.98,
+    "ci": [
+      -0.03569111135269772,
+      -0.016312216326488757
+    ],
+    "pf_without_best3": 0.057657274304392644,
+    "frequency_multiple": 8.135617034822667,
+    "accepted": false,
+    "reasons": [
+      "expectativa OOS negativa",
+      "PF OOS < 1,20",
+      "IC inferior n\u00e3o positivo",
+      "falha DEV/VAL/OOS",
+      "falha no estresse de custos"
+    ]
+  },
+  {
+    "symbol": "BNBUSDT",
+    "tf": "15min",
+    "strategy": "pullback",
+    "positive_months": 0,
+    "months": 3,
+    "stress_pf": 0.2373,
+    "stress_net": -3.07,
+    "ci": [
+      -0.03451288496763137,
+      -0.011346904542525054
+    ],
+    "pf_without_best3": 0.2146439718175488,
+    "frequency_multiple": 6.754739765728777,
+    "accepted": false,
+    "reasons": [
+      "expectativa OOS negativa",
+      "PF OOS < 1,20",
+      "IC inferior n\u00e3o positivo",
+      "falha DEV/VAL/OOS",
+      "falha no estresse de custos"
+    ]
+  },
+  {
+    "symbol": "BNBUSDT",
+    "tf": "15min",
+    "strategy": "reversion",
+    "positive_months": 0,
+    "months": 3,
+    "stress_pf": 0.0796,
+    "stress_net": -1.35,
+    "ci": [
+      -0.05154456529213718,
+      -0.015235006553376396
+    ],
+    "pf_without_best3": 0.09341611689179047,
+    "frequency_multiple": 2.379510599290819,
+    "accepted": false,
+    "reasons": [
+      "expectativa OOS negativa",
+      "PF OOS < 1,20",
+      "IC inferior n\u00e3o positivo",
+      "falha DEV/VAL/OOS",
+      "falha no estresse de custos"
+    ]
+  }
+]
