@@ -1,0 +1,430 @@
+[
+  {
+    "symbol": "BTCUSDT",
+    "timeframe": "15min",
+    "strategy": "A",
+    "approved": false,
+    "reasons": [
+      "PnL negativo em pelo menos um split/custo",
+      "PF OOS abaixo de 1,20",
+      "IC ajustado sem limite inferior positivo"
+    ],
+    "ci": [
+      -0.19704742363742436,
+      0.02338183211525233
+    ],
+    "stress_pnl": -5.95,
+    "frequency_multiple_4h": 6.098028955171816
+  },
+  {
+    "symbol": "BTCUSDT",
+    "timeframe": "15min",
+    "strategy": "B",
+    "approved": false,
+    "reasons": [
+      "PnL negativo em pelo menos um split/custo",
+      "PF OOS abaixo de 1,20",
+      "IC ajustado sem limite inferior positivo"
+    ],
+    "ci": [
+      -0.21796088743561526,
+      -0.007546984280740457
+    ],
+    "stress_pnl": -4.7,
+    "frequency_multiple_4h": 3.547944119372692
+  },
+  {
+    "symbol": "BTCUSDT",
+    "timeframe": "15min",
+    "strategy": "C",
+    "approved": false,
+    "reasons": [
+      "PnL negativo em pelo menos um split/custo",
+      "menos de 30 trades OOS",
+      "PF OOS abaixo de 1,20",
+      "IC ajustado sem limite inferior positivo",
+      "frequência não supera referência 4h"
+    ],
+    "ci": [
+      null,
+      null
+    ],
+    "stress_pnl": -0.17,
+    "frequency_multiple_4h": 0.3326197611911893
+  },
+  {
+    "symbol": "BTCUSDT",
+    "timeframe": "1h",
+    "strategy": "A",
+    "approved": false,
+    "reasons": [
+      "PnL negativo em pelo menos um split/custo",
+      "menos de 30 trades OOS",
+      "PF OOS abaixo de 1,20",
+      "IC ajustado sem limite inferior positivo"
+    ],
+    "ci": [
+      -0.2638590698563282,
+      0.1300173753620078
+    ],
+    "stress_pnl": -2.61,
+    "frequency_multiple_4h": 2.883939336252302
+  },
+  {
+    "symbol": "BTCUSDT",
+    "timeframe": "1h",
+    "strategy": "B",
+    "approved": false,
+    "reasons": [
+      "PnL negativo em pelo menos um split/custo",
+      "menos de 30 trades OOS",
+      "PF OOS abaixo de 1,20",
+      "IC ajustado sem limite inferior positivo"
+    ],
+    "ci": [
+      -0.26830715560085044,
+      0.05523642740323019
+    ],
+    "stress_pnl": -1.73,
+    "frequency_multiple_4h": 1.441969668126151
+  },
+  {
+    "symbol": "BTCUSDT",
+    "timeframe": "1h",
+    "strategy": "C",
+    "approved": false,
+    "reasons": [
+      "PnL negativo em pelo menos um split/custo",
+      "menos de 30 trades OOS",
+      "PF OOS abaixo de 1,20",
+      "IC ajustado sem limite inferior positivo"
+    ],
+    "ci": [
+      -0.2978860570227831,
+      0.04788600640341102
+    ],
+    "stress_pnl": -2.0,
+    "frequency_multiple_4h": 1.2201281807221274
+  },
+  {
+    "symbol": "ETHUSDT",
+    "timeframe": "15min",
+    "strategy": "A",
+    "approved": false,
+    "reasons": [
+      "PnL negativo em pelo menos um split/custo",
+      "PF OOS abaixo de 1,20",
+      "IC ajustado sem limite inferior positivo"
+    ],
+    "ci": [
+      -0.2016870477228035,
+      0.02278068146932414
+    ],
+    "stress_pnl": -7.48,
+    "frequency_multiple_4h": 7.982874268588558
+  },
+  {
+    "symbol": "ETHUSDT",
+    "timeframe": "15min",
+    "strategy": "B",
+    "approved": false,
+    "reasons": [
+      "PnL negativo em pelo menos um split/custo",
+      "menos de 30 trades OOS",
+      "PF OOS abaixo de 1,20",
+      "IC ajustado sem limite inferior positivo"
+    ],
+    "ci": [
+      -0.24548197539782654,
+      0.08233222130557713
+    ],
+    "stress_pnl": -2.91,
+    "frequency_multiple_4h": 3.367775082060798
+  },
+  {
+    "symbol": "ETHUSDT",
+    "timeframe": "15min",
+    "strategy": "C",
+    "approved": false,
+    "reasons": [
+      "PnL negativo em pelo menos um split/custo",
+      "menos de 30 trades OOS",
+      "PF OOS abaixo de 1,20",
+      "IC ajustado sem limite inferior positivo",
+      "frequência não supera referência 4h"
+    ],
+    "ci": [
+      -0.21849102149999974,
+      0.22245211520971372
+    ],
+    "stress_pnl": -0.15,
+    "frequency_multiple_4h": 0.8731268731268735
+  },
+  {
+    "symbol": "ETHUSDT",
+    "timeframe": "1h",
+    "strategy": "A",
+    "approved": false,
+    "reasons": [
+      "PnL negativo em pelo menos um split/custo",
+      "menos de 30 trades OOS",
+      "PF OOS abaixo de 1,20",
+      "IC ajustado sem limite inferior positivo"
+    ],
+    "ci": [
+      -0.26996625917537886,
+      0.05280748033691325
+    ],
+    "stress_pnl": -4.48,
+    "frequency_multiple_4h": 3.618789263278128
+  },
+  {
+    "symbol": "ETHUSDT",
+    "timeframe": "1h",
+    "strategy": "B",
+    "approved": false,
+    "reasons": [
+      "PnL negativo em pelo menos um split/custo",
+      "menos de 30 trades OOS",
+      "PF OOS abaixo de 1,20",
+      "IC ajustado sem limite inferior positivo"
+    ],
+    "ci": [
+      -0.3469619798573308,
+      0.1503025086237987
+    ],
+    "stress_pnl": -2.16,
+    "frequency_multiple_4h": 1.6222158766419197
+  },
+  {
+    "symbol": "ETHUSDT",
+    "timeframe": "1h",
+    "strategy": "C",
+    "approved": false,
+    "reasons": [
+      "PnL negativo em pelo menos um split/custo",
+      "menos de 30 trades OOS",
+      "PF OOS abaixo de 1,20",
+      "IC ajustado sem limite inferior positivo"
+    ],
+    "ci": [
+      -0.3529661049290188,
+      0.15753063192399983
+    ],
+    "stress_pnl": -1.79,
+    "frequency_multiple_4h": 1.4974300399771565
+  },
+  {
+    "symbol": "SOLUSDT",
+    "timeframe": "15min",
+    "strategy": "A",
+    "approved": false,
+    "reasons": [
+      "PnL negativo em pelo menos um split/custo",
+      "PF OOS abaixo de 1,20",
+      "IC ajustado sem limite inferior positivo"
+    ],
+    "ci": [
+      -0.19774546065460286,
+      0.09845351668524234
+    ],
+    "stress_pnl": -6.05,
+    "frequency_multiple_4h": 13.17174254317112
+  },
+  {
+    "symbol": "SOLUSDT",
+    "timeframe": "15min",
+    "strategy": "B",
+    "approved": false,
+    "reasons": [
+      "PnL negativo em pelo menos um split/custo",
+      "menos de 30 trades OOS",
+      "PF OOS abaixo de 1,20",
+      "IC ajustado sem limite inferior positivo"
+    ],
+    "ci": [
+      -0.1793551248988037,
+      0.12558125876533147
+    ],
+    "stress_pnl": -1.57,
+    "frequency_multiple_4h": 5.388440131297277
+  },
+  {
+    "symbol": "SOLUSDT",
+    "timeframe": "15min",
+    "strategy": "C",
+    "approved": false,
+    "reasons": [
+      "PnL negativo em pelo menos um split/custo",
+      "menos de 30 trades OOS",
+      "PF OOS abaixo de 1,20",
+      "IC ajustado sem limite inferior positivo"
+    ],
+    "ci": [
+      -0.22868281187199946,
+      0.09455809871199991
+    ],
+    "stress_pnl": -0.91,
+    "frequency_multiple_4h": 1.9957185671471396
+  },
+  {
+    "symbol": "SOLUSDT",
+    "timeframe": "1h",
+    "strategy": "A",
+    "approved": false,
+    "reasons": [
+      "PnL negativo em pelo menos um split/custo",
+      "PF OOS abaixo de 1,20",
+      "IC ajustado sem limite inferior positivo"
+    ],
+    "ci": [
+      -0.2451345949536976,
+      0.09020197433526463
+    ],
+    "stress_pnl": -3.33,
+    "frequency_multiple_4h": 6.389034837235867
+  },
+  {
+    "symbol": "SOLUSDT",
+    "timeframe": "1h",
+    "strategy": "B",
+    "approved": false,
+    "reasons": [
+      "PnL negativo em pelo menos um split/custo",
+      "menos de 30 trades OOS",
+      "PF OOS abaixo de 1,20",
+      "IC ajustado sem limite inferior positivo"
+    ],
+    "ci": [
+      -0.1783569398439976,
+      0.14131882396800013
+    ],
+    "stress_pnl": -0.43,
+    "frequency_multiple_4h": 1.996573386636208
+  },
+  {
+    "symbol": "SOLUSDT",
+    "timeframe": "1h",
+    "strategy": "C",
+    "approved": false,
+    "reasons": [
+      "PnL negativo em pelo menos um split/custo",
+      "menos de 30 trades OOS",
+      "PF OOS abaixo de 1,20",
+      "IC ajustado sem limite inferior positivo"
+    ],
+    "ci": [
+      -0.1783569398439976,
+      0.14131882396800013
+    ],
+    "stress_pnl": -0.43,
+    "frequency_multiple_4h": 1.996573386636208
+  },
+  {
+    "symbol": "BNBUSDT",
+    "timeframe": "15min",
+    "strategy": "A",
+    "approved": false,
+    "reasons": [
+      "PnL negativo em pelo menos um split/custo",
+      "PF OOS abaixo de 1,20",
+      "IC ajustado sem limite inferior positivo"
+    ],
+    "ci": [
+      -0.15553194371154222,
+      0.07890477507577522
+    ],
+    "stress_pnl": -3.43,
+    "frequency_multiple_4h": 3.991437134294279
+  },
+  {
+    "symbol": "BNBUSDT",
+    "timeframe": "15min",
+    "strategy": "B",
+    "approved": false,
+    "reasons": [
+      "PnL negativo em pelo menos um split/custo",
+      "PF OOS abaixo de 1,20",
+      "IC ajustado sem limite inferior positivo"
+    ],
+    "ci": [
+      -0.19070708533952668,
+      0.12622228450639758
+    ],
+    "stress_pnl": -2.33,
+    "frequency_multiple_4h": 2.5330274121482925
+  },
+  {
+    "symbol": "BNBUSDT",
+    "timeframe": "15min",
+    "strategy": "C",
+    "approved": false,
+    "reasons": [
+      "PnL negativo em pelo menos um split/custo",
+      "menos de 30 trades OOS",
+      "PF OOS abaixo de 1,20",
+      "IC ajustado sem limite inferior positivo",
+      "frequência não supera referência 4h"
+    ],
+    "ci": [
+      null,
+      null
+    ],
+    "stress_pnl": -0.24,
+    "frequency_multiple_4h": 0.15351681285747218
+  },
+  {
+    "symbol": "BNBUSDT",
+    "timeframe": "1h",
+    "strategy": "A",
+    "approved": false,
+    "reasons": [
+      "PnL negativo em pelo menos um split/custo",
+      "PF OOS abaixo de 1,20",
+      "IC ajustado sem limite inferior positivo"
+    ],
+    "ci": [
+      -0.19313723999703736,
+      0.2187941688154581
+    ],
+    "stress_pnl": -1.01,
+    "frequency_multiple_4h": 2.3037385230417797
+  },
+  {
+    "symbol": "BNBUSDT",
+    "timeframe": "1h",
+    "strategy": "B",
+    "approved": false,
+    "reasons": [
+      "PnL negativo em pelo menos um split/custo",
+      "menos de 30 trades OOS",
+      "IC ajustado sem limite inferior positivo",
+      "frequência não supera referência 4h"
+    ],
+    "ci": [
+      -0.1044585756000009,
+      0.26598040671199863
+    ],
+    "stress_pnl": 0.57,
+    "frequency_multiple_4h": 0.7679128410139262
+  },
+  {
+    "symbol": "BNBUSDT",
+    "timeframe": "1h",
+    "strategy": "C",
+    "approved": false,
+    "reasons": [
+      "PnL negativo em pelo menos um split/custo",
+      "menos de 30 trades OOS",
+      "PF OOS abaixo de 1,20",
+      "IC ajustado sem limite inferior positivo",
+      "frequência não supera referência 4h"
+    ],
+    "ci": [
+      -0.2937778497777777,
+      0.31625152612444285
+    ],
+    "stress_pnl": -0.11,
+    "frequency_multiple_4h": 0.6911215569125334
+  }
+]

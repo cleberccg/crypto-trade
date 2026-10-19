@@ -1,0 +1,12 @@
+{
+  "passed": true,
+  "checks": [
+    "96 rows, trade counts, PnL, fees and capital reconciled",
+    "prefix invariance all variants/assets/timeframes",
+    "baseline entries/SL/TP match original class with one-bar delay",
+    "all trades next-open execution",
+    "24 real OOS small-capital backtests",
+    "complete aggregate bar counts",
+    "all actual simulated quantities conform to LOT_SIZE step/min/max, MARKET_LOT_SIZE maximum and entry minimum notional"
+  ]
+}

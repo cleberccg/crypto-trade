@@ -7,6 +7,14 @@ exec(compile(src[:src.index('rng=np.random.default_rng')],__file__,'exec'))
 checks=[]; diagnostics=[]; small=[]; bh=[]
 rows=json.loads((OUT/'results.json').read_text()); trades=pd.read_csv(OUT/'trades.csv')
 assert len(rows)==96
+for z in trades.itertuples():
+    f=filters[z.symbol]; lot=f['LOT_SIZE']; q=Decimal(str(z.quantity))
+    assert q%Decimal(lot['stepSize'])==0
+    assert Decimal(lot['minQty'])<=q<=Decimal(lot['maxQty'])
+    assert z.quantity*z.entry_price>=float(f.get('NOTIONAL',f.get('MIN_NOTIONAL',{})).get('minNotional',0))
+    ml=f.get('MARKET_LOT_SIZE',{})
+    if ml and float(ml['maxQty'])>0: assert z.quantity<=float(ml['maxQty'])
+checks+=['actual quantities: LOT_SIZE precision/min/max, MARKET_LOT_SIZE maximum, entry minimum notional']
 for r in rows:
     t=trades[(trades.symbol==r['symbol'])&(trades.timeframe==r['timeframe'])&(trades.strategy==r['strategy'])&(trades.split==r['split'])&(abs(trades.cost_per_side-r['cost_per_side'])<1e-9)]
     assert len(t)==r['total_trades']

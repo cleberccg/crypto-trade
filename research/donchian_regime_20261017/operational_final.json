@@ -1,0 +1,117 @@
+{
+  "checked_at": "2026-10-17T22:40:59.983495-03:00",
+  "processes": [
+    {
+      "pid": 80848,
+      "is_running": true,
+      "created_at": "2026-10-17T20:45:22.613314-03:00",
+      "command": [
+        "C:\\Python313\\python.exe",
+        "main.py",
+        "live",
+        "--strategy-name",
+        "Sma200RegimeGated",
+        "--strategy-version",
+        "v1",
+        "--symbol",
+        "BNB/USDT",
+        "--timeframe",
+        "4h",
+        "--poll-seconds",
+        "15",
+        "--bootstrap-bars",
+        "1500",
+        "--bootstrap-replay-bars",
+        "350",
+        "--enable-real-orders"
+      ],
+      "rss_mib": 312.86328125
+    },
+    {
+      "pid": 17832,
+      "is_running": true,
+      "created_at": "2026-09-30T23:20:43.049061-03:00",
+      "command": [
+        "C:\\Python313\\python.exe",
+        "main.py",
+        "market-data-daemon",
+        "--symbols",
+        "BNB/USDT",
+        "--timeframes",
+        "4h",
+        "--polling-interval-seconds",
+        "30",
+        "--context-delay-seconds",
+        "0.2",
+        "--batch-size",
+        "1000",
+        "--retry-count",
+        "5",
+        "--retry-delay-seconds",
+        "2",
+        "--bootstrap-days",
+        "7",
+        "--recent-gap-bars",
+        "2000",
+        "--report-every-cycles",
+        "1",
+        "--max-cycles",
+        "0",
+        "--output-prefix",
+        "market_data_daemon"
+      ],
+      "rss_mib": 283.9140625
+    }
+  ],
+  "production_processes_signalled_or_modified": false,
+  "orders_emitted_by_research": 0,
+  "production_database_connections_by_research": 0,
+  "source_hashes_unchanged_since_record": {
+    "strategies/classic_catalog_strategies.py": true,
+    "risk/risk_manager.py": true,
+    "risk/position_sizer.py": true,
+    "backtesting/engine.py": true,
+    "research/external_strategy_replication_strategies.py": true
+  },
+  "resource_policy": {
+    "affinity_logical_cpus": 1,
+    "priority": "Idle",
+    "rss_budget_mib": 900,
+    "checks": "between datasets/backtests; not an OS hard limit"
+  },
+  "observed_research_rss_mib_about": null,
+  "same_process_creation_times": true,
+  "daemon": {
+    "generated_at": "2026-10-18T01:40:58.315375+00:00",
+    "summary": {
+      "cycle": 48816,
+      "contexts": 1,
+      "started_at": "2026-10-01T02:20:47.832880+00:00",
+      "cycle_started_at": "2026-10-18T01:40:58.284659+00:00",
+      "last_execution": "2026-10-18T01:40:58.315375+00:00",
+      "total_inserted_last_cycle": 0,
+      "total_failures": 0,
+      "total_retries_last_cycle": 0
+    },
+    "initial_observed_cycle": 48726,
+    "initial_daemon_process_start": "2026-09-30T23:20:43-03:00"
+  },
+  "recent_live_log_lines": [
+    "2026-10-17 22:29:49 | INFO     | execution.live_trading_service | MainProcess     | [LIVE] LIVE_STATE | OPEN=0/3 DUST=1 DUST_qty=BNB:0.000987260000 capital_committed_usdt=0.00 dust_cost_usdt=0.777124 capital_free_usdt=28.25577283 balance_status=CURRENT | leitura: posições OPEN 0/3; DUST 1 (BNB:0.000987260000); capital OPEN 0.00 USDT; custo residual DUST 0.777124 USDT; USDT livre 28.25577283 | próxima ação: aguardar sinal BUY válido em candle fechado; DUST não ocupa posição ativa",
+    "2026-10-17 22:29:49 | INFO     | execution.live_trading_service | MainProcess     | [LIVE] LIVE_TRADE | trade_id=3081 status=DUST symbol=BNB/USDT quantity=0.000987260000 realized_pnl_usdt=-0.457207 timeframe=4h strategy=Sma200RegimeGated entry_price=787.15200000 stop_loss=7.8688 take_profit=78688.0 exit_pending=False | resultado=PREJUÍZO",
+    "2026-10-17 22:35:02 | INFO     | execution.live_trading_service | MainProcess     | [LIVE] LIVE_STATE | OPEN=0/3 DUST=1 DUST_qty=BNB:0.000987260000 capital_committed_usdt=0.00 dust_cost_usdt=0.777124 capital_free_usdt=28.25577283 balance_status=CURRENT | leitura: posições OPEN 0/3; DUST 1 (BNB:0.000987260000); capital OPEN 0.00 USDT; custo residual DUST 0.777124 USDT; USDT livre 28.25577283 | próxima ação: aguardar sinal BUY válido em candle fechado; DUST não ocupa posição ativa",
+    "2026-10-17 22:35:02 | INFO     | execution.live_trading_service | MainProcess     | [LIVE] LIVE_TRADE | trade_id=3081 status=DUST symbol=BNB/USDT quantity=0.000987260000 realized_pnl_usdt=-0.457207 timeframe=4h strategy=Sma200RegimeGated entry_price=787.15200000 stop_loss=7.8688 take_profit=78688.0 exit_pending=False | resultado=PREJUÍZO",
+    "2026-10-17 22:40:15 | INFO     | execution.live_trading_service | MainProcess     | [LIVE] LIVE_STATE | OPEN=0/3 DUST=1 DUST_qty=BNB:0.000987260000 capital_committed_usdt=0.00 dust_cost_usdt=0.777124 capital_free_usdt=28.25577283 balance_status=CURRENT | leitura: posições OPEN 0/3; DUST 1 (BNB:0.000987260000); capital OPEN 0.00 USDT; custo residual DUST 0.777124 USDT; USDT livre 28.25577283 | próxima ação: aguardar sinal BUY válido em candle fechado; DUST não ocupa posição ativa",
+    "2026-10-17 22:40:15 | INFO     | execution.live_trading_service | MainProcess     | [LIVE] LIVE_TRADE | trade_id=3081 status=DUST symbol=BNB/USDT quantity=0.000987260000 realized_pnl_usdt=-0.457207 timeframe=4h strategy=Sma200RegimeGated entry_price=787.15200000 stop_loss=7.8688 take_profit=78688.0 exit_pending=False | resultado=PREJUÍZO"
+  ],
+  "recent_daemon_log_lines": [
+    "2026-10-17 22:38:28 | INFO     | market_data.daemon             | MainProcess     | market-data-daemon cycle=48811 contexts=1",
+    "2026-10-17 22:38:58 | INFO     | market_data.daemon             | MainProcess     | market-data-daemon cycle=48812 contexts=1",
+    "2026-10-17 22:39:28 | INFO     | market_data.daemon             | MainProcess     | market-data-daemon cycle=48813 contexts=1",
+    "2026-10-17 22:39:58 | INFO     | market_data.daemon             | MainProcess     | market-data-daemon cycle=48814 contexts=1",
+    "2026-10-17 22:40:28 | INFO     | market_data.daemon             | MainProcess     | market-data-daemon cycle=48815 contexts=1",
+    "2026-10-17 22:40:58 | INFO     | market_data.daemon             | MainProcess     | market-data-daemon cycle=48816 contexts=1"
+  ],
+  "exchange_audit_performed": false,
+  "limitation": "Process/log continuity observed; no authenticated exchange audit. LIVE may execute its own authorized orders."
+}
